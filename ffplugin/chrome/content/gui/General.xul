@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2011, Thomas Riedmaier, Technische Universitaet Muenchen
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Crossbear nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THOMAS RIEDMAIER BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+
+<!-- 
+This file defines the overlay that will place a Crossbear Popup in Firefox's Add-on-bar. Furthermore it initializes the Crossbear
+system by instantiating a CBFrontend-object which is the core of the Crossbear-Firefox-Plugin (and which will in turn initialize
+the rest of the system). 
+-->
+
+<overlay id="crossbear" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+		<!-- Include scripts -->
+		<script src="chrome://crossbear/content/crypto-js/crypto.js"/>
+		<script src="chrome://crossbear/content/crypto-js/blockmodes.js"/>
+		<script src="chrome://crossbear/content/crypto-js/aes.js"/>
+		<script src="chrome://crossbear/content/crypto-js/sha256.js"/>
+		<script src="chrome://crossbear/content/crypto-js/sha1.js"/>
+
+		<script src="chrome://crossbear/content/rsa-js/BigInt.js"/>
+		<script src="chrome://crossbear/content/rsa-js/Barrett.js"/>
+		<script src="chrome://crossbear/content/rsa-js/OAEP.js"/>
+		<script src="chrome://crossbear/content/rsa-js/RSA.js"/>
+
+		<script src="chrome://crossbear/content/CBHelper.js"/>
+		<script src="chrome://crossbear/content/CBMessages.js"/>
+		<script src="chrome://crossbear/content/CBEvents.js"/>
+		<script src="chrome://crossbear/content/CBDatabase.js"/>
+		<script src="chrome://crossbear/content/CBNet.js"/>
+		<script src="chrome://crossbear/content/CBHunter.js"/>
+		<script src="chrome://crossbear/content/CBGuard.js"/>
+		<script src="chrome://crossbear/content/CBHTLProcessor.js"/>
+		<script src="chrome://crossbear/content/CBCertificateCache.js"/>
+		<script src="chrome://crossbear/content/CBEventObserver.js"/>
+		<script src="chrome://crossbear/content/CBFrontend.js"/>
+		
+		<!-- Instantiate a new CBFrontend-object and thus initialize the Crossbear system -->
+		<script> var cbfe = new CBFrontend('otranto.net.in.tum.de');</script>
+
+		<!-- Crossbear Popup Menu -->
+		<popupset >
+		
+				<!-- Call the setPopupValues-function if the user clicks on the popup -->
+				<menupopup id="cb-statusbarpanel-popup" onpopupshowing="cbfe.setPopupValues()" position="before_end">
+				
+						<!-- MenueItem Settings: Open a OptionsDlg -->
+						<menuitem label="Settings" id="cb-statusbarpanel-popup-settings" onclick="var params = {inn : {cbFrontend : cbfe},out : {}}; window.openDialog('chrome://crossbear/content/gui/OptionsDlg.xul', 'Crossbear - Settings', 'chrome,centerscreen,dependent=YES,dialog=YES', params);"/>
+						<menuseparator/>
+						
+						<!-- MenueItem Guard: Call the guardCheckBoxClicked-function if the user clicks on it -->
+						<menuitem type="checkbox" autocheck="false" label="Guard" id="cb-statusbarpanel-popup-guard" onclick="cbfe.guardCheckBoxClicked();"/>
+						
+						<!-- MenueItem Hunter: Call the hunterCheckBoxClicked-function if the user clicks on it -->
+						<menuitem type="checkbox" autocheck="false" label="Hunter" id="cb-statusbarpanel-popup-hunter" onclick="cbfe.hunterCheckBoxClicked();"/>
+				</menupopup>
+		</popupset>
+
+		<!-- Add the Crossbear Popup Menu to the Add-on-bar -->
+		<statusbar id="status-bar">  
+				<statusbarpanel id="cb-statusbarpanel" class="statusbarpanel-iconic" src="chrome://crossbear/content/gui/statusbar icon.png" tooltiptext="Crossbear"  popup="cb-statusbarpanel-popup"/>
+		</statusbar>
+
+</overlay>
+

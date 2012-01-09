@@ -1,0 +1,153 @@
+/*
+ * Copyright (c) 2011, Thomas Riedmaier, TU München
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Crossbear nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THOMAS RIEDMAIER BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * This dialog displays the user's preferences and provides a GUI to change them
+ */
+
+/**
+ * Initialization function (called once when the dialog is about to display)
+ */
+function onLoad() {
+	
+	// Load the guard.trustAutomatically-setting and set its GUI equivalent
+	if(window.arguments[0].inn.cbFrontend.getUserPref("guard.trustAutomatically", "bool")){
+		document.getElementById("opt-trust-automatically").selectedIndex = 0;
+	}
+	else {
+		document.getElementById("opt-trust-automatically").selectedIndex = 1;
+	}
+	
+	// Load the guard.ratingToTrustAutomatically-setting and set its GUI equivalent
+	document.getElementById("opt-trust-req-rating").value = window.arguments[0].inn.cbFrontend.getUserPref("guard.ratingToTrustAutomatically", "int");
+
+	// Load the guard.certCacheDefaultValidity-setting and set its GUI equivalent
+	document.getElementById("opt-trust-def-cache-validity").value = window.arguments[0].inn.cbFrontend.getUserPref("guard.certCacheDefaultValidity", "int");
+
+	// Load the hunter.huntingInterval-setting and set its GUI equivalent
+	document.getElementById("opt-hunting-interval").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.huntingInterval", "int");
+
+	// Load the hunter.taskReexecutionInterval-setting and set its GUI equivalent
+	document.getElementById("opt-hunting-reexecution-interval").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.taskReexecutionInterval", "int");
+	
+	// Load the hunter.tracerouteMaxHops-setting and set its GUI equivalent
+	document.getElementById("opt-traceroute-max-hops").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.tracerouteMaxHops", "int");
+
+	// Load the hunter.tracerouteSamplesPerHop-setting and set its GUI equivalent
+	document.getElementById("opt-traceroute-samples-per-hop").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.tracerouteSamplesPerHop", "int");
+
+	// Load the hunter.publicIPcacheValidity-setting and set its GUI equivalent
+	document.getElementById("opt-trust-pub-ip-cache-validity").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.publicIPcacheValidity", "int");
+
+	// Load the hunter.serverIPcacheValidity-setting and set its GUI equivalent
+	document.getElementById("opt-trust-serv-ip-cache-validity").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.serverIPcacheValidity", "int");
+}
+
+/**
+ * Load the default values of for all preferences
+ */
+function loadDefaults() {
+	
+	// Load the default value of the guard.trustAutomatically-setting and set its GUI equivalent
+	if(window.arguments[0].inn.cbFrontend.getDefaultPref("guard.trustAutomatically", "bool")){
+		document.getElementById("opt-trust-automatically").selectedIndex = 0;
+	}
+	else {
+		document.getElementById("opt-trust-automatically").selectedIndex = 1;
+	}
+	
+	// Load the default value of the guard.ratingToTrustAutomatically-setting and set its GUI equivalent
+	document.getElementById("opt-trust-req-rating").value = window.arguments[0].inn.cbFrontend.getDefaultPref("guard.ratingToTrustAutomatically", "int");
+
+	// Load the default value of the guard.certCacheDefaultValidity-setting and set its GUI equivalent
+	document.getElementById("opt-trust-def-cache-validity").value = window.arguments[0].inn.cbFrontend.getDefaultPref("guard.certCacheDefaultValidity", "int");
+
+	// Load the default value of the hunter.huntingInterval-setting and set its GUI equivalent
+	document.getElementById("opt-hunting-interval").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.huntingInterval", "int");
+
+	// Load the default value of the hunter.taskReexecutionInterval-setting and set its GUI equivalent
+	document.getElementById("opt-hunting-reexecution-interval").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.taskReexecutionInterval", "int");
+	
+	// Load the default value of the hunter.tracerouteMaxHops-setting and set its GUI equivalent
+	document.getElementById("opt-traceroute-max-hops").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.tracerouteMaxHops", "int");
+
+	// Load the default value of the hunter.tracerouteSamplesPerHop-setting and set its GUI equivalent
+	document.getElementById("opt-traceroute-samples-per-hop").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.tracerouteSamplesPerHop", "int");
+
+	// Load the default value of the hunter.publicIPcacheValidity-setting and set its GUI equivalent
+	document.getElementById("opt-trust-pub-ip-cache-validity").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.publicIPcacheValidity", "int");
+
+	// Load the default value of the hunter.serverIPcacheValidity-setting and set its GUI equivalent
+	document.getElementById("opt-trust-serv-ip-cache-validity").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.serverIPcacheValidity", "int");
+}
+
+/**
+ * Read the preferences the user entered in the GUI and store them
+ * 
+ * @returns true (So the dialog will be closed)
+ */
+function accept() {
+	
+	// Read the guard.trustAutomatically from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("guard.trustAutomatically", "bool",document.getElementById("opt-trust-automatically-yes").selected);
+
+	// Read the guard.ratingToTrustAutomatically from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("guard.ratingToTrustAutomatically", "int", document.getElementById("opt-trust-req-rating").value);
+
+	// Read the guard.certCacheDefaultValidity from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("guard.certCacheDefaultValidity", "int", document.getElementById("opt-trust-def-cache-validity").value);
+
+	// Read the hunter.huntingInterval from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("hunter.huntingInterval", "int", document.getElementById("opt-hunting-interval").value);
+
+	// Read the hunter.taskReexecutionInterval from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("hunter.taskReexecutionInterval", "int", document.getElementById("opt-hunting-reexecution-interval").value);
+	
+	// Read the hunter.tracerouteMaxHops from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("hunter.tracerouteMaxHops", "int", document.getElementById("opt-traceroute-max-hops").value);
+
+	// Read the hunter.tracerouteSamplesPerHop from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("hunter.tracerouteSamplesPerHop", "int", document.getElementById("opt-traceroute-samples-per-hop").value);
+
+	// Read the hunter.publicIPcacheValidity from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("hunter.publicIPcacheValidity", "int", document.getElementById("opt-trust-pub-ip-cache-validity").value);
+
+	// Read the hunter.serverIPcacheValidity from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("hunter.serverIPcacheValidity", "int", document.getElementById("opt-trust-serv-ip-cache-validity").value);
+	
+	// Return true (So the dialog will be closed)
+	return true;
+}
+
+/**
+ * Close the dialog without making any changes to the user's preferences
+ * 
+ * @returns true (So the dialog will be closed)
+ */
+function cancel() {
+	return true;
+}

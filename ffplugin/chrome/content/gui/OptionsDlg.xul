@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2011, Thomas Riedmaier, Technische Universitaet Muenchen
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Crossbear nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THOMAS RIEDMAIER BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+
+<!-- This dialog displays the user's preferences and provides a GUI to change them -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<dialog id="cb-settings-dlg" title="Crossbear - Settings"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  buttons="accept,cancel"
+  buttonlabelcancel="Cancel"
+  buttonlabelaccept="Save"
+  ondialogaccept="return accept();"
+  ondialogcancel="return cancel();"
+  onload="onLoad();">
+  
+    <!-- Include scripts -->
+  <script type="application/javascript" src="chrome://crossbear/content/gui/OptionsDlg.js"/>
+    
+  <!-- Dialog Header -->
+  <dialogheader title="Crossbear" description="Settings"/>
+  
+  <!-- Dialog Background Image: Thanks go to Aintzane Izaguirre (zeruan19@hotmail.com) for designing Crossbear's logo -->
+  <box style="background-image:url('chrome://crossbear/content/gui/crossbear_bg.png');background-repeat:no-repeat;background-position:center center;">
+  
+  <!-- Left Group: The Guard's preferences -->
+  <groupbox align="center">
+    <caption label="Guard"/>
+    
+    <!-- Radio Buttons for the automatic trust option -->
+    <label value="Trust Certificates Automatically"/>
+    <radiogroup orient="horizontal" id="opt-trust-automatically">   
+     <radio label="YES" id="opt-trust-automatically-yes"/>  
+     <radio label="NO" id="opt-trust-automatically-no"/>  
+    </radiogroup> 
+    
+    <separator orient="horizontal" class="groove-thin"/>
+    
+    <!-- Textbox for the minimal required rating for automatic trust -->
+    <label value="Required Rating For Automatic Trust"/>
+    <box><textbox maxwidth="100" type="number" min="0" max="255" id="opt-trust-req-rating" /></box>
+    
+    <separator orient="horizontal" class="groove-thin"/>
+    
+    <!-- Textbox for the duration that a trust decision will be kept in the local cache -->
+    <label value="Default Cache Validity for Certificates (s)"/>
+    <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-def-cache-validity" /></box>
+    
+    <separator orient="horizontal" class="groove-thin"/>
+    
+    <!-- Button to open a LocalCertCacheDlg -->
+    <label value="Local Certificate Cache"/>
+	<button flex="1" label="Show" width="200" onclick="var params = {inn : {cbFrontend : window.arguments[0].inn.cbFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalCertCacheDlg.xul', 'Crossbear - Local Certificate Cache', 'chrome,centerscreen,dialog=YES', params);"/> 
+
+  </groupbox>
+  
+  <!-- Right Group: The Guard's preferences -->
+  <groupbox align="center">
+    <caption label="Hunter"/>
+    
+    <!-- Textbox for the minimal interval between two HuntingTaskList processings -->
+    <label value="Hunting Interval (s)"/>
+    <box><textbox maxwidth="100" type="number" min="0" id="opt-hunting-interval" /></box>
+    
+    <!-- Textbox for the minimal time that needs to pass before a HuntingTask can be executed again from the same IP -->
+    <label value="Task Reexecution Interval (s)"/>
+    <box><textbox maxwidth="100" type="number" min="0" id="opt-hunting-reexecution-interval" /></box>
+    
+    <!-- Textbox for the maximal number of Hops that will be traced during a Traceroute -->
+    <label value="Traceroute Max Hops"/>
+    <box><textbox maxwidth="100" type="number" min="0" max="50" id="opt-traceroute-max-hops" /></box>
+    
+    <!-- Textbox for the number of samples that will be made with the same TTL-value during a Traceroute -->
+    <label value="Traceroute Samples per Hop"/>
+    <box><textbox maxwidth="100" type="number" min="1" id="opt-traceroute-samples-per-hop" /></box>
+    
+    <!-- Textbox for the time that a PublicIP will be considered valid after it was observed -->
+    <label value="Cache Validity for Public IPs (s)"/>
+    <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-pub-ip-cache-validity" /></box>
+    
+    <!-- Textbox for the time that a Crossbear server IP will be considered valid after it was observed -->
+    <label value="Cache Validity for Server IPs (s)"/>
+    <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-serv-ip-cache-validity"/></box>
+  </groupbox>
+  </box>
+  
+  <!-- Button Box for "Accept", "Cancel" and "Load Defaults" -->
+  <box orient="horizontal" pack="center">
+  	
+  	<button label="Load Defaults" onclick="loadDefaults();"/>
+  	<button dlgtype="cancel"/>
+	<button dlgtype="accept"/> 		
+   		
+  </box>
+</dialog>

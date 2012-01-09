@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2011, Thomas Riedmaier, Technische Universitaet Muenchen
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Crossbear nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THOMAS RIEDMAIER BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+
+<!-- This is a simple dialog that is meant to inform the user about a possible attack against his system -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<dialog 
+
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  
+  windowtype="WarnUserDlg"
+  title="Crossbear - Warning you about a security Thread"
+  buttons="accept"
+  buttonlabelaccept="I understand"
+  ondialogaccept="return ok();"
+  onload="onLoad();"
+  
+  style="-moz-appearance: none; background-color:#000000; ">
+  
+	<!-- Include scripts -->
+	<script type="application/javascript" src="chrome://crossbear/content/gui/WarnUserDlg.js"/>
+
+	<!-- Outer content box (including icon box) -->
+	<box orient="horizontal" >
+	
+		<!-- Icon -->
+		<box orient="vertical" pack="center">
+			<!-- Thanks go to findicons.com for providing free icons -->
+			<image src='warning.png'/>
+		</box>
+		
+		<!-- Inner content box -->
+		<box orient="vertical" id="warning-text">
+		
+			<!-- Warning Text -->
+			<box orient="vertical" pack="start" align="start" flex="1" >
+				<label value="Crossbear detected a potential security thread for your system:" style="text-decoration: underline;font-weight:bold;color:#FFFFFF;margin-left:-2px;"/>
+				<html:div id="warning-text-div" type="content" />
+			</box>
+			
+			<!-- Confirm button -->
+			<box orient="horizontal" pack="end" align="end" flex="1">
+				<button dlgtype="accept"/>
+			</box>
+		</box>
+	</box>
+	
+</dialog>
