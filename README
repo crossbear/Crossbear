@@ -1,0 +1,75 @@
+Crossbear - crossbear@pki.net.in.tum.de
+=======================================
+
+Team:
+Thomas Riedmaier
+Ralph Holz
+
+Good day. Let us introduce ourselves: we are researchers at Technische
+Universität München, Germany.
+
+This is Crossbear, a tool for tracing Men-in-the-middle trying to eavesdrop
+and interfere with an HTTPs connection. Crossbear's purpose is to collect
+data to a) find out whether such Men-in-the-middle exist and b) where in the
+network they are located. It uses two methods. The first is a comparison of 
+certificate chains from several points in the network, including a warning 
+to the user when a different certificate chain is seen. In this respect, it
+is very similar to Perspectives or Convergence. The second method, however,
+is more important. It consists of creating Hunting Tasks which are then sent
+out to Crossbear clients around the world. Each Hunting Task is a request to
+traceroute to the indicated SSL server. The idea is that by correlating 
+results from different vantage points it may be possible to derive where in
+the network the attacker is located.
+
+If you have further questions, have a look at our talks (slides) and a brief
+introductory video from 28C3.
+
+Slides: https://pki.net.in.tum.de/node/4
+Video: https://www.youtube.com/watch?v=bOyavGIou-w
+
+Crossbear comes as a Firefox plugin.
+
+PRIVACY STATEMENT - YOU WANT TO READ THIS
+=========================================
+
+Your data is sent encrypted to our servers at Technische Universität München,
+Germany. WE DO NOT SHARE IT WITH ANYONE ELSE AND USE IT ONLY FOR THE PURPOSE
+OF CLASSIFYING MEN-IN-THE-MIDDLE. WE DO OUR BEST TO KEEP THE SERVERS SECURE
+AND PREVENT DATA LEAKAGE TO ATTACKERS.
+
+We store the following data:
+
+- Source: IP address of requesting client and AS, because we need it to trace
+the man-in-the-middle. We resolve to an AS in order to find other clients in
+the same AS which might work as hunters.
+- Certificate chains: as seen by clients and hunters.
+- Traceroutes: from requesting client and from hunting tasks.
+- Timestamps: when a request was made and a certain certificate chain seen
+
+We do not store any other information. Not your name, nothing about your 
+browser.
+
+During the test period of Crossbear, your data will be stored on the servers
+IN PLAIN. We will change when this Crossbear goes live. Bear in mind, however, 
+that in order to be useful, the Crossbear server will always need to be able
+to access recent data like certificate chains
+
+Yes, that does mean we know which sites *some* client (with a certain IP) 
+has accessed. If you don't want us to know about which sites you are visiting, 
+deactivate Crossbear (and surf privately for that time).
+
+*In fact, we encourage you to use Crossbear only when you suspect your current
+connection to the Internet might be eavesdropped on and you want the assurance
+that Crossbear can provide.* At any other time, it is wise (and will hurt our 
+work only very little), if you deactivate Crossbear.
+
+Let us repeat this: our goal is to trace men-in-the-middle, not users. We want
+to gather hard data. If you want to help us with this, you are very welcome. 
+We want to publish attacks that we learn about, and we can only do this with 
+your help. However, if you feel you don't want to participate in the hunting,
+but still want some reassurance, we can recommend Convergence (convergence.io).
+In fact, Crossbear makes use of Convergence itself (as a kind of back-end to
+have more vantage points).
+
+If you have any questions, please do contact us. Our e-mail address is indicates
+at the top of this document.
