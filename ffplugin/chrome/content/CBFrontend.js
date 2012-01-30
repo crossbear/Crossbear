@@ -29,7 +29,7 @@
  * This class bundles all functionality that is related to
  * - Displaying information/warnings to the user
  * - Getting and setting the user's preferences 
- * - (de-)activation of the Hunter/Guard
+ * - (de-)activation of the Hunter/Protector
  * - System initialization and shutdown
  * 
  * @param cbServerName The Hostname of the Crossbear server (e.g. otranto.net.in.tum.de)
@@ -51,7 +51,7 @@ function CBFrontend(cbServerName) {
 	this.cbdatabase = new CBDatabase(this);
 	this.cbnet = new CBNet(this);
 	this.cbhunter = new CBHunter(this);
-	this.cbguard = new CBGuard(this);
+	this.cbprotector = new CBProtector(this);
 	this.cbhtlprocessor = new CBHTLProcessor(this);
 	this.cbcertificatecache = new CBCertificateCache(this);
 	this.cbeventobserver = new CBEventObserver(this);
@@ -85,7 +85,7 @@ function CBFrontend(cbServerName) {
 				this.shutdown(true);
 				
 				// ... display a Message-Box so the user is aware that something went wrong
-				var crashText = "Crossbear just crashed :(\n It is very sorry for the inconvenience.";
+				var crashText = "Crossbear just crashed :(\n This might be caused by a change in the protocol. Please make sure you use the latest version of Crossbear!";
 				alert(crashText);
 				
 				// .. and finally crash ;)
@@ -239,11 +239,11 @@ function CBFrontend(cbServerName) {
 				// Mark the system as inactive (so the shutdown is not performed twice)
 				this.shutdownWasRequested = true;
 				
-				// Deactivate the Guard
-				this.deactivateGuard(systemCrashed);
+				// Deactivate the Protector
+				this.deactivateProtector(systemCrashed);
 				
-				// Perform a clean shutdown of the Guard
-				this.cbeventobserver.shutdownGuard();
+				// Perform a clean shutdown of the Protector
+				this.cbeventobserver.shutdownProtector();
 				
 				// Deactivate the Hunter
 				this.deactivateHunter(systemCrashed);
@@ -292,47 +292,47 @@ function CBFrontend(cbServerName) {
 		};
 		
 		/**
-		 * Enable Crossbear's Guard-functionality
+		 * Enable Crossbear's Protector-functionality
 		 */
-		CBFrontend.prototype.activateGuard = function activateGuard() {
+		CBFrontend.prototype.activateProtector = function activateProtector() {
 
-			// Store the fact that guarding should be done (so it will be reactivated after a new start)
-			this.setUserPref("activateGuard", "bool", true);
+			// Store the fact that protectoring should be done (so it will be reactivated after a new start)
+			this.setUserPref("activateProtector", "bool", true);
 
 			// Tell the EventObserver to start watching for XMLHTTPRequests and to check their certificates for ALL HTTPS-connections
-			this.cbeventobserver.setGuardActivity(true);
+			this.cbeventobserver.setProtectorActivity(true);
 		};
 
 		/**
-		 *  Disable Crossbear's Guard-functionality
+		 *  Disable Crossbear's Protector-functionality
 		 * 
-		 * @param changeUserPref Flag indicating whether the Guard should merely be disabled (e.g. because the system shuts down) or if the user additionally wants this state to be permanent.
+		 * @param changeUserPref Flag indicating whether the Protector should merely be disabled (e.g. because the system shuts down) or if the user additionally wants this state to be permanent.
 		 */
-		CBFrontend.prototype.deactivateGuard = function deactivateGuard(changeUserPref) {
+		CBFrontend.prototype.deactivateProtector = function deactivateProtector(changeUserPref) {
 
-			// If the deactivation of the Guard should be permanent this decision needs to be stored
+			// If the deactivation of the Protector should be permanent this decision needs to be stored
 			if (changeUserPref) {
-				this.setUserPref("activateGuard", "bool", false);
+				this.setUserPref("activateProtector", "bool", false);
 			}
 
 			// Tell the EventObserver to limit the connection checking to connections to the Crossbear-Server
-			this.cbeventobserver.setGuardActivity(false);
+			this.cbeventobserver.setProtectorActivity(false);
 
 		};
 		
 		/**
-		 * Function that handles the event that the user clicked on the Guard-Checkbox. It will invert the current activation state of the Guard.
+		 * Function that handles the event that the user clicked on the Protector-Checkbox. It will invert the current activation state of the Protector.
 		 */
-		CBFrontend.prototype.guardCheckBoxClicked = function guardCheckBoxClicked() {
+		CBFrontend.prototype.protectorCheckBoxClicked = function protectorCheckBoxClicked() {
 			
-			// Get the current activation state of the Guard
-			var oldPrefVal = this.getUserPref("activateGuard", "bool");
+			// Get the current activation state of the Protector
+			var oldPrefVal = this.getUserPref("activateProtector", "bool");
 
 			// Invert the activation state
 			if(oldPrefVal){
-				this.deactivateGuard(true);
+				this.deactivateProtector(true);
 			} else{
-				this.activateGuard();
+				this.activateProtector();
 			}
 
 		};
@@ -355,7 +355,7 @@ function CBFrontend(cbServerName) {
 		};
 		
 		/**
-		 * Read the Hunter's and the Guard's current activation states and set the ticks in the cb-statusbarpanel-popup according to them.
+		 * Read the Hunter's and the Protector's current activation states and set the ticks in the cb-statusbarpanel-popup according to them.
 		 */
 		CBFrontend.prototype.setPopupValues = function setPopupValues() {
 			
@@ -369,14 +369,14 @@ function CBFrontend(cbServerName) {
 				document.getElementById('cb-statusbarpanel-popup-hunter').removeAttribute("checked");
 			}
 			
-			// Get the current activation state of the Guard ...
-			var guardActive = this.getUserPref("activateGuard", "bool");
+			// Get the current activation state of the Protector ...
+			var protectorActive = this.getUserPref("activateProtector", "bool");
 
 			// ... and set the tick in the cb-statusbarpanel-popup according to it.
-			if(guardActive){
-				document.getElementById('cb-statusbarpanel-popup-guard').setAttribute("checked", "true");
-			} else if (document.getElementById('cb-statusbarpanel-popup-guard').hasAttribute("checked")){
-				document.getElementById('cb-statusbarpanel-popup-guard').removeAttribute("checked");
+			if(protectorActive){
+				document.getElementById('cb-statusbarpanel-popup-protector').setAttribute("checked", "true");
+			} else if (document.getElementById('cb-statusbarpanel-popup-protector').hasAttribute("checked")){
+				document.getElementById('cb-statusbarpanel-popup-protector').removeAttribute("checked");
 			}
 			
 			
@@ -389,11 +389,11 @@ function CBFrontend(cbServerName) {
 	// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
 	this.cbhunter.init();
 	
-	// Initialize the guard (needs to be active to check at least the connections to the Crossbear server)
-	this.cbeventobserver.initGuard();
+	// Initialize the protector (needs to be active to check at least the connections to the Crossbear server)
+	this.cbeventobserver.initProtector();
 	
-	// Activate Hunter and Guard if specified by the user
+	// Activate Hunter and Protector if specified by the user
 	if(this.getUserPref("activateHunter", "bool"))this.activateHunter();
-	if(this.getUserPref("activateGuard", "bool"))this.activateGuard();
+	if(this.getUserPref("activateProtector", "bool"))this.activateProtector();
 	
 }

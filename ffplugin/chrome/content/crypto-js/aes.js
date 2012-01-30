@@ -1,7 +1,7 @@
 /*
- * Crypto-JS v2.5.2
+ * Crypto-JS v2.5.3
  * http://code.google.com/p/crypto-js/
- * (c) 2009-2011 by Jeff Mott. All rights reserved.
+ * (c) 2009-2012 by Jeff Mott. All rights reserved.
  * http://code.google.com/p/crypto-js/wiki/License
  */
 (function(){

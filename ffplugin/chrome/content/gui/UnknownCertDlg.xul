@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   This is the dialog that will display the rating and judgments that were sent by the Crossbear server in response to a CertVerifyRequest.
   The user will be given the choice whether or not he/she want's to trust the certificate that was verified by Crossbear. A Timeout while
   connecting to the Crossbear server is handled by displaying the two buttons two the user. The first one is a "Retry"-button while the
-  second one is a "Deactivate Guard"-button.
+  second one is a "Deactivate Protector"-button.
  -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
@@ -81,7 +81,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <!-- No-Reply-Buttons Box -->
     <box orient="horizontal" pack="center" hidden="true" id="timeoutButtonBox">
     	<button label="Retry" onclick="retry();"/>
-    	<button label="Deactivate Guard" onclick="deactivateGuard();"/>
+    	<button label="Deactivate Protector" onclick="deactivateProtector();"/>
     </box>
   </box>
 </dialog>

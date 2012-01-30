@@ -34,19 +34,19 @@
  */
 function onLoad() {
 	
-	// Load the guard.trustAutomatically-setting and set its GUI equivalent
-	if(window.arguments[0].inn.cbFrontend.getUserPref("guard.trustAutomatically", "bool")){
+	// Load the protector.trustAutomatically-setting and set its GUI equivalent
+	if(window.arguments[0].inn.cbFrontend.getUserPref("protector.trustAutomatically", "bool")){
 		document.getElementById("opt-trust-automatically").selectedIndex = 0;
 	}
 	else {
 		document.getElementById("opt-trust-automatically").selectedIndex = 1;
 	}
 	
-	// Load the guard.ratingToTrustAutomatically-setting and set its GUI equivalent
-	document.getElementById("opt-trust-req-rating").value = window.arguments[0].inn.cbFrontend.getUserPref("guard.ratingToTrustAutomatically", "int");
+	// Load the protector.ratingToTrustAutomatically-setting and set its GUI equivalent
+	document.getElementById("opt-trust-req-rating").value = window.arguments[0].inn.cbFrontend.getUserPref("protector.ratingToTrustAutomatically", "int");
 
-	// Load the guard.certCacheDefaultValidity-setting and set its GUI equivalent
-	document.getElementById("opt-trust-def-cache-validity").value = window.arguments[0].inn.cbFrontend.getUserPref("guard.certCacheDefaultValidity", "int");
+	// Load the protector.tdcValidity-setting and set its GUI equivalent
+	document.getElementById("opt-tdc-validity").value = window.arguments[0].inn.cbFrontend.getUserPref("protector.tdcValidity", "int");
 
 	// Load the hunter.huntingInterval-setting and set its GUI equivalent
 	document.getElementById("opt-hunting-interval").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.huntingInterval", "int");
@@ -72,19 +72,19 @@ function onLoad() {
  */
 function loadDefaults() {
 	
-	// Load the default value of the guard.trustAutomatically-setting and set its GUI equivalent
-	if(window.arguments[0].inn.cbFrontend.getDefaultPref("guard.trustAutomatically", "bool")){
+	// Load the default value of the protector.trustAutomatically-setting and set its GUI equivalent
+	if(window.arguments[0].inn.cbFrontend.getDefaultPref("protector.trustAutomatically", "bool")){
 		document.getElementById("opt-trust-automatically").selectedIndex = 0;
 	}
 	else {
 		document.getElementById("opt-trust-automatically").selectedIndex = 1;
 	}
 	
-	// Load the default value of the guard.ratingToTrustAutomatically-setting and set its GUI equivalent
-	document.getElementById("opt-trust-req-rating").value = window.arguments[0].inn.cbFrontend.getDefaultPref("guard.ratingToTrustAutomatically", "int");
+	// Load the default value of the protector.ratingToTrustAutomatically-setting and set its GUI equivalent
+	document.getElementById("opt-trust-req-rating").value = window.arguments[0].inn.cbFrontend.getDefaultPref("protector.ratingToTrustAutomatically", "int");
 
-	// Load the default value of the guard.certCacheDefaultValidity-setting and set its GUI equivalent
-	document.getElementById("opt-trust-def-cache-validity").value = window.arguments[0].inn.cbFrontend.getDefaultPref("guard.certCacheDefaultValidity", "int");
+	// Load the default value of the protector.tdcValidity-setting and set its GUI equivalent
+	document.getElementById("opt-tdc-validity").value =  window.arguments[0].inn.cbFrontend.getDefaultPref("protector.tdcValidity", "int");
 
 	// Load the default value of the hunter.huntingInterval-setting and set its GUI equivalent
 	document.getElementById("opt-hunting-interval").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.huntingInterval", "int");
@@ -112,14 +112,14 @@ function loadDefaults() {
  */
 function accept() {
 	
-	// Read the guard.trustAutomatically from its GUI equivalent and store it
-	window.arguments[0].inn.cbFrontend.setUserPref("guard.trustAutomatically", "bool",document.getElementById("opt-trust-automatically-yes").selected);
+	// Read the protector.trustAutomatically from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("protector.trustAutomatically", "bool",document.getElementById("opt-trust-automatically-yes").selected);
 
-	// Read the guard.ratingToTrustAutomatically from its GUI equivalent and store it
-	window.arguments[0].inn.cbFrontend.setUserPref("guard.ratingToTrustAutomatically", "int", document.getElementById("opt-trust-req-rating").value);
+	// Read the protector.ratingToTrustAutomatically from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("protector.ratingToTrustAutomatically", "int", document.getElementById("opt-trust-req-rating").value);
 
-	// Read the guard.certCacheDefaultValidity from its GUI equivalent and store it
-	window.arguments[0].inn.cbFrontend.setUserPref("guard.certCacheDefaultValidity", "int", document.getElementById("opt-trust-def-cache-validity").value);
+	// Read the protector.tdcValidity from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("protector.tdcValidity", "int", document.getElementById("opt-tdc-validity").value);
 
 	// Read the hunter.huntingInterval from its GUI equivalent and store it
 	window.arguments[0].inn.cbFrontend.setUserPref("hunter.huntingInterval", "int", document.getElementById("opt-hunting-interval").value);

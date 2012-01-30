@@ -49,9 +49,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <!-- Dialog Background Image: Thanks go to Aintzane Izaguirre (zeruan19@hotmail.com) for designing Crossbear's logo -->
   <box style="background-image:url('chrome://crossbear/content/gui/crossbear_bg.png');background-repeat:no-repeat;background-position:center center;">
   
-  <!-- Left Group: The Guard's preferences -->
+  <!-- Left Group: The Protector's preferences -->
   <groupbox align="center">
-    <caption label="Guard"/>
+    <caption label="Protector"/>
     
     <!-- Radio Buttons for the automatic trust option -->
     <label value="Trust Certificates Automatically"/>
@@ -69,18 +69,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <separator orient="horizontal" class="groove-thin"/>
     
     <!-- Textbox for the duration that a trust decision will be kept in the local cache -->
-    <label value="Default Cache Validity for Certificates (s)"/>
-    <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-def-cache-validity" /></box>
+    <label value="Cache Validity For Trust Decisions (s)"/>
+    <box><textbox maxwidth="100" type="number" min="0" id="opt-tdc-validity" /></box>
     
     <separator orient="horizontal" class="groove-thin"/>
     
-    <!-- Button to open a LocalCertCacheDlg -->
-    <label value="Local Certificate Cache"/>
-	<button flex="1" label="Show" width="200" onclick="var params = {inn : {cbFrontend : window.arguments[0].inn.cbFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalCertCacheDlg.xul', 'Crossbear - Local Certificate Cache', 'chrome,centerscreen,dialog=YES', params);"/> 
+    <!-- Button to open a LocalTDCDlg -->
+    <label value="Trust Decision Cache"/>
+	<button flex="1" label="Show" width="200" onclick="var params = {inn : {cbFrontend : window.arguments[0].inn.cbFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalTDCDlg.xul', 'Crossbear - Local Trust Decision Cache', 'chrome,centerscreen,dialog=YES', params);"/> 
 
   </groupbox>
   
-  <!-- Right Group: The Guard's preferences -->
+  <!-- Right Group: The Protector's preferences -->
   <groupbox align="center">
     <caption label="Hunter"/>
     
@@ -89,7 +89,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <box><textbox maxwidth="100" type="number" min="0" id="opt-hunting-interval" /></box>
     
     <!-- Textbox for the minimal time that needs to pass before a HuntingTask can be executed again from the same IP -->
-    <label value="Task Reexecution Interval (s)"/>
+    <label value="Task Re-execution Interval (s)"/>
     <box><textbox maxwidth="100" type="number" min="0" id="opt-hunting-reexecution-interval" /></box>
     
     <!-- Textbox for the maximal number of Hops that will be traced during a Traceroute -->
@@ -97,15 +97,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <box><textbox maxwidth="100" type="number" min="0" max="50" id="opt-traceroute-max-hops" /></box>
     
     <!-- Textbox for the number of samples that will be made with the same TTL-value during a Traceroute -->
-    <label value="Traceroute Samples per Hop"/>
+    <label value="Traceroute Samples Per Hop"/>
     <box><textbox maxwidth="100" type="number" min="1" id="opt-traceroute-samples-per-hop" /></box>
     
     <!-- Textbox for the time that a PublicIP will be considered valid after it was observed -->
-    <label value="Cache Validity for Public IPs (s)"/>
+    <label value="Cache Validity For Public IPs (s)"/>
     <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-pub-ip-cache-validity" /></box>
     
     <!-- Textbox for the time that a Crossbear server IP will be considered valid after it was observed -->
-    <label value="Cache Validity for Server IPs (s)"/>
+    <label value="Cache Validity For Server IPs (s)"/>
     <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-serv-ip-cache-validity"/></box>
   </groupbox>
   </box>

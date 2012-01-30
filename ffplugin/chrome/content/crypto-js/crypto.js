@@ -1,7 +1,7 @@
 /*
- * Crypto-JS v2.5.2
+ * Crypto-JS v2.5.3
  * http://code.google.com/p/crypto-js/
- * (c) 2009-2011 by Jeff Mott. All rights reserved.
+ * (c) 2009-2012 by Jeff Mott. All rights reserved.
  * http://code.google.com/p/crypto-js/wiki/License
  */
 if (typeof Crypto == "undefined" || ! Crypto.util)
@@ -52,7 +52,7 @@ var util = Crypto.util = {
 	// Convert a byte array to big-endian 32-bit words
 	bytesToWords: function (bytes) {
 		for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8)
-			words[b >>> 5] |= bytes[i] << (24 - b % 32);
+			words[b >>> 5] |= (bytes[i] & 0xFF) << (24 - b % 32);
 		return words;
 	},
 

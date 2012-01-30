@@ -55,7 +55,7 @@
 var window = {};
 importScripts('crypto-js/crypto.js', 'CBHelper.js', 'CBEvents.js', 'CBMessages.js', 'CBCertificateChainFetcher.js', 'CBTracer.js');
 var Crypto = window.Crypto;
-importScripts('crypto-js/sha256.js');
+importScripts('crypto-js/sha256.js', 'crypto-js/md5.js');
 
 // The CBTracer-object that will be used to perform the Traceroutes
 var cbtracer = null;
@@ -192,7 +192,7 @@ function executeFirstHuntingTaskInList() {
 
 		// Try to fetch the certificate chain from server
 		currentTaskChain = cbccf.getCertificateChainFromServerFB(tasksToDo[0].data.targetIP, tasksToDo[0].data.ipVersion, tasksToDo[0].data.targetPort, tasksToDo[0].data.targetHostname);
-		if(currentTaskChain == null){
+		if(currentTaskChain == null || currentTaskChain.length == 0){
 			
 			// If it was not possible to contact the server (e.g. because of a timeout) just skip the execution of the current Task and go on with the next one
 			cbFrontend.displayInformation("Could not obtain a certificate for task"+tasksToDo[0].data.taskID+". Continuing with next one!");
@@ -367,11 +367,6 @@ function storeNewTask(event) {
 function processServerTimeReply(event) {
 	try {
 
-		// Calculate the SHA256-Hash of the target's certificate
-		var serverCertHash = (currentTaskChain.length > 0) ? Crypto.SHA256(currentTaskChain[0], {
-			asBytes : true
-		}) : [];
-
 		// Store the fact of the successful execution of the HuntingTask in the local database
 		var dbStoreReq = new CBHunterWorkerDBStoreRequest(tasksToDo[0].data.taskID, currentTaksPublicIP, event.data.currentServerTime);
 		postMessage(dbStoreReq);
@@ -380,10 +375,13 @@ function processServerTimeReply(event) {
 		 * Build a HuntingTaskReply
 		 */ 
 		
-		// First: Check if the certificate that has been observed is already well known to the server (i.e. if its hash is within the alreadyKnownHashes-list)
+		// First: Calculate the Hash of the target's certificate chain
+		var serverCertChainHash = calculateCertChainHash(currentTaskChain);
+		
+		// Check if the certificate that has been observed is already well known to the server (i.e. if its hash is within the alreadyKnownHashes-list)
 		var alreadyKnown = false;
 		for ( var i = 0; i < tasksToDo[0].data.alreadyKnownHashes.length; i++) {
-			if (arrayCompare(tasksToDo[0].data.alreadyKnownHashes[i], serverCertHash)) {
+			if (arrayCompare(tasksToDo[0].data.alreadyKnownHashes[i], serverCertChainHash)) {
 				alreadyKnown = true;
 				break;
 			}
@@ -395,9 +393,9 @@ function processServerTimeReply(event) {
 		// Third: Build the actual HuntingTaskReply depending on whether the observed certificate is already well known to the server
 		var taskReply = null;
 		if (alreadyKnown) {
-			taskReply = new CBMessageTaskReplyKnownCert(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, serverCertHash, currentTaskTR);
+			taskReply = new CBMessageTaskReplyKnownCertChain(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, serverCertChainHash, currentTaskTR);
 		} else {
-			taskReply = new CBMessageTaskReplyNewCert(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, currentTaskChain, currentTaskTR);
+			taskReply = new CBMessageTaskReplyNewCertChain(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, currentTaskChain, currentTaskTR);
 		}
 		
 		// Fourth: Add the HuntingTaskReply to the tasksDone-list

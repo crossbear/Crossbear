@@ -82,6 +82,16 @@ String.prototype.endsWith = function(str) {
 	return (this.match(str + "$") == str);
 };
 
+/**
+ * Remove leading and trailing whitespaces
+ * 
+ * @returns This string just without leading and trailing whitespaces
+ */
+String.prototype.trim = function () {
+
+	  return this.replace((/^\s+|\s+$/g), "");
+};
+
 // Regex that matches all IPv4 and all IPv6-Addresses (and more)
 const ipRegex = /^[\d\.:abcdef]*$/i;
 
@@ -390,6 +400,62 @@ function generate256BitAESKey() {
 	
 	// Finally return it
 	return aesKey;
+};
+
+/**
+ * Calculate the Hash of a certificate chain. This is, concatenate the SHA256-hash of the server's certificate with the MD5-hashes of the chain certificates and calculate the SHA256-hash on the result
+ * 
+ * @param certChain The certificate chain to calculate the hash for (including the server certificate)
+ * @return The hash of the certificate chain
+ */
+function calculateCertChainHash(certChain){
+	
+	var certChainClone = clone(certChain);
+	certChainClone.splice(0,1);
+	
+	// Get the concatenation of the md5 hashes of the chain certificates ...
+	var md5Hashes = [];
+	for(var i = 0 ; i<certChainClone.length;i++){
+		md5Hashes.push(Crypto.MD5(getPemEncoding(certChainClone[i]), {asBytes : true}));
+	}
+	var md5HashesConcat = md5Hashes.implode();
+	
+	
+	// Calculate the SHA256-hash of the server certificate
+	var serverCertHash = Crypto.SHA256(certChain[0], {asBytes : true});
+
+	// Concatenate the hash of the server certificate with the ones of its chain and calculate the SHA256-hash for the result
+	return Crypto.SHA256(serverCertHash.concat(md5HashesConcat), {asBytes : true});
+};
+
+/**
+ * Get the PEM-representation of a certificate.
+ * 
+ * Please note: The PEM encoding returned by this function is structured in lines of 64 characters each. Linebreaks are equal to a \n
+ * 
+ * @param cert
+ *            The certificate
+ * @return The PEM representation of cert
+ */
+function getPemEncoding(cert) {
+
+	// Get the bytes of the certificate and encode them in base64
+	var base64EncodedCert = Crypto.util.bytesToBase64(cert);
+
+	// Write the PEM header
+	var re = "-----BEGIN CERTIFICATE-----\n";
+
+	// Write the certificate data in lines of 64 chars
+	var len = base64EncodedCert.length;
+	for (var i = 0; i < len; i += 64) {
+		re += base64EncodedCert.substring(i, Math.min(len, i + 64)) + "\n";
+	}
+
+	// Write the PEM trailer
+	re += "-----END CERTIFICATE-----";
+
+	// Return the PEM-representation of the certificate
+	return re;
 };
 
 /**

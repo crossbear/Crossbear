@@ -124,7 +124,7 @@ function CBMessageCurrentServerTime(rawData) {
 /**
  * HuntingTask-messages are sent from the Crossbear server to the Crossbear client(s). Upon receiving a HuntingTask-message a client will contact the scan-target and download its certificate chain.
  * Also it will run a traceroute on the scan-target. After that it will check if the certificate it received is already well known to the server. Depending on the result of this check the client will
- * either generate a HuntingTaskReplyKnownCert-message or a HuntingTaskReplyNewCert-message and send it to the server.
+ * either generate a HuntingTaskReplyKnownCertChain-message or a HuntingTaskReplyNewCertChain-message and send it to the server.
  * 
  * The structure of the HuntingTask-message is
  * - Header
@@ -317,14 +317,16 @@ function CBMessageCertVerifyResult(rawData) {
  * 
  * Calling this function/constructor will generate a CertVerifyRequest-message
  * 
- * @param certBytes The bytes of the observed certificate (DER-encoding)
+ * @param certChain The certificate chain observed by the client (DER-encoding)
  * @param host A String specifying the Host from which the certificate was observed (format: HostName|HostIP|HostPort)
+ * @param options The options that were chosen by the user (one byte). Currently only the lsb has a meaning: User is behind a ssl-proxy (yes:1; no:0)
  * 
  * @author Thomas Riedmaier
  */
-function CBMessageCertVerifyRequest(certBytes, host) {
-	this.certBytes = certBytes;
+function CBMessageCertVerifyRequest(certChain, host, options) {
+	this.certChain = certChain;
 	this.host = host;
+	this.options = options;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
 	if (typeof (_cbmessagecertverifyrequest_prototype_called) == 'undefined') {
@@ -336,10 +338,18 @@ function CBMessageCertVerifyRequest(certBytes, host) {
 		 */
 		CBMessageCertVerifyRequest.prototype.getBytes = function getBytes() {
 
-			// First part of the data: the questionable certificate
-			var messageData = this.certBytes;
+			// First part of the data: The options, that the user chose
+			var messageData = [this.options & 255];
+	
+			// Second part: the number of how many certificates are part of the chain
+			messageData = messageData.concat(this.certChain.length & 255);
 
-			// Second part: the host from which it was received (required for the server to query the host for the certificate).
+			// Third part: the certificate chain (beginning with the server certificate)
+			for ( var i = 0; i < Math.min(this.certChain.length, 255); i++) {
+				messageData = messageData.concat(this.certChain[i]);
+			}
+
+			// Fourth part: the host from which it was received (required for the server to query the host for the certificate).
 			messageData = messageData.concat(Crypto.charenc.Binary.stringToBytes(this.host));
 
 			// Add the Header (message-type and message-length) to make it a valid CERT_VERIFY_REQUEST message
@@ -383,11 +393,11 @@ function CBMessagePublicIPNotifRequest(rsaEncAESKey) {
 }
 
 /**
- * A HuntingTaskReplyNewCert-message is one of the two possible messages that could be sent in reply to a HuntingTask. It will be sent in case that the client observed a certificate that is NOT YET
+ * A HuntingTaskReplyNewCertChain-message is one of the two possible messages that could be sent in reply to a HuntingTask. It will be sent in case that the client observed a certificate that is NOT YET
  * well known by the server.
  * 
  * 
- * The structure of the HuntingTaskReplyNewCert-message is
+ * The structure of the HuntingTaskReplyNewCertChain-message is
  * - Header
  * - Task ID (4 bytes)
  * - Server time of execution (4 bytes)
@@ -396,7 +406,7 @@ function CBMessagePublicIPNotifRequest(rsaEncAESKey) {
  * - The certificate chain observed by the client (byte[] of variable length)
  * - Trace to the target (String of variable length)
  * 
- * Calling this function/constructor will generate a CBMessageTaskReplyNewCert-message
+ * Calling this function/constructor will generate a CBMessageTaskReplyNewCertChain-message
  * 
  * @param taskID The HuntingTask's ID for which this reply is sent
  * @param serverTimeOfExecution The estimated server local time when the hunting task was executed
@@ -406,7 +416,7 @@ function CBMessagePublicIPNotifRequest(rsaEncAESKey) {
  * 
  * @author Thomas Riedmaier
  */
-function CBMessageTaskReplyNewCert(taskID, serverTimeOfExecution, hMac, certChain, trace) {
+function CBMessageTaskReplyNewCertChain(taskID, serverTimeOfExecution, hMac, certChain, trace) {
 	this.taskID = taskID;
 	this.serverTimeOfExecution = serverTimeOfExecution;
 	this.hMac = hMac;
@@ -414,14 +424,14 @@ function CBMessageTaskReplyNewCert(taskID, serverTimeOfExecution, hMac, certChai
 	this.trace = trace;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagetaskreplynewcert_prototype_called) == 'undefined') {
-		_cbmessagetaskreplynewcert_prototype_called = true;
+	if (typeof (_cbmessagetaskreplynewcertchain_prototype_called) == 'undefined') {
+		_cbmessagetaskreplynewcertchain_prototype_called = true;
 
 		/**
 		 * Get the message's bytes 
-		 * @returns The byte[]-representation of the HuntingTaskReplyNewCert-message
+		 * @returns The byte[]-representation of the HuntingTaskReplyNewCertChain-message
 		 */
-		CBMessageTaskReplyNewCert.prototype.getBytes = function getBytes() {
+		CBMessageTaskReplyNewCertChain.prototype.getBytes = function getBytes() {
 
 			// First part of the data: the task id
 			var messageData = intToBytes(this.taskID);
@@ -451,10 +461,10 @@ function CBMessageTaskReplyNewCert(taskID, serverTimeOfExecution, hMac, certChai
 }
 
 /**
- * A HuntingTaskReplyKnownCert-message is one of the two possible messages that could be sent in reply to a HuntingTask. It will be sent in case that the client observed a certificate that is already
+ * A HuntingTaskReplyKnownCertChain-message is one of the two possible messages that could be sent in reply to a HuntingTask. It will be sent in case that the client observed a certificate that is already
  * well known by the server.
  * 
- * The structure of the HuntingTaskReplyKnownCert-message is
+ * The structure of the HuntingTaskReplyKnownCertChain-message is
  * - Header
  * - Task ID (4 bytes)
  * - Server time of execution (4 bytes)
@@ -462,7 +472,7 @@ function CBMessageTaskReplyNewCert(taskID, serverTimeOfExecution, hMac, certChai
  * - Hash of the observed certificate (32 bytes)
  * - Trace to the server (String of variable length)
  * 
- * Calling this function/constructor will generate a CBMessageTaskReplyNewCert-message
+ * Calling this function/constructor will generate a CBMessageTaskReplyNewCertChain-message
  * 
  * @param taskID The HuntingTask's ID for which this reply is sent
  * @param serverTimeOfExecution The estimated server local time when the hunting task was executed
@@ -472,7 +482,7 @@ function CBMessageTaskReplyNewCert(taskID, serverTimeOfExecution, hMac, certChai
  * 
  * @author Thomas Riedmaier
  */
-function CBMessageTaskReplyKnownCert(taskID, serverTimeOfExecution, hMac, serverCertHash, trace) {
+function CBMessageTaskReplyKnownCertChain(taskID, serverTimeOfExecution, hMac, serverCertHash, trace) {
 	this.taskID = taskID;
 	this.serverTimeOfExecution = serverTimeOfExecution;
 	this.hMac = hMac;
@@ -480,14 +490,14 @@ function CBMessageTaskReplyKnownCert(taskID, serverTimeOfExecution, hMac, server
 	this.trace = trace;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagetaskreplyknowncert_prototype_called) == 'undefined') {
-		_cbmessagetaskreplyknowncert_prototype_called = true;
+	if (typeof (_cbmessagetaskreplyknowncertchain_prototype_called) == 'undefined') {
+		_cbmessagetaskreplyknowncertchain_prototype_called = true;
 
 		/**
 		 * Get the message's bytes 
-		 * @returns The byte[]-representation of the HuntingTaskReplyKnownCert-message
+		 * @returns The byte[]-representation of the HuntingTaskReplyKnownCertChain-message
 		 */
-		CBMessageTaskReplyKnownCert.prototype.getBytes = function getBytes() {
+		CBMessageTaskReplyKnownCertChain.prototype.getBytes = function getBytes() {
 
 			// First part of the data: the task id
 			var messageData = intToBytes(this.taskID);

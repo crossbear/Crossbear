@@ -417,7 +417,7 @@ function CBTracer(cbFrontend) {
 			}
 			
 			//Finally add the Target's IP to the list of Hops (which will be transformed in a "\n"-seperated list) and return the trace
-			return re.join('\n') + '\n' + ip;
+			return (re.join('\n') + '\n' + ip).trim();
 		};
 
 		/**

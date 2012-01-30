@@ -26,8 +26,8 @@
  */
 
 /**
- * Crossbear's Guard-functionality is implemented by the use of a "http-on-examine-response"-Event-Observer. To be precise a "http-on-examine-response"-Event-Handler will be active as soon as Crossbear's Guard is initialized. This Handler checks the
- * certificate of each and every HTTPS-connection. The Guard will always monitor the connections to the Crossbear-Server. All others will only be monitored if the guard is set as "active".
+ * Crossbear's Protector-functionality is implemented by the use of a "http-on-examine-response"-Event-Observer. To be precise a "http-on-examine-response"-Event-Handler will be active as soon as Crossbear's Protector is initialized. This Handler checks the
+ * certificate of each and every HTTPS-connection. The Protector will always monitor the connections to the Crossbear-Server. All others will only be monitored if the protector is set as "active".
  * 
  * If a certificate has never been seen for the connection's domain, the certificate is sent to the Crossbear server for validation. The result will then be displayed to the user who has to decide whether he/she wan't to trust the certificate for
  * that domain or not. If the certificate has already been seen for that domain before, the user's trust decision is read from the local cache and applied again.
@@ -46,10 +46,10 @@
 function CBEventObserver(cbFrontend) {
 	this.cbFrontend = cbFrontend;
 	
-	// Flag indicating if the Guard is currently active
-	this.guardIsActive = false;
+	// Flag indicating if the Protector is currently active
+	this.protectorIsActive = false;
 	
-	// Flag stating whether the Guard should check all connections or only those to the Crossbear-Server
+	// Flag stating whether the Protector should check all connections or only those to the Crossbear-Server
 	this.checkCBServerOnly = true;
 	
 	// "this" does not always point to THIS object (especially in callback functions). Therefore I use the "self" variable to hold a handle on THIS object
@@ -66,43 +66,43 @@ function CBEventObserver(cbFrontend) {
 		_cbeventobserver_prototype_called = true;
 		
 		/**
-		 * Initialize the Guard
+		 * Initialize the Protector
 		 */
-		CBEventObserver.prototype.initGuard = function initGuard() {
+		CBEventObserver.prototype.initProtector = function initProtector() {
 			
-			// Check if the Guard is already active
-			if(!self.guardIsActive){
+			// Check if the Protector is already active
+			if(!self.protectorIsActive){
 				
 				// If not: initialize it (i.e. add this object as event-listener for the "http-on-examine-response"-event. This will allow Crossbear to inspect each and every page before it is displayed)
 				observerService.addObserver(self, "http-on-examine-response", false);
 			}
 			
 			// Set the activity-flag to true
-			self.guardIsActive = true;
+			self.protectorIsActive = true;
 		};
 		
 		/**
-		 * Shut the Guard down
+		 * Shut the Protector down
 		 */
-		CBEventObserver.prototype.shutdownGuard = function shutdownGuard() {
+		CBEventObserver.prototype.shutdownProtector = function shutdownProtector() {
 			
-			// Check if the Guard is active
-			if(self.guardIsActive){
+			// Check if the Protector is active
+			if(self.protectorIsActive){
 				
 				//If yes: shut it down (i.e. remove this object from the list of event-listeners for the "http-on-examine-response"-event)
 				observerService.removeObserver(self, "http-on-examine-response");
 			}
 			
 			// Set the activity-flag to false
-			self.guardIsActive = false;
+			self.protectorIsActive = false;
 		};
 		
 		
 		
 		/**
-		 * (De-)Activate the Guard. Activating the Guard will cause all connections to be checked. Deactivating the Guard will limit the connection-checking to connections to the Crossbear-server
+		 * (De-)Activate the Protector. Activating the Protector will cause all connections to be checked. Deactivating the Protector will limit the connection-checking to connections to the Crossbear-server
 		 */
-		CBEventObserver.prototype.setGuardActivity = function setGuardActivity(active) {
+		CBEventObserver.prototype.setProtectorActivity = function setProtectorActivity(active) {
 			self.checkCBServerOnly = !active;
 		};
 
@@ -115,6 +115,8 @@ function CBEventObserver(cbFrontend) {
 		 * @param aData An optional parameter or other auxiliary data further describing the change or action(not used).
 		 */
 		CBEventObserver.prototype.observe = function observe(aSubject, aTopic, aData) {
+			
+			//SUGG: Implement a event observer for the "private-browsing" and disable the Protector every time the user switches to private browsing mode
 			
 			// In case the user wants to shutdown Firefox
 			if (aTopic == 'quit-application-requested') {
@@ -169,17 +171,25 @@ function CBEventObserver(cbFrontend) {
 				var remoteAddress = aSubject.QueryInterface(Components.interfaces.nsIHttpChannelInternal).remoteAddress +"|"+aSubject.QueryInterface(Components.interfaces.nsIHttpChannelInternal).remotePort;
 				
 				
-				// Generate the SHA256-Hash for the certificate (this is its identifier in the local cache)
-				var serverCertBytesLength = {};
-				var serverCertBytes = serverCert.getRawDER(serverCertBytesLength);
-				var serverCertHash = Crypto.SHA256(serverCertBytes, {});
+				// Get the certificate chain that the server is using
+				var cc = serverCert.getChain();
+				var serverCertChain = [];
+				for ( var i = 0; i < cc.length; i++) {
+
+					var currentCert = cc.queryElementAt(i, Components.interfaces.nsIX509Cert);
+					var currentCertBytesLength = {};
+					serverCertChain.push(currentCert.getRawDER(currentCertBytesLength));
+				}
+				
+				// Generate the SHA256-Hash for the server certificate (this is its identifier in the local cache)
+				var serverCertHash = Crypto.SHA256(serverCertChain[0], {});
 
 				// Check if the certificate has been seen for the domain. If yes: get the cached policy
 				var cacheStatus = cbFrontend.cbcertificatecache.checkValidity(serverCertHash, host, self.checkCBServerOnly);
 
 				// Loop until the user decided whether to trust the host's certificate for this domain
 				var verificationRequested = false;
-				while (self.guardIsActive) {
+				while (self.protectorIsActive) {
 
 					// In case the user considers the connection's certificate valid for this domain -> Load the page.
 					if (cacheStatus == CBCertificateCacheReturnTypes.OK || cacheStatus == CBCertificateCacheReturnTypes.CB_SERVER_OK) {
@@ -209,7 +219,7 @@ function CBEventObserver(cbFrontend) {
 					// If the certificate/domain combination was not found in the local cache initially: Request the server to verify the certificate
 					if(!verificationRequested){
 						verificationRequested = true;
-						cbFrontend.cbguard.requestVerification(serverCertBytes, serverCertHash, host+"|"+remoteAddress);
+						cbFrontend.cbprotector.requestVerification(serverCertChain, serverCertHash, host+"|"+remoteAddress);
 					}
 					
 					// Since this loop is not left until there is a trust decision about the certificate: Let the GUI-Thread process waiting events to avoid GUI-freezing

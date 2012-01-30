@@ -53,7 +53,7 @@ the rest of the system).
 		<script src="chrome://crossbear/content/CBDatabase.js"/>
 		<script src="chrome://crossbear/content/CBNet.js"/>
 		<script src="chrome://crossbear/content/CBHunter.js"/>
-		<script src="chrome://crossbear/content/CBGuard.js"/>
+		<script src="chrome://crossbear/content/CBProtector.js"/>
 		<script src="chrome://crossbear/content/CBHTLProcessor.js"/>
 		<script src="chrome://crossbear/content/CBCertificateCache.js"/>
 		<script src="chrome://crossbear/content/CBEventObserver.js"/>
@@ -72,8 +72,8 @@ the rest of the system).
 						<menuitem label="Settings" id="cb-statusbarpanel-popup-settings" onclick="var params = {inn : {cbFrontend : cbfe},out : {}}; window.openDialog('chrome://crossbear/content/gui/OptionsDlg.xul', 'Crossbear - Settings', 'chrome,centerscreen,dependent=YES,dialog=YES', params);"/>
 						<menuseparator/>
 						
-						<!-- MenueItem Guard: Call the guardCheckBoxClicked-function if the user clicks on it -->
-						<menuitem type="checkbox" autocheck="false" label="Guard" id="cb-statusbarpanel-popup-guard" onclick="cbfe.guardCheckBoxClicked();"/>
+						<!-- MenueItem Protector: Call the protectorCheckBoxClicked-function if the user clicks on it -->
+						<menuitem type="checkbox" autocheck="false" label="Protector" id="cb-statusbarpanel-popup-protector" onclick="cbfe.protectorCheckBoxClicked();"/>
 						
 						<!-- MenueItem Hunter: Call the hunterCheckBoxClicked-function if the user clicks on it -->
 						<menuitem type="checkbox" autocheck="false" label="Hunter" id="cb-statusbarpanel-popup-hunter" onclick="cbfe.hunterCheckBoxClicked();"/>
