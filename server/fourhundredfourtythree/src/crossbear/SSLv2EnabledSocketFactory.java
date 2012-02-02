@@ -129,6 +129,16 @@ public class SSLv2EnabledSocketFactory extends SSLSocketFactory {
 
 		return enableSSLv2Hello(sock);
 	}
+	
+	/* (non-Javadoc)
+	 * @see javax.net.SocketFactory#createSocket()
+	 */
+	@Override
+	public Socket createSocket() throws IOException{
+		SSLSocket sock = (SSLSocket) factory.createSocket();
+		
+		return enableSSLv2Hello(sock);
+	}
 
 	/* (non-Javadoc)
 	 * @see javax.net.ssl.SSLSocketFactory#getDefaultCipherSuites()
