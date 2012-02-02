@@ -48,10 +48,10 @@ function CBDatabase(cbFrontend) {
 	this.DBConn.executeSimpleSQL("CREATE INDEX IF NOT EXISTS performedTasks_taskid_publicip ON performedTasks ( TaskID,PublicIP);");
 	this.DBConn.executeSimpleSQL("CREATE INDEX IF NOT EXISTS performedTasks_taskid ON performedTasks ( TaskID);");
 
-	// Create (if not yet existing) the certTrust-table aka the local certificate cache. Please note: "UNIQUE" induces a "INDEX" so there is no need to explicitely create it.
+	// Create (if not yet existing) the certTrust-table aka the local TDC. Please note: "UNIQUE" induces a "INDEX" so there is no need to explicitely create it.
 	this.DBConn.executeSimpleSQL("CREATE TABLE IF NOT EXISTS certTrust( ID INTEGER PRIMARY KEY ASC, CertHash TEXT, Host TEXT, Trust INTEGER , ValidUntil INTEGER, UNIQUE(CertHash, Host));");
 	
-	// Remove old entries from the local certificate cache
+	// Remove old entries from the local TDC
 	this.DBConn.executeSimpleSQL("DELETE FROM certTrust WHERE ValidUntil < "+Math.round(new Date().getTime() / 1000));
 	
 	// "this" does not always point to THIS object (especially in callback functions). Therefore I use the "self" variable to hold a handle on THIS object
