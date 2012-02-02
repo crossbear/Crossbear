@@ -53,7 +53,7 @@ function CBFrontend(cbServerName) {
 	this.cbhunter = new CBHunter(this);
 	this.cbprotector = new CBProtector(this);
 	this.cbhtlprocessor = new CBHTLProcessor(this);
-	this.cbcertificatecache = new CBCertificateCache(this);
+	this.cbtrustdecisioncache = new CBTrustDecisionCache(this);
 	this.cbeventobserver = new CBEventObserver(this);
 
 	// Some elements require functions from CBFrontend and will therefore initialized below.
@@ -130,7 +130,7 @@ function CBFrontend(cbServerName) {
 		 */
 		CBFrontend.prototype.displayInformation = function displayInformation(what) {
 			// Alternative for the line below: console.log
-			consoleService.logStringMessage(what);
+			consoleService.logStringMessage("CB:"+new Date().toUTCString()+":"+what);
 		};
 
 		/**
@@ -383,8 +383,8 @@ function CBFrontend(cbServerName) {
 		};
 	}
 
-	// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBCertificateCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
-	this.ServerRSAKeyPair = addCBCertToLocalStoreAndCache(this.cbcertificatecache);
+	// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBTrustDecisionCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
+	this.ServerRSAKeyPair = addCBCertToLocalStoreAndCache(this.cbtrustdecisioncache);
 	
 	// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
 	this.cbhunter.init();
