@@ -33,6 +33,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -42,14 +43,14 @@ import crossbear.Database;
 
 /**
  * HuntingTask-messages are sent from the Crossbear server to the Crossbear client(s). Upon receiving a HuntingTask-message a client will contact the scan-target and download its certificate chain.
- * Also it will run a traceroute on the scan-target. After that it will check if the certificate it received is already well known to the server. Depending on the result of this check the client will
- * either generate a HuntingTaskReplyKnownCert-message or a HuntingTaskReplyNewCert-message and send it to the server.
+ * Also it will run a traceroute on the scan-target. After that it will check if the certificate chain it received is already well known to the server. Depending on the result of this check the client will
+ * either generate a HuntingTaskReplyKnownCertChain-message or a HuntingTaskReplyNewCertChain-message and send it to the server.
  * 
  * The structure of the HuntingTask-message is
  * - Header
  * - TaskID (four bytes) 
- * - Number of certificates that are already well known (1 byte)
- * - Array of SHA256-hashes of the certificates that are already well known 
+ * - Number of certificate chains that are already well known (1 byte)
+ * - Array of SHA256-hashes of the certificate chains that are already well known 
  * - IP Address of the scan-target in binary format (4 or 16 bytes)
  * - Port of the scan-target (two bytes) 
  * - Hostname of the scan-target (String of variable length)
@@ -69,8 +70,9 @@ public class HuntingTask extends Message {
 	 * @return A Vector that contains all currently active HuntingTasks
 	 * @throws UnknownHostException
 	 * @throws SQLException
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public static Vector<HuntingTask> getAllActive(Database db) throws UnknownHostException, SQLException {
+	public static Vector<HuntingTask> getAllActive(Database db) throws UnknownHostException, SQLException, NoSuchAlgorithmException {
 		
 		// Create a empty result vector
 		Vector<HuntingTask> re = new Vector<HuntingTask>();
@@ -100,8 +102,8 @@ public class HuntingTask extends Message {
 	// The scan-target's Hostname
 	private final String targetHostName;
 
-	// An array of byte[]s representing the hashes of the certificates that are already well known for the HuntingTask
-	private final byte[][] alreadyKnownCertHashes;
+	// An array of byte[]s representing the hashes of the certificate chains that are already well known for the HuntingTask
+	private final byte[][] alreadyKnownCertChainHashes;
 	
 	
 	/**
@@ -128,16 +130,16 @@ public class HuntingTask extends Message {
 		taskID = Message.byteArrayToInt(taskIDBytes);
 		bytesRead += 4;
 		
-		// Extract the number of well known certificate hashes
+		// Extract the number of well known certificate chain hashes
 		int numOfKnownCerts = (0xFF & (int)raw[4]);
 		bytesRead +=1;
 		
 		// Create an byte[][] big enough to hold all known hashes
-		alreadyKnownCertHashes = new byte[numOfKnownCerts][32];
+		alreadyKnownCertChainHashes = new byte[numOfKnownCerts][32];
 		
 		// Read all known hashes and store them in alreadyKnownCertHashes
 		for(int i = 0 ; i< numOfKnownCerts;i++){
-			System.arraycopy(raw, bytesRead, alreadyKnownCertHashes[i], 0, 32);
+			System.arraycopy(raw, bytesRead, alreadyKnownCertChainHashes[i], 0, 32);
 			bytesRead += 32;
 		}
 		
@@ -170,8 +172,9 @@ public class HuntingTask extends Message {
 	 * @param targetPort The value of the "TargetPort"-field
 	 * @param db The Database connection to use for further operations
 	 * @throws SQLException 
+	 * @throws NoSuchAlgorithmException 
 	 */
-	private HuntingTask(int taskID, String targetHostName, InetAddress targetIP, int targetPort, Database db) throws SQLException {
+	private HuntingTask(int taskID, String targetHostName, InetAddress targetIP, int targetPort, Database db) throws SQLException, NoSuchAlgorithmException {
 		super((targetIP instanceof Inet6Address) ? Message.MESSAGE_TYPE_IPV6_SHA256_TASK : Message.MESSAGE_TYPE_IPV4_SHA256_TASK);
 		
 		this.targetHostName = targetHostName;
@@ -179,9 +182,8 @@ public class HuntingTask extends Message {
 		this.targetPort = targetPort;
 		this.taskID = taskID;
 		
-		// Calculate and store the hashes of the well known certificates for this HuntingTask
-		// SUGG: remember that this is exploitable: you can get many (all?) hashes of certs from our DB and then compare it is currently limited to a limited number of hash values (3), which is good 
-		this.alreadyKnownCertHashes = calculateAlreadyKnownCertHashes(3, db);
+		// Calculate and store the hashes of the well known certificate chains for this HuntingTask 
+		this.alreadyKnownCertChainHashes = calculateKnownCertificateChainHashes(3, db);
 	}
 
 	/**
@@ -194,8 +196,9 @@ public class HuntingTask extends Message {
 	 * @param targetPort The port of the scan-target
 	 * @param db The Database connection to use for further operations
 	 * @throws SQLException
+	 * @throws NoSuchAlgorithmException 
 	 */
-	public HuntingTask(String targetHostName, InetAddress targetIP, int targetPort, Database db) throws SQLException {
+	public HuntingTask(String targetHostName, InetAddress targetIP, int targetPort, Database db) throws SQLException, NoSuchAlgorithmException {
 		super((targetIP instanceof Inet6Address) ? Message.MESSAGE_TYPE_IPV6_SHA256_TASK : Message.MESSAGE_TYPE_IPV4_SHA256_TASK);
 
 
@@ -212,35 +215,33 @@ public class HuntingTask extends Message {
 		}
 
 
-		// Calculate and store the hashes of the well known certificates for this HuntingTask
-		this.alreadyKnownCertHashes = calculateAlreadyKnownCertHashes(3, db);
+		// Calculate and store the hashes of the well known certificate chains for this HuntingTask
+		this.alreadyKnownCertChainHashes = calculateKnownCertificateChainHashes(3, db);
 	}
 
 	/**
-	 * Get the SHA256Hashes of all well known certificates for this HuntingTask. A certificate is well known for a hunting task if it has been observed for the HuntingTask's scan-target and if its certificate-chain is known.
+	 * Get the SHA256Hashes of all well known certificates chains for this HuntingTask. A certificate chain is well known for a hunting task if it has been observed for the HuntingTask's scan-target.
 	 * 
 	 * @param max The maximum number of hashes to be returned.
 	 * @param db The Database connection to use
-	 * @return An array of SHA256Hashes - one for each well known certificate for the current HuntingTask (limited by the "max" parameter)
+	 * @return An array of SHA256Hashes - one for each well known certificate chain for the current HuntingTask (limited by the "max" parameter)
 	 * @throws SQLException
+	 * @throws NoSuchAlgorithmException 
 	 */
-	private byte[][] calculateAlreadyKnownCertHashes(int max, Database db) throws SQLException {
+	private byte[][] calculateKnownCertificateChainHashes(int max, Database db) throws SQLException, NoSuchAlgorithmException {
 
 		// Create a empty result vector
 		Vector<byte[]> re = new Vector<byte[]>();
 
-		// Get the SHA256-hashes of all certificates that have ever been observed for the scan-target and whose certificate-chains are known. Order them by their most recent observation.
+		// Get the SHA256ChainHash of all certificates that have ever been observed for the scan-target. Order them by their most recent observation.
 		Object[] params = { targetHostName + ":" + String.valueOf(targetPort) };
-		ResultSet rs = db.executeQuery("SELECT co.CertID, Max(co.TimeOfObservation) as LastSeen FROM CertObservations AS co JOIN ServerCerts AS sc ON sc.SHA256DERHash = co.CertID WHERE ServerHostPort = ? AND sc.CertChainMD5 IS NOT NULL GROUP BY co.CertID ORDER BY LastSeen DESC", params);
+		ResultSet rs = db.executeQuery("SELECT sc.SHA256ChainHash , Max(co.TimeOfObservation) as LastSeen FROM CertObservations AS co JOIN ServerCerts AS sc ON sc.Id = co.CertID WHERE ServerHostPort = ? AND sc.SHA256ChainHash IS NOT NULL GROUP BY sc.SHA256ChainHash ORDER BY LastSeen DESC LIMIT "+String.valueOf(max), params);
 
-		// Store up to "max" hashes in the result vector
-		for (int i = 0; i < max; i++) {
-			if (!rs.next()) {
-				break;
-			}
-
-			// Since the databse stores the HexString-representation of the SHA256-hashees they need to be converted into their byte[]-representation
-			re.add(hexStringToByteArray(rs.getString("CertID")));
+		// Store up to "max" hashes in the result vector (number of results generated by the SQL-Query is limited)
+		while(rs.next()) {
+			
+			// Get the byte[]-representation of the SHA256ChainHash-field
+			re.add(hexStringToByteArray(rs.getString("SHA256ChainHash")));
 		}
 
 		// Return the result as an array
@@ -263,10 +264,10 @@ public class HuntingTask extends Message {
 	}
 
 	/**
-	 * @return The Hashes of the certificates that are well known for the HuntingTask
+	 * @return The Hashes of the certificate chains that are well known for the HuntingTask
 	 */
-	public byte[][] getAlreadyKnownCertHashes() {
-		return alreadyKnownCertHashes;
+	public byte[][] getAlreadyKnownCertChainHashes() {
+		return alreadyKnownCertChainHashes;
 	}
 
 	/**
@@ -329,12 +330,12 @@ public class HuntingTask extends Message {
 		// Write the taskID (four bytes integer)
 		out.write(Message.intToByteArray(taskID));
 
-		// Write the number of how many certificates are well known for the HuntingTask (one byte)
-		out.write((byte) alreadyKnownCertHashes.length);
+		// Write the number of how many certificate chains are well known for the HuntingTask (one byte)
+		out.write((byte) alreadyKnownCertChainHashes.length);
 
-		// Write the hashes of the well known certificates (32 bytes each)
-		for (int i = 0; i < (byte) alreadyKnownCertHashes.length; i++) {
-			out.write(alreadyKnownCertHashes[i]);
+		// Write the hashes of the well known certificate chains (32 bytes each)
+		for (int i = 0; i < (byte) alreadyKnownCertChainHashes.length; i++) {
+			out.write(alreadyKnownCertChainHashes[i]);
 		}
 
 		// Write the scan-target's IP-Address (16 or 4 bytes depending on the IP-version)

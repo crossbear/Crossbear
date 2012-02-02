@@ -59,6 +59,7 @@ public class CertVerifyRequest extends Message {
 	// Regex to validate Hostnames according to RFC 952 and RFC 1123
 	private static final String validHostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\\-]*[A-Za-z0-9])$";
 
+
 	/**
 	 * Read a CertVerifyRequest-message from a InputStream. During the reading a lot of checks on the validity of the supplied data are performed. If one of them fails an exception is thrown.
 	 * 
@@ -94,13 +95,26 @@ public class CertVerifyRequest extends Message {
 		}
 		int messageLength = Message.byteArrayToInt(messageLengthB);
 		
-
-		// Try to extract a X.509-Certificate from the InputStream
+		// Read the options field
+		cvr.setOptions( bin.read());
+		
+		// Cast the Message's Number-Of-Certificates-In-Chain-field into an integer
+		int numberOfCertificates = bin.read();
+		X509Certificate[] certChain = new X509Certificate[numberOfCertificates];
+		
+		// Extract the certificate Chain from the InputStream
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
-		cvr.setCert((X509Certificate) cf.generateCertificate(bin));
+		int certificateChainBytes = 0;
+		for (int i = 0; i < numberOfCertificates; i++) {
+			certChain[i] = (X509Certificate) cf.generateCertificate(bin);
+			certificateChainBytes += certChain[i].getEncoded().length;
+		}
+		
+		// Set the certificate chain in the cvr-object
+		cvr.setCertChain(certChain);
 
 		// Read the message's remainder. It should be of the format "HostName|HostIP|HostPort". Therefore it can be split into an array of size three.
-		String[] host = Message.readNCharsFromStream(bin, messageLength - 3 - cvr.getCert().getEncoded().length).split("\\|");
+		String[] host = Message.readNCharsFromStream(bin, messageLength - 5 - certificateChainBytes).split("\\|");
 
 		// Assert that the host-parameter actually consists of three parts.
 		if (host.length != 3) {
@@ -137,8 +151,8 @@ public class CertVerifyRequest extends Message {
 		return cvr;
 	}
 	
-	// The certificate that has been sent by the client
-	private X509Certificate cert = null;
+	// The certificate chain that has been sent by the client
+	private X509Certificate[] certChain = null;
 	
 	// The name of the Host from which the certificate has been received
 	private String hostName = "";
@@ -152,8 +166,11 @@ public class CertVerifyRequest extends Message {
 	// The IP that sent the CertVerifyRequest-message
 	private InetAddress remoteAddr = null;
 	
-	//The IP that received the CertVerifyRequest-message
+	// The IP that received the CertVerifyRequest-message
 	private InetAddress localAddr = null;
+	
+	// The options that were chosen by the user (one byte). Currently only the lsb has a meaning: User is behind a ssl-proxy (yes:1; no:0)
+	private int options;
 
 	/**
 	 * Create a new Message of Type MESSAGE_TYPE_CERT_VERIFY_REQUEST
@@ -163,10 +180,10 @@ public class CertVerifyRequest extends Message {
 	}
 
 	/**
-	 * @return The certificate that has been sent by the client
+	 * @return The certificate chain that has been sent by the client
 	 */
-	public X509Certificate getCert() {
-		return cert;
+	public X509Certificate[] getCertChain() {
+		return certChain;
 	}
 
 	/**
@@ -221,6 +238,13 @@ public class CertVerifyRequest extends Message {
 	public InetAddress getLocalAddr() {
 		return localAddr;
 	}
+	
+	/**
+	 * @return The options that the user chose
+	 */
+	public int getOptions() {
+		return options;
+	}
 
 	/**
 	 * @return The IP that sent the CertVerifyRequest-message
@@ -230,10 +254,10 @@ public class CertVerifyRequest extends Message {
 	}
 
 	/**
-	 * @param cert The certificate that has been sent by the client
+	 * @param cert The certificate chain that has been sent by the client
 	 */
-	public void setCert(X509Certificate cert) {
-		this.cert = cert;
+	public void setCertChain(X509Certificate[] certChain) {
+		this.certChain = certChain;
 	}
 
 	/**
@@ -263,6 +287,13 @@ public class CertVerifyRequest extends Message {
 	public void setLocalAddr(InetAddress localAddr) {
 		this.localAddr = localAddr;
 	}
+	
+	/**
+	 * @param options The options that were chosen by the user (one byte)
+	 */
+	public void setOptions(int options) {
+		this.options = options;
+	}
 
 	/**
 	 * @param remoteAddr The IP that sent the CertVerifyRequest-message
@@ -277,8 +308,18 @@ public class CertVerifyRequest extends Message {
 	@Override
 	protected void writeContent(OutputStream out) throws CertificateEncodingException, IOException {
 
-		out.write(cert.getEncoded());
+		// First part: The options for the verification process
+		out.write(options);	
+		
+		// Second part: the number of how many certificates are part of the chain
+		out.write(this.certChain.length & 255);
 
+		// Third part: the certificate chain (beginning with the server certificate)
+		for (int i = 0; i < Math.min(this.certChain.length, 255); i++) {
+			out.write(this.certChain[i].getEncoded());
+		}
+
+		// Forth part: The server's Hostname, IP and port
 		out.write(new String(hostName + "|" + hostIP.getHostAddress() + "|" + String.valueOf(hostPort)).getBytes());
 
 	}

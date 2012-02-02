@@ -46,7 +46,7 @@ import java.util.Vector;
 import crossbear.Database;
 
 /**
- * HuntingTaskReplies are sent by the Crossbear clients in reply to a HuntingTask. There are two different HuntingTaskReplies: The HuntingTaskReplyKnownCert and the HuntingTaskReplyNewCert. There is
+ * HuntingTaskReplies are sent by the Crossbear clients in reply to a HuntingTask. There are two different HuntingTaskReplies: The HuntingTaskReplyKnownCertChain and the HuntingTaskReplyNewCertChain. There is
  * quite a lot of functionality which they need both. This code is moved into this class:
  * - validation of Timestamps
  * - validation of Traces

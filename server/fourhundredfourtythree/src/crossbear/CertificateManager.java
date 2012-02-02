@@ -33,7 +33,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.net.URL;
+import java.net.InetSocketAddress;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
@@ -66,10 +66,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 
 import org.bouncycastle.util.encoders.Base64;
@@ -90,7 +88,7 @@ public class CertificateManager {
 	 * 
 	 * The rationale behind this function is that one the one hand CertificateVerificationRequests should not cause the client's IP to be stored in the database. On the other hand it is desirable to
 	 * have as much data at hand as possible when it comes to data evaluation. Not storing the last block of numbers is a compromise. A better one would certainly be to store the client's AS.
-	 * Unfortunately, this requires a list of AS which is currently not available to Crossbear.
+	 * This could e.g. be done by executing "whois -h whois.cymru.com \" -v IPADDRESS\" " and parsing the output
 	 * 
 	 * @param hostAddress
 	 *            an IPv4 or IPv6 address that should be Anonymize
@@ -109,14 +107,14 @@ public class CertificateManager {
 	 * anyways the jdk.certpath.disabledAlgorithms-property should be set to some dummy value like "BLABLABLA". Since calling 'Security.setProperty("jdk.certpath.disabledAlgorithms", "BLABLABLA");'
 	 * doesn't work from within a Website this has to be done manualy in the "java.security"-file.
 	 * 
-	 * @param hostPort
-	 *            The Hostname and port of the server e.g. encrypted.google.com:443
-	 * @return The certificate chain of that server starting with the server's certificate and continuing with it's chain certificates (if any are sent)
+	 * @param host The Hostname of the server e.g. "encrypted.google.com"
+	 * @param host The ort of the server e.g. 443
+	 * @return The certificate chain of that server starting with the server's certificate and continuing with it's chain certificates (if any are sent) along with the IP from which this chain was received
 	 * @throws KeyManagementException
 	 * @throws IOException
 	 * @throws NoSuchAlgorithmException
 	 */
-	public static X509Certificate[] getCertChainFromServer(String hostPort) throws KeyManagementException, IOException, NoSuchAlgorithmException {
+	public static CertificateChainContainer getCertChainFromServer(String host, int port) throws KeyManagementException, IOException, NoSuchAlgorithmException {
 
 		IOException lastCaughtException = null;
 
@@ -130,30 +128,35 @@ public class CertificateManager {
 				// is not working when called from jsp it has to be set in the java.security
 				// file of the current jvm
 
-				// Create a HttpsURLConnection targeted for hostPort
-				URL url = new URL("https://" + hostPort + "/");
-				HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-
 				// Force the connection even if the certificate is untrusted
 				SSLContext sc = SSLContext.getInstance("SSL");
 				sc.init(null, trustAllCerts, new java.security.SecureRandom());
+				
+				// Create and open a Socket for the connection
+				SSLSocket sock;
 				if (numberOfTries == 0) {
-					con.setSSLSocketFactory(sc.getSocketFactory());
+					
+					// Opening the connection has to be done in the createSocket-method or else SNI will not work
+					sock = (SSLSocket) sc.getSocketFactory().createSocket(host, port);
 				} else {
+					
 					// In case the the server doesn't support TLS/SSL3 try to use SSLv2Handshake mode
-					con.setSSLSocketFactory(new SSLv2EnabledSocketFactory(sc));
-				}
+					sock = (SSLSocket) new SSLv2EnabledSocketFactory(sc).createSocket();
+					
+					// Opening the connection in an extra call allows to specify the timeout value
+					sock.connect(new InetSocketAddress(host, port), 3000);
+				}				
 
-				// Force the connection even if the certificate is not valid for the domain
-				con.setHostnameVerifier(allHostsValid);
-
-				// Open the connection
-				con.connect();
-
+				// Get the server's IP-Address
+				InetAddress serverAddress = ((InetSocketAddress)sock.getRemoteSocketAddress()).getAddress();
+				
+				// Make sure the handshaking attempt does not take forever
+				sock.setSoTimeout(3000);
+				
 				// Get the certificate chain provided by the server
-				Certificate certs[] = con.getServerCertificates();
-
-				return (certs instanceof X509Certificate[]) ? (X509Certificate[]) certs : null;
+				Certificate certs[] = sock.getSession().getPeerCertificates();
+				
+				return new CertificateChainContainer((certs instanceof X509Certificate[]) ? (X509Certificate[]) certs : null, serverAddress);
 
 			} catch (IOException e) {
 				lastCaughtException = e;
@@ -176,7 +179,7 @@ public class CertificateManager {
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 */
-	private static String getCertChainMD5(LinkedList<X509Certificate> certList) throws CertificateEncodingException, NoSuchAlgorithmException, UnsupportedEncodingException {
+	public static String getCertChainMD5(LinkedList<X509Certificate> certList) throws CertificateEncodingException, NoSuchAlgorithmException, UnsupportedEncodingException {
 		StringBuilder re = new StringBuilder();
 
 		// Go through all Elements of the chain
@@ -188,6 +191,30 @@ public class CertificateManager {
 
 		return re.toString();
 	}
+	
+	/**
+	 * Get all IDs of certificates with a certain SHA256DERHash
+	 * 
+	 * @param certHash The hash that the certificates need to share
+	 * @param db The database connection to use
+	 * @return A comma-separated list of the IDs of the certificates that share "certHash" as SHA256DERHash
+	 * @throws InvalidParameterException
+	 * @throws SQLException
+	 */
+	public static String getCertIDs(byte[] certHash, Database db) throws InvalidParameterException, SQLException{
+		
+		// Query the database for the list
+		Object[] params = { Message.byteArrayToHexString(certHash) };
+		ResultSet rs = db.executeQuery("SELECT array_to_string(array_agg(DISTINCT Id),', ') AS IDs FROM ServerCerts WHERE SHA256DERHash = ?", params);
+
+		// If the result is empty then there is no certificate that has that hash -> return an empty String
+		if (!rs.next()) {
+			return "";
+		}
+		
+		// Return the list
+		return rs.getString("IDs");
+	}
 
 
 	/**
@@ -195,13 +222,14 @@ public class CertificateManager {
 	 * 
 	 * The code was created by the use of http://www.exampledepot.com/egs/java.security.cert/ValidCertPath.html
 	 * 
+	 * @param password The password for accessing the local CA Keystore
 	 * @return The system's Trusted-CAs keystore
 	 * @throws NoSuchAlgorithmException
 	 * @throws CertificateException
 	 * @throws IOException
 	 * @throws KeyStoreException
 	 */
-	private static KeyStore getLocalCAKeystore() throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
+	private static KeyStore getLocalCAKeystore(String password) throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
 
 		// The trusted-CAs' keystore is located inside the JAVA-Home directory - get it's path
 		/* 
@@ -212,8 +240,6 @@ public class CertificateManager {
 		// Open and load it using the default password
 		FileInputStream is = new FileInputStream(filename);
 		KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-		// TODO: Keystore password: right, change it :)
-		String password = "USEYOURPASSWORD";
 		keystore.load(is, password.toCharArray());
 
 		return keystore;
@@ -350,8 +376,8 @@ public class CertificateManager {
 	/**
 	 * Store the observation of a certificate in the CertObservations-table
 	 * 
-	 * @param certHash
-	 *            The SHA256-Hash of the certificate
+	 * @param certID
+	 *            The ID of the certificate (i.e. the Id column of the ServerCerts-table)
 	 * @param serverHostPort
 	 *            The Hostname and port of the server for which the certificate has been observed (e.g. encrypted.google.com:443)
 	 * @param serverIP
@@ -369,48 +395,14 @@ public class CertificateManager {
 	 * @throws InvalidParameterException
 	 * @throws SQLException
 	 */
-	public static long rememberCertObservation(String certHash, String serverHostPort, String serverIP, Timestamp serverTimeOfExecution, String observerType, String observerIP, Database db) throws NumberFormatException, InvalidParameterException, SQLException  {
+	public static long rememberCertObservation(Long certID, String serverHostPort, String serverIP, Timestamp serverTimeOfExecution, String observerType, String observerIP, Database db) throws NumberFormatException, InvalidParameterException, SQLException  {
 
 		// Create an entry of the observation in the CertObservations table
-		Object[] params = { certHash, serverHostPort, serverIP, serverTimeOfExecution, observerType, observerIP };
+		Object[] params = { certID, serverHostPort, serverIP, serverTimeOfExecution, observerType, observerIP };
 		return Long.valueOf(db.executeInsert("INSERT INTO CertObservations ( CertID, ServerHostPort, ServerIP, TimeOfObservation, ObserverType, ObserverIP) VALUES (?,?,?,?,?,?)", params));
 
 	}
 	
-	/**
-	 * Check if a certificate that is stored in the ServerCerts-table has already got a md5-encoded certificate chain assigned to it.
-	 * 
-	 * @param certHash
-	 *            The SHA256-Hash of the certificate to check
-	 * @param db
-	 *            The database connection to use
-	 * @return True if it already has a chain else false
-	 * @throws InvalidParameterException
-	 * @throws SQLException
-	 */
-	private static boolean serverCertHasCertificateChain(String certHash, Database db) throws InvalidParameterException, SQLException {
-		Object[] params = { certHash };
-		ResultSet rs = db.executeQuery("SELECT 1 FROM ServerCerts WHERE SHA256DERHash = ? AND CertChainMD5 IS NOT NULL LIMIT 1", params);
-		return rs.next();
-	}
-	
-	/**
-	 * Set the md5-encoded certificate chain for a certificate .
-	 * 
-	 * @param certHash
-	 *            The SHA256-Hash of the certificate for which the chain should be set
-	 * @param certChainMD5
-	 *            The md5-encoded certificate chain
-	 * @param db
-	 *            The database connection to use
-	 * @throws InvalidParameterException
-	 * @throws SQLException
-	 */
-	private static void setServerCertCertificateChain(String certHash, String certChainMD5, Database db) throws InvalidParameterException, SQLException {
-		Object[] params = { certChainMD5, certHash };
-		db.executeUpdate("UPDATE ServerCerts SET CertChainMD5 = ? WHERE SHA256DERHash = ?", params);
-
-	}
 	
 	/**
 	 * Hash a byte[] using the SHA1-algorithm
@@ -442,29 +434,26 @@ public class CertificateManager {
 	 * Store a certificate in the database. Depending on whether the certificate is actually a server's certificate or only a chain certificate is is either stored in the ServerCerts-table or in the
 	 * ChainCerts-table. In case the certificate already exists the database entry is not modified.
 	 * 
-	 * Please note: This function does not set the CertChainMD5-field in the ServerCerts-table. To do so you should use the setServerCertCertificateChain-function.
-	 * 
 	 * @param cert
 	 *            The certificate to store
 	 * @param isChainCert
 	 *            Is the certificate to store a chain certificate?
+	 * @param certChainMd5
+	 * 			  The md5-hash of the certificate chain in case the certificate is a server certificate. If it should not be set, then this parameter should be "null"
 	 * @param db
 	 *            The database connection to use
-	 * @return False if the certificate has already been in the database before; true if it has been inserted by this function
+	 * @return The ID of the certificate after it has been inserted either into the ChainCerts or into the ServerCerts table. If it was already inserted, the old ID is returned
 	 * @throws SQLException
 	 * @throws CertificateEncodingException
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 */
-	private static boolean storeCert(X509Certificate cert, boolean isChainCert, Database db) throws SQLException, CertificateEncodingException, NoSuchAlgorithmException, UnsupportedEncodingException {
+	private static Long storeCert(X509Certificate cert, boolean isChainCert, String certChainMd5, Database db) throws SQLException, CertificateEncodingException, NoSuchAlgorithmException, UnsupportedEncodingException {
 
-		boolean re;
+		Long re;
 		SQLException lastSQLException = null;
 
-		// Determine the database table into which the certificate should be inserted
-		String tablename = isChainCert ? "ChainCerts" : "ServerCerts";
-
-		// Calculate the KEY for the database entry (i.e. the certificate's SHA256-Hash)
+		// Calculate the certificate's SHA256-Hash
 		String certSHA256 = Message.byteArrayToHexString(SHA256(cert.getEncoded()));
 
 		/*
@@ -477,24 +466,52 @@ public class CertificateManager {
 			try {
 
 				// First: Check if the entry already exists.
-				Object[] params = { certSHA256 };
-				ResultSet rs = db.executeQuery("SELECT 1 FROM " + tablename + " WHERE SHA256DERHash = ? LIMIT 1", params);
+				ResultSet rs;
+				if(isChainCert){
+					Object[] params =  { certSHA256 };
+					rs = db.executeQuery("SELECT Id FROM ChainCerts WHERE SHA256DERHash = ? LIMIT 1", params);
+				} else {
+					if(certChainMd5 == null){
+						Object[] params =  { certSHA256};
+						rs = db.executeQuery("SELECT Id FROM ServerCerts WHERE SHA256DERHash = ? AND CertChainMD5 IS NULL LIMIT 1", params);
+					} else {
+						Object[] params =  { certSHA256 , certChainMd5};
+						rs = db.executeQuery("SELECT Id FROM ServerCerts WHERE SHA256DERHash = ? AND CertChainMD5 = ? LIMIT 1", params);	
+					}
+				}
+
 
 				// If not add a new entry to the database
 				if (!rs.next()) {
 
 					String certPem = getPemEncoding(cert);
 					String certSHA1 = Message.byteArrayToHexString(SHA1(cert.getEncoded()));
-					Object[] params2 = { certSHA256,certSHA1, cert.getEncoded(), Message.byteArrayToHexString(MD5(certPem.getBytes("UTF-8"))), certPem };
-					db.executeInsert("INSERT INTO " + tablename + " (SHA256DERHash,SHA1DERHash, DERRaw, MD5PEMHash, PEMRaw) VALUES (?,?,?,?,?)", params2);
+					String certPemMd5 = Message.byteArrayToHexString(MD5(certPem.getBytes("UTF-8")));
+					
+					String key;
+					if(isChainCert){
+						Object[] params2 = { certSHA256,certSHA1, cert.getEncoded(), certPemMd5, certPem };
+						key = db.executeInsert("INSERT INTO ChainCerts (SHA256DERHash,SHA1DERHash, DERRaw, MD5PEMHash, PEMRaw) VALUES (?,?,?,?,?)", params2);
+					} else {
+						if(certChainMd5 == null){
+							Object[] params2 = { certSHA256, certSHA1, cert.getEncoded(), certPemMd5, certPem };
+							key = db.executeInsert("INSERT INTO ServerCerts (SHA256DERHash,SHA1DERHash, DERRaw, MD5PEMHash, PEMRaw) VALUES (?,?,?,?,?)", params2);
+						} else {
+							
+							String certChainSHA256 = Message.byteArrayToHexString(SHA256(Message.hexStringToByteArray(certSHA256+certChainMd5)));
+									
+							Object[] params2 = { certSHA256, certSHA1, cert.getEncoded(), certPemMd5, certPem, certChainMd5,certChainSHA256 };
+							key = db.executeInsert("INSERT INTO ServerCerts (SHA256DERHash,SHA1DERHash, DERRaw, MD5PEMHash, PEMRaw, CertChainMD5, SHA256ChainHash) VALUES (?,?,?,?,?,?,?)", params2);
+						}
+					}
 
 					// The call to this function actually inserted a entry in the database
-					re = true;
+					re = Long.valueOf(key);
 
 				} else {
 
 					// The call to this function did not insert a entry in the database
-					re = false;
+					re = Long.valueOf(rs.getString("Id"));
 				}
 
 				// Try to commit the changes
@@ -595,17 +612,6 @@ public class CertificateManager {
 	// (required in order to be able to download certificates whose root certificates are not known)
 	private static final TrustManager[] trustAllCerts = new TrustManager[] { new TrustAllCertificatesTM()};
 
-	/*
-	 *  A HostnameVerifier that does not validate hostnames
-	 *  (required in order to be able to download certificates when they are not valid for a domain)
-	 *  The code was created by the use of http://www.nakov.com/blog/2009/07/16/disable-certificate-validation-in-java-ssl-connections/
-	 */
-	private static final HostnameVerifier allHostsValid = new HostnameVerifier() {
-		public boolean verify(String hostname, SSLSession session) {
-			return true;
-		}
-	};
-
 	// The duration in seconds a entry will be valid in a cache. This value is used when writing into a cache not when reading from it
 	private int cacheValidity;
 
@@ -617,23 +623,24 @@ public class CertificateManager {
 	 * However, this is only done when the chain could be validated and that might require the local system's root-CA KeyStore.
 	 * 
 	 * @param db
-	 *            The database connection that will be used to insert the local system's root-CAs into the ChainCerts-table
+	 *            The database connection that will be used to insert the local system's root-CAs into the ChainCerts-table (set this to null if the current system has no database; e.g. if the CertificateManager is instantiated by a Hunter)
 	 * @param cacheValidity
 	 *            The duration in seconds a entry will be valid in a cache. This value is used when writing into a cache not when reading from it.
+	 * @param password The password for accessing the local CA Keystore
 	 * @throws NoSuchAlgorithmException
 	 * @throws KeyStoreException
 	 * @throws SQLException
 	 * @throws CertificateException
 	 * @throws IOException
 	 */
-	public CertificateManager(Database db, int cacheValidity) throws NoSuchAlgorithmException, KeyStoreException, SQLException, CertificateException, IOException {
+	public CertificateManager(Database db, int cacheValidity, String password) throws NoSuchAlgorithmException, KeyStoreException, SQLException, CertificateException, IOException {
 
 		// Remember the cacheValidity
 		this.cacheValidity = cacheValidity;
 
 		// Load the local system's root-CA KeyStore and store it in the ChainCerts-table
-		this.localCAKeystore = getLocalCAKeystore();
-		addCAsFromLocalCAKeyStoreToDB(db);
+		this.localCAKeystore = getLocalCAKeystore(password);
+		if(db != null)addCAsFromLocalCAKeyStoreToDB(db);
 
 	}
 
@@ -661,7 +668,7 @@ public class CertificateManager {
 
 			// store it in the ChainCerts-table
 			if (cert instanceof X509Certificate) {
-				storeCert((X509Certificate) cert, true, db);
+				storeCert((X509Certificate) cert, true,null, db);
 			}
 		}
 
@@ -691,15 +698,16 @@ public class CertificateManager {
 			KeyStoreException, CertificateException, KeyManagementException, IOException, NoSuchProviderException {
 
 		// Concatenate hostname and hostport to hostport. Hostport is the host's identifier in the database
-		String serverHostPort = cvr.getHostName() + ":" + cvr.getHostPort();
+		String serverHostPort = cvr.getHostName() + ":" + String.valueOf(((cvr.getOptions()&1) != 0)?443:cvr.getHostPort());
 
 		// first try to load the certificate from the local cache
 		X509Certificate serverCert = getServerCertFromCache(serverHostPort, db);
 		if (null != serverCert)
 			return serverCert;
 
-		// if that failed try to load it from the server
-		X509Certificate[] serverCertChain = getCertChainFromServer(serverHostPort);
+		// if that failed try to load it from the server (port depends on whether the cvr was generated by a user that uses a SSL-Proxy)
+		CertificateChainContainer CCC = getCertChainFromServer(cvr.getHostName(), ((cvr.getOptions()&1) != 0)?443:cvr.getHostPort());
+		X509Certificate[] serverCertChain = CCC.getChain();
 		if (null == serverCertChain)
 			return null;
 
@@ -707,13 +715,10 @@ public class CertificateManager {
 		storeServerCertInCache(serverCertChain[0], serverHostPort, cacheValidity, db);
 
 		// ... then store the whole chain (if not already stored) ...
-		storeCertChain(serverCertChain, db);
+		Long serverCertID = storeCertChain(serverCertChain, db);
 
-		// ... and remember the observation of the server's cert in the CertObservations table. To do so the IP of the server needs to be known
-		// Since there is no direct way of getting it from a HTTP-connection we resolve the hostname a second time and hope we get the same IP that was used for the HTTP-connection (which is a quite
-		// reasonable assumption since java caches DNS query results)
-		InetAddress serverIP = InetAddress.getByName(cvr.getHostName());
-		rememberCertObservation(Message.byteArrayToHexString(SHA256(serverCertChain[0].getEncoded())), serverHostPort, serverIP.getHostAddress(), new Timestamp(System.currentTimeMillis()), "CrossbearServer", cvr
+		// ... and remember the observation of the server's cert in the CertObservations table.
+		rememberCertObservation(serverCertID, serverHostPort, CCC.getServerAddress().getHostAddress(), new Timestamp(System.currentTimeMillis()), "CrossbearServer", cvr
 				.getLocalAddr().getHostAddress(), db);
 
 		// Finally return the server's cert
@@ -729,30 +734,33 @@ public class CertificateManager {
 	 * @param db
 	 *            The database connection to use
 	 * @return The observed certificate
-	 * @throws CertificateEncodingException
 	 * @throws InvalidParameterException
 	 * @throws NoSuchAlgorithmException
 	 * @throws SQLException
 	 * @throws UnsupportedEncodingException
+	 * @throws NoSuchProviderException 
+	 * @throws CertificateException 
+	 * @throws KeyStoreException 
+	 * @throws InvalidAlgorithmParameterException 
 	 */
-	public X509Certificate getCertFromRequest(CertVerifyRequest cvr, Database db) throws CertificateEncodingException, InvalidParameterException, NoSuchAlgorithmException, SQLException,
-			UnsupportedEncodingException {
+	public X509Certificate getCertFromRequest(CertVerifyRequest cvr, Database db) throws InvalidParameterException, NoSuchAlgorithmException, SQLException,
+			UnsupportedEncodingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, NoSuchProviderException {
 
 		// Concatenate hostname and hostport to hostport. Hostport is the host's identifier in the database
-		String serverHostPort = cvr.getHostName() + ":" + cvr.getHostPort();
+		String serverHostPort = cvr.getHostName() + ":" + String.valueOf(((cvr.getOptions()&1) != 0)?443:cvr.getHostPort());
 
-		// Extract the server's certificate from the request ...
-		X509Certificate requestCert = cvr.getCert();
+		// Extract the server's certificate chain from the request ...
+		X509Certificate[] requestCertChain = cvr.getCertChain();
 
 		// ... store it in the database (if not already done before) ...
-		storeCert(requestCert, false, db);
+		Long requestCertID = storeCertChain(requestCertChain, db);
 
 		// ... and remember it's observation in the CertObservations table
-		rememberCertObservation(Message.byteArrayToHexString(SHA256(requestCert.getEncoded())), serverHostPort, cvr.getHostIP().getHostAddress(), new Timestamp(System.currentTimeMillis()), "CrossbearCVR",
+		rememberCertObservation(requestCertID, serverHostPort, cvr.getHostIP().getHostAddress(), new Timestamp(System.currentTimeMillis()), "CrossbearCVR",
 				anonymize(cvr.getRemoteAddr().getHostAddress()), db);
 
 		// Finally: return it
-		return requestCert;
+		return requestCertChain[0];
 	}
 	
 
@@ -807,16 +815,15 @@ public class CertificateManager {
 	/**
 	 * This function takes a certificate chain and stores its first element in the ServerCerts-table and the remainder in the ChainCerts-table.
 	 * 
-	 * In case the last element of the certificate chain is self-signed and the certificate chain is valid the getCertChainMD5 is called and the result is then stored using
-	 * setServerCertCertificateChain. The same is done in case the last element of the chain is not self signed but an entry in the localCAKeystore-KeyStore exists that completes the chain. If the
-	 * chain is either invalid or could not be completed the certificate chain is not set. In that case the CertChainMD5 is just left "null" and may be set by a future call to storeCertChain.
-	 * 
-	 * Please Note: In case the certificate has already been inserted into the database earlier and it has already had a certificate chain then nothing is done.
+	 * In case the last element of the certificate chain is self-signed and the certificate chain is valid, the getCertChainMD5 is called and the result is stored along with the server certificate.
+	 * The same is done in case the last element of the chain is not self signed but an entry in the localCAKeystore-KeyStore exists that completes the chain. If the
+	 * chain is either invalid or could not be completed the certificate chain is not set. In that case the CertChainMD5 is just left "null".
 	 * 
 	 * @param certs
 	 *            The certificate chain to store (certs[0] is assumed to be the server's certificate)
 	 * @param db
 	 *            The database connection to use
+	 * @return The ID of the server's certificate after it has been inserted into the ServerCerts table. If it was already inserted, the old ID is returned
 	 * @throws InvalidAlgorithmParameterException
 	 * @throws KeyStoreException
 	 * @throws NoSuchAlgorithmException
@@ -825,44 +832,32 @@ public class CertificateManager {
 	 * @throws UnsupportedEncodingException
 	 * @throws NoSuchProviderException
 	 */
-	public void storeCertChain(X509Certificate[] certs, Database db) throws InvalidAlgorithmParameterException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SQLException,
+	public Long storeCertChain(X509Certificate[] certs, Database db) throws InvalidAlgorithmParameterException, KeyStoreException, NoSuchAlgorithmException, CertificateException, SQLException,
 			UnsupportedEncodingException, NoSuchProviderException {
 
-		// Calculate the KEY for the database entry (i.e. the certificate's SHA256-Hash)
-		String serverCertHash = Message.byteArrayToHexString(SHA256(certs[0].getEncoded()));
-
-		// Try to insert the server's certificate
-		if (!storeCert(certs[0], false, db)) {
-
-			// If it has already been inserted in the database earlier check if it has a certificate chain attached to it
-			if (serverCertHasCertificateChain(serverCertHash, db)) {
-				// if it has then there is no need to go on
-				return;
-			}
-
-		}
-
-		// When this point of the function is reached it is unclear which (if any) of the elements of the certificate chain are already inside the database. Therefore add all of them
-		for (int i = 1; i < certs.length; i++) {
-			storeCert(certs[i], true, db);
-		}
-
-		// See if there is a way in which the certificate chain can be ordered so that it is valid and its end is self-signed. If necessary add a chain terminator from the system's root-CA KeyStore to do so.
+		// See if there is a way in which the certificate chain can be ordered so that it is valid and its end is self-signed. If necessary add a chain terminator from the system's root-CA KeyStore to
+		// do so.
 		LinkedList<X509Certificate> validatedChain = makeCertChainValid(certs, 50, true);
 
-		if (validatedChain == null) {
-			// If that was not possible: do nothing (maybe somebody will provide a valid chain for this certificate later)
-			return;
+		String certChainMD5 = null;
+		
+		// If the chain is valid: Calculate it's md5-hash
+		if (validatedChain != null) {
+
+			// Remove the server's certificate from the chain
+			validatedChain.removeFirst();
+
+			// Get the concatenation of the md5 hashes of the chain's certificates ...
+			certChainMD5 = getCertChainMD5(validatedChain);
 		}
 
-		// Remove the server's certificate from the chain
-		validatedChain.removeFirst();
-
-		// Get the concatenation of the md5 hashes of the chain's certificates ...
-		String certChainMD5 = getCertChainMD5(validatedChain);
-
-		// ... and store it.
-		setServerCertCertificateChain(serverCertHash, certChainMD5, db);
+		// Insert all elements of the certificate chain
+		for (int i = 1; i < certs.length; i++) {
+			storeCert(certs[i], true, null, db);
+		}
+		
+		// Insert the server's certificate and return it's ID
+		return storeCert(certs[0], false, certChainMD5, db);
 
 	}
 
