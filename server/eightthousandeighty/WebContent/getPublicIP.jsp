@@ -43,6 +43,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	* every time getPublicIP.jsp is loaded a global PublicIPNotifProcessor object is created.
 	*/
 	private PublicIPNotifProcessor pipnp;
+	
+	// Properties and settings of the Crossbear server
+	private Properties properties;
 
 	//Constructor-like functionality: Only performed the first time the page is loaded
 	public void jspInit() {
@@ -57,6 +60,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			*/
 			Security.addProvider(new BouncyCastleProvider());
 
+			// Load the porperties and settings from the config file
+			properties = new Properties("/var/lib/tomcat6/webapps/crossbear.properties");
+					
 			/*
 			* Like mentioned above the PublicIPNotifProcessor needs to load the RSA key on initilization.
 			* This is done here.
@@ -69,31 +75,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		}
 	}
 	%><%
-	// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
-	OutputStream outStream = response.getOutputStream();
 	Database db = null;
 	
 	try {
+		
+		// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
+		OutputStream outStream = response.getOutputStream();
 				
 		//First of all try to decode the PublicIPNotifRequest sent by the client
 		PublicIPNotifRequest pipnr = PublicIPNotifRequest.readFromStream(request.getInputStream(), request.getRemoteAddr());
 		
 		
 		// Open a database connection
-		db = new Database();
+		db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
 		
 		// Decrypt the AES-key, generate a PublicIPNotification-message and encrypt it with the AES-key
 		byte[] reply = pipnp.generateEncryptedPublicIPNotif(pipnr,db);
 
 		// Send the result to the client
 		outStream.write(reply);
+				
+		// Finally: Sent the reply to the client (flush the buffer)
+		response.flushBuffer();
 
 	} catch (Exception e) {
 		/*
 		* None of the calls above catches exceptions. Whenever something went wrong (e.g. with decoding the client's request)
 		* A exception is thrown and cought here. Since it's not very smart to tell attackers what went wrong a dummy reply is sent to them.
 		*/
-		outStream.write(new String("Crossbear").getBytes());
+		out.println("Crossbear");
 		
 		// For debugging reasons: Log what went wrong
 		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/eightthousandeighty/processing.getpublicip.error", e);
@@ -102,7 +112,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		if (db != null)
 			db.close();
 	}
-
-	// Finally: Sent the reply to the client
-	response.flushBuffer();
 %>
