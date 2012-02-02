@@ -42,6 +42,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	*/
 	private CertificateManager cm;
 
+	// Properties and settings of the Crossbear server
+	private Properties properties;
+
 	//Constructor-like functionality: Only performed the first time the page is loaded
 	public void jspInit() {
 
@@ -55,6 +58,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			* all of these are used in Crossbear.
 			*/
 			Security.addProvider(new BouncyCastleProvider());
+					
+			// Load the porperties and settings from the config file
+			properties = new Properties("/var/lib/tomcat6/webapps/crossbear.properties");
 
 			/*
 			* Like mentioned above the CertificateManager needs to load the local keystore on initilization.
@@ -66,8 +72,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			* Since Crossbear uses Transactions there is no such thing as a global Database object. That again is
 			* the reason why a new database connection is created to insert the certificates and closed afterwards.
 			*/
-			Database db = new Database();
-			cm = new CertificateManager(db,0);
+			Database db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
+			cm = new CertificateManager(db, 0, properties.getProperty("keystore.password"));
 			db.close();
 
 
@@ -79,15 +85,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	}
 	%><%
-	// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
-	OutputStream outStream = response.getOutputStream();
 	Database db = null;
 
 	try {
+		// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
+		OutputStream outStream = response.getOutputStream();
 
 		//Processing the Hunting Task Result is quite lenghty. Therefore i moved this functionality to the "Hunting Task Result Processor " (HTRProcessor)
-		db = new Database();
+		db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
 		HTRProcessor htrp = new HTRProcessor(request.getInputStream(), cm, db);
+		
+		// Finally: Sent the reply to the client
+		response.flushBuffer();
 
 	} catch (Exception e) {	
 		/*
@@ -102,12 +111,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		/*
 		* Since it's not very smart to tell attackers if something went wrong a dummy reply is sent to them.
 		*/
-		outStream.write(new String("Crossbear").getBytes());
+		out.println("Crossbear");
 		
 		if (db != null)
 			db.close();
 	}
-
-	// Finally: Sent the reply to the client
-	response.flushBuffer();
 %>

@@ -56,8 +56,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	* - HuntingTaskListCache (contains the current list of hunting tasks)
 	*
 	* cacheValidity is the time in milliseconds that an entry stays valid in one of those caches
+	*
+	* SUGG: The cacheValidity could be adjusted dynamically based on the server's current load
 	*/
 	private int cacheValidity = 5 * 60 * 1000;
+	
+	// Properties and settings of the Crossbear server
+	private Properties properties;
 	
 	/*
 	* Old entries schould be removed from the caches. This is done once every thousand page loads.
@@ -78,9 +83,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			* all of these are used in Crossbear.
 			*/
 			Security.addProvider(new BouncyCastleProvider());
+					
+			// Load the porperties and settings from the config file
+			properties = new Properties("/var/lib/tomcat6/webapps/crossbear.properties");
 
 			/*
-			* Like mentioned above the CertificateManager needs to load the local keystore on initilization.
+			* As mentioned above the CertificateManager needs to load the local keystore on initilization.
 			* This is done here.
 			* 
 			* In order to be able to look into all certificates that are part of any certificate chain these
@@ -89,8 +97,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			* Since Crossbear uses Transactions there is no such thing as a global Database object. That again is
 			* the reason why a new database connection is created to insert the certificates and closed afterwards.
 			*/
-			Database db = new Database();
-			cm = new CertificateManager(db,cacheValidity);
+			Database db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
+			cm = new CertificateManager(db,cacheValidity, properties.getProperty("keystore.password"));
 			db.close();
 
 		} catch (Exception e) {
@@ -101,17 +109,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	}
 	%><%
-	
-	// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
-	OutputStream outStream = response.getOutputStream();
 	Database db = null;
 	
 	try {
+		// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
+		OutputStream outStream = response.getOutputStream();
+		
 		//First of all try to decode the CertVerifyRequest sent by the client
 		CertVerifyRequest cvr = CertVerifyRequest.readFromStream(request.getInputStream(), request.getRemoteAddr(), request.getLocalAddr());
 
 		//If the decoding succedded open a database connection and create a CVRProcessor
-		db = new Database();
+		db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
 		CVRProcessor cvrp = new CVRProcessor(cvr, cm, db);
 		
 		/*
@@ -134,7 +142,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			cvrp.storeCertVerifyResultInCache(reply,cacheValidity);
 		}
 
-		// Finally send the reply to the client
+		// Send the reply to the client
 		outStream.write(reply);
 		
 		// Occasionally purge the cache from old entries
@@ -144,6 +152,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			
 			pageLoadCounter = 0;
 		}
+		
+		// Finally: Sent the reply to the client (flush the out buffer)
+		response.flushBuffer();
 
 
 	} catch (Exception e) {
@@ -151,7 +162,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		* None of the calls above catches exceptions. Whenever something went wrong (e.g. with decoding the client's request)
 		* A exception is thrown and cought here. Since it's not very smart to tell attackers what went wrong a dummy reply is sent to them.
 		*/
-		outStream.write(new String("Crossbear").getBytes());
+		out.println("Crossbear");
 
 		// For debugging reasons: Log what went wrong
 		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/processing.verifycert.error", e);
@@ -160,7 +171,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		if (db != null)
 			db.close();
 	}
-	
-	// Finally: Sent the reply to the client
-	response.flushBuffer();
 %>

@@ -42,8 +42,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	* - HuntingTaskListCache (contains the current list of hunting tasks)
 	*
 	* cacheValidity is the time in milliseconds that an entry stays valid in one of those caches
+	*
+	* SUGG: The cacheValidity could be adjusted dynamically based on the server's current load
 	*/
 	private int cacheValidity = 5 * 60 * 1000;
+	
+	// Properties and settings of the Crossbear server
+	private Properties properties;
 
 	//Constructor-like functionality: Only performed the first time the page is loaded
 	public void jspInit() {
@@ -57,6 +62,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			* all of these are used in Crossbear.
 			*/
 			Security.addProvider(new BouncyCastleProvider());
+					
+			// Load the porperties and settings from the config file
+			properties = new Properties("/var/lib/tomcat6/webapps/crossbear.properties");
 
 		} catch (Exception e) {
 
@@ -64,13 +72,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		}
 	}
 	%><%
-	// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
-	OutputStream outStream = response.getOutputStream();
 	Database db = null;
 
 	try {
+		// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
+		OutputStream outStream = response.getOutputStream();
 
-		db = new Database();
+		db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
 
 		/*
 		* The hunting task list consists of three parts:
@@ -86,22 +94,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 		//Send the Hunting Task List to the client
 		outStream.write(reply.getBytes());
+		
+		// Finally: Sent the reply to the client
+		response.flushBuffer();
 
 	} catch (Exception e) {
 		/*
 		* None of the calls above catches exceptions. Whenever something went wrong (e.g. with decoding the client's request)
 		* A exception is thrown and cought here. Since it's not very smart to tell attackers what went wrong a dummy reply is sent to them.
 		*/
-		outStream.write(new String("Crossbear").getBytes());
+		out.println("Crossbear");
 
 		// For debugging reasons: Log what went wrong
 		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/processing.getHuntingTaskList.error", e);
 
 	} finally {
 		if (db != null)
-	db.close();
+			db.close();
 	}
-
-	// Finally: Sent the reply to the client
-	response.flushBuffer();
 %>
