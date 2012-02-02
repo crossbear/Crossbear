@@ -26,10 +26,10 @@
  */
 
 /**
- * This dialog displays the user's local certificate cache and opens a EditCertificateCacheEntryDlg when a user clicked on an entry of the cache
+ * This dialog displays the user's local TDC and opens a EditTDCEntryDlg when a user clicked on an entry of the cache
  */
 
-// A list of criteria that can be chosen to order the entries of the certificate cache (Fixed lists prevents SQL-Injection)
+// A list of criteria that can be chosen to order the entries of the TDC (Fixed lists prevents SQL-Injection)
 var orderByConstants = {
 	Hash : "CertHash",
 	Host : "Host",
@@ -50,7 +50,7 @@ var asc = true;
 var orderBy = orderByConstants.Host;
 
 /**
- * Take an array of mozIStorageRows, each representing an entry in the certificate cache, and place it in the dialog's ListBox.
+ * Take an array of mozIStorageRows, each representing an entry in the TDC, and place it in the dialog's ListBox.
  * 
  * @param allrows The array of mozIStorageRows.
  */
@@ -100,11 +100,11 @@ function displayCertificates(allrows){
 }
 
 /**
- * Request the content of the local certificate cache from the database using displayCertificates as callback-function (i.e. displayCertificates will handle the database reply containing the cache entries)
+ * Request the content of the local TDC from the database using displayCertificates as callback-function (i.e. displayCertificates will handle the database reply containing the cache entries)
  */
 function loadCertificatesFromDatabase(){
 	
-	// Build the SQL-Statement to request the content of the certificate cache ...
+	// Build the SQL-Statement to request the content of the TDC ...
 	var sqlStatement = "SELECT ID, Host, CertHash, datetime(ValidUntil, 'unixepoch', 'localtime') AS VU, Trust FROM certTrust ORDER BY "+orderBy+orderAscending[asc?1:0];
 	var params = new Object();
 	

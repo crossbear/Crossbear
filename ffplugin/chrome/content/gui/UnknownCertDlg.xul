@@ -54,7 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
   <script type="application/javascript" src="chrome://crossbear/content/CBHelper.js"/>
   <script type="application/javascript" src="chrome://crossbear/content/CBMessages.js"/>
-  <script type="application/javascript" src="chrome://crossbear/content/CBCertificateCache.js"/>
+  <script type="application/javascript" src="chrome://crossbear/content/CBTrustDecisionCache.js"/>
   <script type="application/javascript" src="chrome://crossbear/content/gui/UnknownCertDlg.js"/>
  
   <!-- Content Box -->

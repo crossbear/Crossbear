@@ -72,17 +72,17 @@ function bringToFront() {
 }
 
 /**
- * This function checks if the dialog's Certificate/domain-combination was inserted into the CBCertificateCache. If it was then the window is closed. If not the bringToFront-function is called.
+ * This function checks if the dialog's Certificate/domain-combination was inserted into the CBTrustDecisionCache. If it was then the window is closed. If not the bringToFront-function is called.
  * 
- * @param forceWindowClose If true then the window will be closed no matter whether the Certificate/domain-combination was inserted in the CBCertificateCache. This is useful e.g. when the system is about to shut down or when the protector was deactivated.
+ * @param forceWindowClose If true then the window will be closed no matter whether the Certificate/domain-combination was inserted in the CBTrustDecisionCache. This is useful e.g. when the system is about to shut down or when the protector was deactivated.
  */
 function checkIfCertIsInCache(forceWindowClose) {
 
 	// Ask the cache if the host's certificate should be trusted for its domain
-	var cacheStatus = window.arguments[0].inn.cbFrontend.cbcertificatecache.checkValidity(window.arguments[0].inn.certHash, window.arguments[0].inn.host.split("|")[0],window.arguments[0].inn.cbFrontend.cbeventobserver.checkCBServerOnly);
+	var cacheStatus = window.arguments[0].inn.cbFrontend.cbtrustdecisioncache.checkValidity(window.arguments[0].inn.certHash, window.arguments[0].inn.host.split("|")[0],window.arguments[0].inn.cbFrontend.cbeventobserver.checkCBServerOnly);
 
 	// If the cache can answer that question or if the window must be closed ...
-	if (cacheStatus != CBCertificateCacheReturnTypes.NOT_IN_CACHE || forceWindowClose) {
+	if (cacheStatus != CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE || forceWindowClose) {
 		
 		// ... close it.
 		window.close();
@@ -177,7 +177,7 @@ function retry() {
  */
 function setTrust(trust) {
 
-	// Add a new entry in the CBCertificateCache for the host's certificate and domain according to the user's choice of trust and his/hers defaultCacheValidity
+	// Add a new entry in the CBTrustDecisionCache for the host's certificate and domain according to the user's choice of trust and his/hers defaultCacheValidity
 	window.arguments[0].inn.cbFrontend.cbprotector.addCacheEntryDefaultValidity(window.arguments[0].inn.certHash, window.arguments[0].inn.host.split("|")[0], trust);
 
 	// Stop the timer that calls the contactCBServer-function ...
