@@ -100,23 +100,20 @@ public class Database {
 
 	// The JDBC Connector Class.
 	private static final String dbClassName = "org.postgresql.Driver";
-
-	// The name and login of/for the database
-	private static final String database = "jdbc:postgresql://localhost/crossbear";
-	private static final String user = "crossbear";
-	private static final String password = "USEYOURPASSWORD";
 	
 	// The java.sql.Connection that is wrapped by this class
 	private final Connection con;
-
 	
 	/**
 	 * Create and open a new connection to the database using the stored login credentials
 	 * 
+	 * @param url The location of the Crossbear database
+	 * @param user The user to access the database
+	 * @param password The password for the user "user"
 	 * @throws ClassNotFoundException
 	 * @throws SQLException
 	 */
-	public Database() throws ClassNotFoundException, SQLException{
+	public Database(String url, String user, String password) throws ClassNotFoundException, SQLException{
 		
 		// Get the classname of the database driver
 	    Class.forName(dbClassName);
@@ -127,7 +124,7 @@ public class Database {
 	    p.setProperty("password",password);
 
 	    // Try to connect
-	    con = DriverManager.getConnection(database,p);
+	    con = DriverManager.getConnection(url,p);
 	    
 	}
 	

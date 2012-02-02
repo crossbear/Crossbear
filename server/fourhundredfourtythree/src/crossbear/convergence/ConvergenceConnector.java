@@ -58,7 +58,7 @@ import crossbear.TrustSingleCertificateTM;
 import crossbear.messaging.Message;
 
 /**
- * The Convergence Project (http://convergence.io/) which was initially created by Moxie Marlinspike provides a functionality that is quite similar to Crossbear's Guard-functionality: Comparison based
+ * The Convergence Project (http://convergence.io/) which was initially created by Moxie Marlinspike provides a functionality that is quite similar to Crossbear's Protector-functionality: Comparison based
  * certificate verification by the use of distributed observation points. Crossbear utilizes Convergence's functionality to make the report it gives about a certificate more accurate. To do so
  * Crossbear queries the Convergence project every time it judges a certificate and adds Convergence's judgment as an additional judgment to the certificate's report.
  * 
@@ -352,7 +352,7 @@ public class ConvergenceConnector {
 
 			// If that failed also: Report that it was not possible to get a Judgment from Convergence.
 			if (hostCcos == null) {
-				return new CertJudgment("CONVERGENCE: NO REPLY", 0);
+				return new CertJudgment("<crit>CONVERGENCE: NO REPLY</crit>", 0);
 			}
 
 			// In case it was possible: See if convergence has ever observed "cert"

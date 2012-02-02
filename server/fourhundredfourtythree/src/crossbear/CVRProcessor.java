@@ -28,6 +28,7 @@
 package crossbear;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -231,11 +232,12 @@ public class CVRProcessor {
 	}
 
 	/**
-	 * Judge the keylength of a certificate. The outcome is always the keylength. Its rating depends on whether it is shorter or longer than 1976 ( which is the BSI suggestion for 2011-2015:
-	 * http://www.keylength.com/en/8/). If it's shorter than the rating is <0 and decreases exponentially with (keylength - 1976). If it is longer than the rating is >0 and increases linearly with
-	 * (keylength - 1976).
+	 * Judge the keylength of a certificate. The outcome is always the keylength. Its rating depends on whether it is shorter or longer than 2048 ( which is the NIST suggestion until 2030:
+	 * http://csrc.nist.gov/groups/ST/toolkit/documents/SP800-57Part1-Revision3_May2011.pdf). If it's shorter, then the rating is <0 and decreases quadratically with (keylength - 2048). If it is longer
+	 * then the rating is >0 and increases linearly with (keylength - 2048).
 	 * 
-	 * @param cert The certificate to judge
+	 * @param cert
+	 *            The certificate to judge
 	 * @return A CertificateJudgment rating the certificates keylength based on the current keylength suggestion of BSI.
 	 */
 	private static CertJudgment getJudgmentOfKeyLength(X509Certificate cert){
@@ -244,8 +246,8 @@ public class CVRProcessor {
 		// Get the keylength of the Certificate's public key
 		int keylength = ((RSAPublicKey) (cert.getPublicKey())).getModulus().bitLength();
 		
-		// Rate it deppending on the value of (keylength - 1976).
-		int keylengthRating = (keylength - 1976 <0)? ((1976 - keylength)*(keylength - 1976))/30000:(keylength - 1976)/100;
+		// Rate it deppending on the value of (keylength - 2048).
+		int keylengthRating = (keylength - 2048 <0)? ((2048 - keylength)*(keylength - 2048))/30000:(keylength - 2048)/100;
 		
 		// Report the result
 		if(keylengthRating<0){
@@ -276,12 +278,15 @@ public class CVRProcessor {
 	 */
 	private static CertJudgment getJudgmentOfLastObservationPeriod(X509Certificate cert, String hostPort, Database db) throws CertificateEncodingException, NoSuchAlgorithmException, InvalidParameterException, SQLException {
 		
-		// Calculate the KEY for the database entry (i.e. the certificate's SHA256-Hash)
-		String certHash = Message.byteArrayToHexString(CertificateManager.SHA256(cert.getEncoded()));
+		// Calculate the certificate's SHA256-Hash
+		byte[] certHash = CertificateManager.SHA256(cert.getEncoded());
+		
+		// Get all certificate ID's that share that hash
+		String IDs = CertificateManager.getCertIDs(certHash,db);
 
 		// Get the Timestamp of the last observation of the certificate for the host or the current time if it has never been observed (which would result in a LCOP of 0 days)
-		Object[] params = { hostPort, certHash };
-		ResultSet rs = db.executeQuery("SELECT coalesce(MAX(Timeofobservation), 'NOW') AS Time FROM CertObservations WHERE ServerHostPort = ? AND CertID = ? AND ObserverType = 'CrossbearServer'", params);
+		Object[] params = { hostPort };
+		ResultSet rs = db.executeQuery("SELECT coalesce(MAX(Timeofobservation), 'NOW') AS Time FROM CertObservations WHERE ServerHostPort = ? AND CertID IN ("+IDs+") AND ObserverType = 'CrossbearServer'", params);
 
 		if (!rs.next()) {
 			throw new SQLException("Query returned invalid result.");
@@ -291,12 +296,12 @@ public class CVRProcessor {
 		Timestamp endOfObservationPeriod = rs.getTimestamp("Time");
 
 		
-		Object[] params2 = { hostPort, certHash, hostPort, certHash, endOfObservationPeriod };
+		Object[] params2 = { hostPort, hostPort, endOfObservationPeriod };
 		// Get the newest Timestamp of any certificate observation for the host that was not on the current certificate but is older than endOfObservationPeriod (or alternatively a very old dummy timestamp if there is none).
-		String sqlSubQuery = "SELECT coalesce(MAX(TimeOfObservation), TIMESTAMP '1900-01-01 00:00') as Time FROM CertObservations WHERE ServerHostPort = ? AND CertID <> ? AND ObserverType = 'CrossbearServer' and TimeOfObservation < ?";
+		String sqlSubQuery = "SELECT coalesce(MAX(TimeOfObservation), TIMESTAMP '1900-01-01 00:00') as Time FROM CertObservations WHERE ServerHostPort = ? AND CertID NOT IN ("+IDs+") AND ObserverType = 'CrossbearServer' and TimeOfObservation < ?";
 		
 		// Get the oldest Timestamp of any observation of the current certificate that is still newer than the Timestamp of the sub-querry
-		rs = db.executeQuery("SELECT coalesce(MIN(TimeOfObservation), 'NOW') as Time FROM CertObservations WHERE ServerHostPort = ? and CertID = ?  AND ObserverType = 'CrossbearServer' AND TimeOfObservation > (" + sqlSubQuery + ")", params2);
+		rs = db.executeQuery("SELECT coalesce(MIN(TimeOfObservation), 'NOW') as Time FROM CertObservations WHERE ServerHostPort = ? AND CertID IN ("+IDs+")  AND ObserverType = 'CrossbearServer' AND TimeOfObservation > (" + sqlSubQuery + ")", params2);
 
 		if (!rs.next()) {
 			throw new SQLException("Query returned invalid result.");
@@ -338,12 +343,15 @@ public class CVRProcessor {
 	 */
 	private static CertJudgment getJudgmentOfTotalNumberOfObservation(X509Certificate cert, String hostPort, Database db) throws CertificateEncodingException, NoSuchAlgorithmException, InvalidParameterException, SQLException {
 
-		// Calculate the KEY for the database entry (i.e. the certificate's SHA256-Hash)
-		String certHash = Message.byteArrayToHexString(CertificateManager.SHA256(cert.getEncoded()));
+		// Calculate the certificate's SHA256-Hash
+		byte[] certHash = CertificateManager.SHA256(cert.getEncoded());
+		
+		// Get all certificate ID's that share that hash
+		String IDs = CertificateManager.getCertIDs(certHash,db);
 		
 		// Get the total number of how often cert has been observed for hostPort by the CrossbearServer
-		Object[] params = { hostPort, certHash };
-		ResultSet rs = db.executeQuery("SELECT COUNT(Id) as Num FROM CertObservations WHERE ServerHostPort = ? AND CertID = ? AND ObserverType = 'CrossbearServer'", params);
+		Object[] params = { hostPort };
+		ResultSet rs = db.executeQuery("SELECT COUNT(Id) as Num FROM CertObservations WHERE ServerHostPort = ? AND CertID IN ("+IDs+") AND ObserverType = 'CrossbearServer'", params);
 		
 		if (!rs.next()) {
 			throw new SQLException("Query returned invalid result.");
@@ -680,12 +688,21 @@ public class CVRProcessor {
 	 */
 	public MessageList process() throws InvalidParameterException, NoSuchAlgorithmException, SQLException, KeyManagementException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, NoSuchProviderException, IOException, InvalidKeyException {
 
-		
-		X509Certificate serverCert = cm.getCertForHost(cvr, db);
+		// Get the certificate that the client sent
 		X509Certificate requestCert = cm.getCertFromRequest(cvr, db);
 		
+		X509Certificate serverCert;
+		try{
+			// Try to get the server's real certificate ...
+			serverCert = cm.getCertForHost(cvr, db);
+		} catch (ConnectException e){
+			
+			// ... and if that was not possible: set it to null
+			serverCert = null;
+		}
+		
 		//concatenate hostname and hostport to hostport. Hostport is the host's identifier in the database
-		String hostPort = cvr.getHostName()+":"+cvr.getHostPort();
+		String hostPort = cvr.getHostName()+":"+String.valueOf(((cvr.getOptions()&1) != 0)?443:cvr.getHostPort());
 		
 		MessageList ml = new MessageList();
 
@@ -715,7 +732,7 @@ public class CVRProcessor {
 		// What are the used encryption/hash algorithms? Are they safe? (some algorithms like e.g. md2 and md5 are not considered safe anymore)
 		result.addJudgment(getJudgmentOfUsedAlgorithms(requestCert));
 
-		// What is the length of the key? (BSI suggests at least 1976 for 2011-2015: http://www.keylength.com/en/8/)
+		// What is the length of the key? (NIST suggests at least 2048 until 2030: http://csrc.nist.gov/groups/ST/toolkit/documents/SP800-57Part1-Revision3_May2011.pdf)
 		result.addJudgment(getJudgmentOfKeyLength(requestCert));
 
 		ml.add(result);
@@ -724,7 +741,7 @@ public class CVRProcessor {
 		if (huntingTaskShouldBeCreated(result)) {
 			ml.add(new CurrentServerTime());
 			ml.add(new PublicIPNotification(cvr.getRemoteAddr(), db));
-			ml.add(new HuntingTask(cvr.getHostName(), cvr.getHostIP(), cvr.getHostPort(), db));
+			ml.add(new HuntingTask(cvr.getHostName(), cvr.getHostIP(), ((cvr.getOptions()&1) != 0)?443:cvr.getHostPort(), db));
 		}
 
 		return ml;

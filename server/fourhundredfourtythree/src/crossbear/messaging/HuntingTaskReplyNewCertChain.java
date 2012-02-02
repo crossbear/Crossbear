@@ -27,60 +27,79 @@
 
 package crossbear.messaging;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.LinkedList;
 
 import crossbear.CertificateManager;
 import crossbear.Database;
 
 /**
- * A HuntingTaskReplyKnownCert-message is one of the two possible messages that could be sent in reply to a HuntingTask. It will be sent in case that the client observed a certificate that is already
+ * A HuntingTaskReplyNewCertChain-message is one of the two possible messages that could be sent in reply to a HuntingTask. It will be sent in case that the client observed a certificate chain that is NOT YET
  * well known by the server.
  * 
- * The structure of the HuntingTaskReplyKnownCert-message is
+ * The structure of the HuntingTaskReplyNewCertChain-message is
  * - Header
  * - Task ID (4 bytes)
  * - Server time of execution (4 bytes)
  * - HMAC of the PublicIP that was inserted in the trace to the server as first hop(32 bytes)
- * - Hash of the observed certificate (32 bytes)
- * - Trace to the server (String of variable length)
+ * - The length of the certificate chain that was observed by the client (1 byte)
+ * - The certificate chain observed by the client (byte[] of variable length)
+ * - Trace to the target (String of variable length)
  * 
  * @author Thomas Riedmaier
  * 
  */
-public class HuntingTaskReplyKnownCert extends HuntingTaskReply {
+public class HuntingTaskReplyNewCertChain extends HuntingTaskReply {
 
-	// The hash of the certificate that has been observed by the client
-	private byte[] serverCertHash;
+	// The CertificateManager that will be used for processing or storing certificates
+	private CertificateManager cm = null;
+	
+	// The certificate chain that was observed by the client
+	private X509Certificate[] certChain;
 
 	/**
-	 * Create a HuntingTaskReplyKnownCert based on a byte[] that was sent by a client and is supposed to be a valid HuntingTaskReplyKnownCert-message. The validity is checked within this function.
+	 * Create a HuntingTaskReplyNewCertChain based on a byte[] that was sent by a client and is supposed to be a valid HuntingTaskReplyNewCertChain-message. The validity is checked within this function.
 	 * 
-	 * @param raw The byte[] to create the HuntingTaskReplyKnownCert from (it is supposed to be a valid HuntingTaskReplyKnownCert-message)
+	 * @param raw The byte[] to create the HuntingTaskReplyNewCertChain from (it is supposed to be a valid HuntingTaskReplyNewCertChain-message)
+	 * @param cm The CertificateManager that will be used for processing or storing certificates
 	 * @param db The Database connection to use
+	 * @throws CertificateException
 	 * @throws InvalidParameterException
 	 * @throws SQLException
+	 * @throws IOException
 	 * @throws InvalidKeyException
-	 * @throws UnknownHostException
 	 * @throws NoSuchAlgorithmException
 	 * @throws NoSuchProviderException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws KeyStoreException
 	 */
-	public HuntingTaskReplyKnownCert(byte[] raw, Database db) throws InvalidParameterException, SQLException, InvalidKeyException, UnknownHostException, NoSuchAlgorithmException, NoSuchProviderException {
-		// Create a HuntingTaskReply-Object of Type HuntingTaskReplyKnownCert
-		super(Message.MESSAGE_TYPE_TASK_REPLY_KNOWN_CERT);
+	public HuntingTaskReplyNewCertChain(byte[] raw, CertificateManager cm, Database db) throws CertificateException, InvalidParameterException, SQLException, IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, KeyStoreException {
+		// Create a HuntingTaskReply-Object of Type HuntingTaskReplyNewCertChain
+		super(Message.MESSAGE_TYPE_TASK_REPLY_NEW_CERT);
+		
+		// Store a handle to the CertificateManager so the certificate Chain can be processed and stored
+		this.cm = cm;
 
-		// Make sure that the input - which is supposed to be a HuntingTaskReplyKnownCert-message - is long enough (i.e. at least as long as the fixed length part of a HuntingTaskReplyKnownCert-message)
-		if (raw.length < 4 + 4 + 32 + 32) {
+		// Make sure that the input - which is supposed to be a HuntingTaskReplyNewCertChain-message - is long enough (i.e. at least as long as the fixed length part of a HuntingTaskReplyNewCertChain-message)
+		if (raw.length < 4 + 4 + 32 + 1 + 32) {
 			throw new IllegalArgumentException("The raw data array is too short: "+ raw.length);
 		}
 
@@ -114,14 +133,23 @@ public class HuntingTaskReplyKnownCert extends HuntingTaskReply {
 		pubIPHmac = new byte[32];
 		System.arraycopy(raw, 8, pubIPHmac, 0, 32);
 
-		// Cast the Message's Server-Cert-Hash-field into a byte[]
-		serverCertHash = new byte[32];
-		System.arraycopy(raw, 40, serverCertHash, 0, 32);
+		// Cast the Message's Number-Of-Certificates-In-Chain-field into an integer
+		int numberOfCertificates = (0xFF & (int) raw[40]);
+		certChain = new X509Certificate[numberOfCertificates];
+
+		// Cast the remaining Message into a BufferedInputStream so the certificate chain can easily be extracted
+		byte[] remainingMessage = new byte[raw.length - 41];
+		System.arraycopy(raw, 41, remainingMessage, 0, remainingMessage.length);
+		BufferedInputStream remainingMessageIS = new BufferedInputStream(new ByteArrayInputStream(remainingMessage));
+		
+		// Extract the certificate Chain
+		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+		for (int i = 0; i < numberOfCertificates; i++) {
+			certChain[i] = (X509Certificate) cf.generateCertificate(remainingMessageIS);
+		}
 
 		// Cast the Message's Trace-field into a String
-		byte[] traceBytes = new byte[raw.length - 72];
-		System.arraycopy(raw, 72, traceBytes, 0, traceBytes.length);
-		trace = new String(traceBytes);
+		trace = Message.inputStreamToString(remainingMessageIS);
 
 		/*
 		 * Validate the contents of the Message's fields
@@ -133,81 +161,64 @@ public class HuntingTaskReplyKnownCert extends HuntingTaskReply {
 		// Second: check if the trace is valid
 		validateTrace(trace, pubIPHmac, InetAddress.getByName(taskDetails.getString("TargetIP")),db);
 
-		// Third: check if the certificate hash is valid:
-		validateKnownCertificateHash(serverCertHash, serverHostPort,db);
-
+		// Third: check if the certificate chain is valid within itself (i.e. can it be ordered in a way that it is sane?)
+		LinkedList<X509Certificate> validatedChain = cm.makeCertChainValid(certChain,50,false);
+		if (validatedChain == null) {
+			throw new IllegalArgumentException("The certificate chain could not be validated!");
+		} else{
+			// The chain might have been transmitted in a wrong order. Since validatedChain is in the correct order -> Store it instead of certChain.
+			certChain = validatedChain.toArray(new X509Certificate[]{});
+		}
+		
 		/*
 		 * Perform more checks ( Sourcecode will not be published in order to make attacks on Crossbear harder)
 		 */
 	}
 
 	/**
-	 * Create a new HuntingTaskReplyKnownCert-message with explicit content
+	 * Create a new HuntingTaskReplyNewCertChain-message with explicit content
 	 * 
 	 * Please note: This function assumes that the input has already been checked for validity and therefore doesn't perform input validation!
+	 * Please note: This constructor DOES NOT SET the CertificateManager so storeInDatabase MUST NOT BE CALLED ON THIS OBJECT!
 	 * 
-	 * @param taskID The identifier of this HuntingTask (equals the Id-column in the HuntingTasks-table)
+	 * @param taskID The HuntingTask's ID for which this reply is sent
 	 * @param serverTimeOfExecution The estimated server local time when the hunting task was executed
 	 * @param pubIPHmac The HMAC of the PublicIP that was inserted in the trace to the server as first hop
-	 * @param serverCertHash The SHA256-Hash of the observed certificate
+	 * @param certChain The certificate chain observed by the client
 	 * @param trace The trace to the target
 	 */
-	public HuntingTaskReplyKnownCert(int taskID, Timestamp serverTimeOfExecution, byte[] pubIPHmac, byte[] serverCertHash, String trace){
-		// Create a HuntingTaskReply-Object of Type HuntingTaskReplyKnownCert
-		super(Message.MESSAGE_TYPE_TASK_REPLY_KNOWN_CERT);
+	public HuntingTaskReplyNewCertChain(int taskID, Timestamp serverTimeOfExecution, byte[] pubIPHmac, X509Certificate[] certChain, String trace){
+		// Create a HuntingTaskReply-Object of Type HuntingTaskReplyNewCertChain
+		super(Message.MESSAGE_TYPE_TASK_REPLY_NEW_CERT);
 		
 		this.taskID = taskID;
 		this.serverTimeOfExecution = serverTimeOfExecution;
 		this.pubIPHmac = pubIPHmac;
-		this.serverCertHash = serverCertHash;
+		this.certChain = certChain;
 		this.trace = trace;
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see crossbear.HuntingTaskReply#storeInDatabase()
 	 */
 	@Override
-	public void storeInDatabase(Database db) throws SQLException, CertificateEncodingException, InvalidParameterException, NoSuchAlgorithmException {
-		
+	public void storeInDatabase(Database db) throws InvalidAlgorithmParameterException, KeyStoreException, NoSuchAlgorithmException, CertificateException, UnsupportedEncodingException, NoSuchProviderException, SQLException {
+
 		// The HuntingTask might have been deactivated recently. This doesn't throw an exception but replies to those tasks will not be stored in the database anyway.
 		if (!taskIsActive)
 			return;
 
+		// Store the newly observed chain in the database
+		Long serverCertID = cm.storeCertChain(this.certChain, db);
+
 		// Store the observation that was made by the client in the database
-		long observID = CertificateManager.rememberCertObservation(byteArrayToHexString(this.serverCertHash), this.serverHostPort, this.serverIP, this.serverTimeOfExecution, "CrossbearHunter", this.observerIP, db);
+		long observID = CertificateManager.rememberCertObservation(serverCertID, this.serverHostPort, this.serverIP, this.serverTimeOfExecution, "CrossbearHunter", observerIP, db);
 
 		// Store the HuntingTaskResult in the database
 		CertificateManager.storeHuntingTaskResult(this.taskID, this.trace, observID, db);
 
 	}
-	
-	/**
-	 * Check if the certificate-hash that was sent within the HuntingTaskReplyKnownCert-message actually belongs to a certificate that is well known for the HuntingTask's HostPort-combination. The checks that are performed are 
-	 * - Is a certificate with that hash already known and is its certificate-chain set?
-	 * - Has the certificate ever been observed on the host:port combination?
-	 * 
-	 * @param serverCertHash The certificate-hash to check
-	 * @param serverHostPort The Hostname and port of the server from which it has been observed by the client e.g. encrypted.google.com:443
-	 * @param db The Database connection to use
-	 * @throws InvalidParameterException
-	 * @throws SQLException
-	 */
-	private void validateKnownCertificateHash(byte[] serverCertHash, String serverHostPort, Database db) throws InvalidParameterException, SQLException {
 
-		// Cast the hash from a byte[]-representation into a Hex-String representation
-		String serverCertHash_s = byteArrayToHexString(serverCertHash);
-
-		// Check if the certificate-hash that was sent within the HuntingTaskReplyKnownCert-message actually belongs to a certificate that is well known for a Host:port-combination
-		Object[] params = { serverCertHash_s, serverHostPort };
-		ResultSet rs = db.executeQuery("SELECT 1 FROM ServerCerts AS sc JOIN CertObservations AS co ON sc.SHA256DERHash = co.CertID WHERE sc.SHA256DERHash = ? AND sc.CertChainMD5 IS NOT NULL AND co.ServerHostPort = ? LIMIT 1", params);
-
-		// If the query returned a result then everything is fine if not the client sent a forged reply: Throw an exception
-		if (!rs.next()) {
-			throw new IllegalArgumentException("The certificate hash(" + serverCertHash_s + ") of the reply doesn't belong to a \"well known\" certificate ");
-		}
-
-	}
-	
 	/* (non-Javadoc)
 	 * @see crossbear.Message#writeContent(java.io.OutputStream)
 	 */
@@ -223,10 +234,15 @@ public class HuntingTaskReplyKnownCert extends HuntingTaskReply {
 		// Third part: the HMAC of the public IP used for the traceroute (needed by the server to validate the result)
 		out.write(this.pubIPHmac);
 
-		// Fourth part: the hash of the observed certificate
-		out.write(this.serverCertHash);
+		// Fourth part: the number of how many certificates are part of the chain
+		out.write(this.certChain.length & 255);
 
-		// Fifth part: the trace to the server
+		// Fifth part: the certificate chain (beginning with the server certificate)
+		for (int i = 0; i < Math.min(this.certChain.length, 255); i++) {
+			out.write(this.certChain[i].getEncoded());
+		}
+
+		// Sixth part: the trace to the server
 		out.write(this.trace.getBytes());
 
 	}

@@ -39,8 +39,8 @@ import java.security.cert.CertificateException;
 import java.sql.SQLException;
 
 import crossbear.messaging.HuntingTaskReply;
-import crossbear.messaging.HuntingTaskReplyKnownCert;
-import crossbear.messaging.HuntingTaskReplyNewCert;
+import crossbear.messaging.HuntingTaskReplyKnownCertChain;
+import crossbear.messaging.HuntingTaskReplyNewCertChain;
 import crossbear.messaging.Message;
 
 
@@ -96,9 +96,9 @@ public class HTRProcessor {
 			byte[] raw = Message.readNBytesFromStream(in, messageLength-3);
 			HuntingTaskReply reply;
 			if(messageType == Message.MESSAGE_TYPE_TASK_REPLY_KNOWN_CERT){
-				reply = new HuntingTaskReplyKnownCert(raw,db);
+				reply = new HuntingTaskReplyKnownCertChain(raw,db);
 			} else{
-				reply = new HuntingTaskReplyNewCert(raw,cm,db);
+				reply = new HuntingTaskReplyNewCertChain(raw,cm,db);
 			}
 			
 			// If the constructor didn't throw any Exceptions: Store the reply in the database
