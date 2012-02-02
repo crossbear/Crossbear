@@ -55,7 +55,7 @@ the rest of the system).
 		<script src="chrome://crossbear/content/CBHunter.js"/>
 		<script src="chrome://crossbear/content/CBProtector.js"/>
 		<script src="chrome://crossbear/content/CBHTLProcessor.js"/>
-		<script src="chrome://crossbear/content/CBCertificateCache.js"/>
+		<script src="chrome://crossbear/content/CBTrustDecisionCache.js"/>
 		<script src="chrome://crossbear/content/CBEventObserver.js"/>
 		<script src="chrome://crossbear/content/CBFrontend.js"/>
 		
