@@ -60,7 +60,7 @@ function CBProtector(cbFrontend) {
 		_cbprotector_prototype_called = true;
 
 		/**
-		 * Add a new entry in the CBCertificateCache for the host's certificate and domain according to the user's choice of trust and his/hers defaultCacheValidity.
+		 * Add a new entry in the CBTrustDecisionCache for the host's certificate and domain according to the user's choice of trust and his/hers defaultCacheValidity.
 		 * 
 		 * @param certHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
 		 * @param host The host that should or should not be trusted when sending a certificate with hash "hash"
@@ -70,8 +70,8 @@ function CBProtector(cbFrontend) {
 			// Get a timestamp for the current time
 			var currentTimestamp = Math.round(new Date().getTime() / 1000);
 
-			// Add a new entry in the CBCertificateCache for the host's certificate and domain according to the user's choice of trust and his/hers tdcValidity.
-			cbFrontend.cbcertificatecache.add(certHash, host, trust, currentTimestamp + cbFrontend.getUserPref("protector.tdcValidity", "int"));
+			// Add a new entry in the CBTrustDecisionCache for the host's certificate and domain according to the user's choice of trust and his/hers tdcValidity.
+			cbFrontend.cbtrustdecisioncache.add(certHash, host, trust, currentTimestamp + cbFrontend.getUserPref("protector.tdcValidity", "int"));
 		};
 
 		/**
@@ -81,7 +81,7 @@ function CBProtector(cbFrontend) {
 		 * - A response consisting of a normal response, and a piggy-backed HuntingTask (+PublicIPNotification, +CurrentServerTime )
 		 * 
 		 * This function will forward all piggy-backed HuntingTasks to the Hunter. Furthermore it will display a UnknownCertDlg if the user doesn't use the automatic-trust-setting or the server responded with a low rating. If the user DOES use that setting
-		 * and the server responded with a high rating then an entry in the CBCertificateCache is created automatically.
+		 * and the server responded with a high rating then an entry in the CBTrustDecisionCache is created automatically.
 		 * 
 		 * If a timeout occurred then a UnknownCertDlg will again be shown.
 		 * 
