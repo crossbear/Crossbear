@@ -279,6 +279,13 @@ function CBHunter(cbFrontend) {
 				}
 			} else if ((this.readyState == 4) && (this.status == 0)) { 
 				cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: could not connect to cbServer (connection timed out)!", false);
+				
+				// In case a callback-function was specified transfer the control-flow to it
+				if(this.cbCallBackParams.callback != null){
+
+					this.cbCallBackParams.callback("");
+					
+				}
 				return;
 			} else if ((this.readyState == 4)) {
 				cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: could not connect to cbServer (HTTP-STATUS: "+this.status+":"+this.statusText+")!", true);
