@@ -336,17 +336,17 @@ function getRSAPublicKeyFromBase64Cert(base64Cert) {
 
 /**
  * Read the certificate of the Crossbear server from the local file system and add it as a trusted server certificate to the Firefox certificate database. This needs to be done since Firefox doesn't allow connections to servers whose certificates it
- * doesn't trust. After this is done Crossbear's own Certificate cache (cbcertificatecache) is informed about the server's certificate. This again is necessary to prevent Mitm-attacks against Crossbear (the Server's certificate that is set by this
+ * doesn't trust. After this is done Crossbear's own TDC (cbtrustdecisioncache) is informed about the server's certificate. This again is necessary to prevent Mitm-attacks against Crossbear (the Server's certificate that is set by this
  * function is THE ONLY one that will be trusted for connections to the Crossbear server).
  * 
  * Finally this function will return the certificate's public key so it can be used to send asymmetrically encrypted data to the Crossbear server.
  * 
  * The code was created by the use of https://developer.mozilla.org/en/Code_snippets/Miscellaneous#Adding_custom_certificates_to_a_XULRunner_application
  * 
- * @param cbcertificatecache The CBCertificateCache to notify about the current Crossbear server certificate
+ * @param cbtrustdecisioncache The CBTrustDecisionCache to notify about the current Crossbear server certificate
  * @returns A RSAKeyPair containing the Public-RSA-key of the Crossbear server
  */
-function addCBCertToLocalStoreAndCache(cbcertificatecache) {
+function addCBCertToLocalStoreAndCache(cbtrustdecisioncache) {
 	
 	// Open Firefox's certificate database
 	var certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB2);
@@ -374,9 +374,9 @@ function addCBCertToLocalStoreAndCache(cbcertificatecache) {
 	// Add the certificate to Firefox's certificate database
 	certDB.addCertFromBase64(cert, 'P,p,p', "");
 
-	// Notify the CBCertificateCache about the current Crossbear server certificate
+	// Notify the CBTrustDecisionCache about the current Crossbear server certificate
 	var serverCertHash = Crypto.SHA256(Crypto.util.base64ToBytes(cert), {});
-	cbcertificatecache.setCBServerCertHash(serverCertHash);
+	cbtrustdecisioncache.setCBServerCertHash(serverCertHash);
 
 	// Extract and return the certificate's public key
 	return getRSAPublicKeyFromBase64Cert(cert);
