@@ -252,6 +252,13 @@ public class CertVerifyRequest extends Message {
 	public InetAddress getRemoteAddr() {
 		return remoteAddr;
 	}
+	
+	/**
+	 * @return True if the user claims to be using a SSL-Proxy, false otherwise
+	 */
+	public boolean isUserUsingProxy(){
+	return (getOptions()&1) != 0;
+	}
 
 	/**
 	 * @param cert The certificate chain that has been sent by the client

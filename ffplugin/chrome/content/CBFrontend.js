@@ -136,22 +136,22 @@ function CBFrontend(cbServerName) {
 		/**
 		 * Warn the user that system might currently be under attack. This is currently done by displaying a WarnUserDlg
 		 * 
-		 * @param thread The message explaining the thread that the user is supposingly facing
+		 * @param threat The message explaining the threat that the user is supposingly facing
 		 * @param timeoutSec A Timeout parameter specifying how long the warning is minimally displayed
 		 */
-		CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(thread, timeoutSec) {
+		CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(threat, timeoutSec) {
 
 			// Build an object containing the parameters for the WarnUserDlg
 			var params = {
 				inn : {
-					thread : thread,
+					threat : threat,
 					timeoutSec : timeoutSec
 				},
 				out : {}
 			};
 
 			// Open the Dialog
-			window.openDialog("chrome://crossbear/content/gui/WarnUserDlg.xul", "Crossbear - Warning you about a security Thread", "chrome,centerscreen,dependent=YES,dialog=YES,modal=YES,close=no", params);
+			window.openDialog("chrome://crossbear/content/gui/WarnUserDlg.xul", "Crossbear - Warning you about a security Threat", "chrome,centerscreen,dependent=YES,dialog=YES,modal=YES,close=no", params);
 		};
 
 		/**

@@ -35,9 +35,9 @@
  */
 function onLoad() {
 
-	// Set the warning-text according to the thread that the user should be warned about
+	// Set the warning-text according to the threat that the user should be warned about
 	var wtd = document.getElementById("warning-text-div");
-	wtd.innerHTML ="<p xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" width=\"350px\" style=\"color:#FFFFFF; word-wrap: break-word;\">"+window.arguments[0].inn.thread+"</p>";
+	wtd.innerHTML ="<p xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" width=\"350px\" style=\"color:#FFFFFF; word-wrap: break-word;\">"+window.arguments[0].inn.threat+"</p>";
 
 	//Disable the "I understand" button
 	document.documentElement.getButton("accept").disabled = true;

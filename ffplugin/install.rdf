@@ -20,7 +20,7 @@
    
     <!-- Front End MetaData -->
     <em:name>Crossbear</em:name>  
-    <em:description>A extenstion to detect and localize TLS Man-in-the-middle attacks</em:description>  
+    <em:description>A extension to detect and localize TLS Man-in-the-middle attacks</em:description>  
     <em:creator>Thomas Riedmaier</em:creator>  
 		<em:homepageURL>http://pki.net.in.tum.de</em:homepageURL>  
 

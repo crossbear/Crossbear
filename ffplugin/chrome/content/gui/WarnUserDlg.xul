@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   xmlns:html="http://www.w3.org/1999/xhtml"
   
   windowtype="WarnUserDlg"
-  title="Crossbear - Warning you about a security Thread"
+  title="Crossbear - Warning you about a security Threat"
   buttons="accept"
   buttonlabelaccept="I understand"
   ondialogaccept="return ok();"
@@ -62,7 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		
 			<!-- Warning Text -->
 			<box orient="vertical" pack="start" align="start" flex="1" >
-				<label value="Crossbear detected a potential security thread for your system:" style="text-decoration: underline;font-weight:bold;color:#FFFFFF;margin-left:-2px;"/>
+				<label value="Crossbear detected a potential security threat for your system:" style="text-decoration: underline;font-weight:bold;color:#FFFFFF;margin-left:-2px;"/>
 				<html:div id="warning-text-div" type="content" />
 			</box>
 			

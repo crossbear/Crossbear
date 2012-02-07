@@ -28,7 +28,6 @@
 package crossbear;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.InetAddress;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -643,15 +642,21 @@ public class CVRProcessor {
 	 * made here.
 	 * 
 	 * The current implementation of this function will return true if the comparison of the request's and the host's certificates resulted in a "different"-judgment and if the host's IP is a normal
-	 * unicast IP. In all other cases the function will return false.
+	 * unicast IP (and not the one of a proxy). In all other cases the function will return false.
 	 * 
+	 * @param request The Request that the client sent
 	 * @param result The CertVerifyResult that has been created for the CertVerifyRequest
 	 * @return True if a HuntingTask should be created else false
 	 */
-	private boolean huntingTaskShouldBeCreated(CertVerifyResult result) {
+	private boolean huntingTaskShouldBeCreated(CertVerifyRequest request, CertVerifyResult result) {
 		
 		// Did the comparison of the request's and the host's certificates resulted in a "different"-judgment?
 		if(result.getReport().indexOf("CERTCOMPARE: DIFFERENT") == -1){
+			return false;
+		}
+		
+		// Did the client set the "ssl-proxy"-bit
+		if(cvr.isUserUsingProxy()){
 			return false;
 		}
 	
@@ -692,17 +697,12 @@ public class CVRProcessor {
 		X509Certificate requestCert = cm.getCertFromRequest(cvr, db);
 		
 		X509Certificate serverCert;
-		try{
-			// Try to get the server's real certificate ...
-			serverCert = cm.getCertForHost(cvr, db);
-		} catch (ConnectException e){
-			
-			// ... and if that was not possible: set it to null
-			serverCert = null;
-		}
-		
+
+		// Try to get the server's real certificate ...
+		serverCert = cm.getCertForHost(cvr, db);
+
 		//concatenate hostname and hostport to hostport. Hostport is the host's identifier in the database
-		String hostPort = cvr.getHostName()+":"+String.valueOf(((cvr.getOptions()&1) != 0)?443:cvr.getHostPort());
+		String hostPort = cvr.getHostName()+":"+String.valueOf(cvr.isUserUsingProxy()?443:cvr.getHostPort());
 		
 		MessageList ml = new MessageList();
 
@@ -738,10 +738,10 @@ public class CVRProcessor {
 		ml.add(result);
 
 		// Is the result such that a Hunting Task should be created?
-		if (huntingTaskShouldBeCreated(result)) {
+		if (huntingTaskShouldBeCreated(cvr, result)) {
 			ml.add(new CurrentServerTime());
 			ml.add(new PublicIPNotification(cvr.getRemoteAddr(), db));
-			ml.add(new HuntingTask(cvr.getHostName(), cvr.getHostIP(), ((cvr.getOptions()&1) != 0)?443:cvr.getHostPort(), db));
+			ml.add(new HuntingTask(cvr.getHostName(), cvr.getHostIP(), cvr.isUserUsingProxy()?443:cvr.getHostPort(), db));
 		}
 
 		return ml;
