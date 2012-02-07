@@ -36,6 +36,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
@@ -411,6 +412,49 @@ public class CVRProcessor {
 		String match = matcher.group();
 		return match.substring(3, match.length());
 	}
+	
+	/**
+	 * After a certificate was judged and a CertVerifyResult was created it might be of use to create a Hunting Task on the server of the CertVerifyRequest. The decision if this is wanted or not is
+	 * made here.
+	 * 
+	 * The current implementation of this function will return true if all of the following criteria are true:
+	 * - comparison of the request's and the host's certificates resulted in a "different"-judgment
+	 * - the IP of the server is not the one of a SSL-Proxy
+	 * - the chain that the client observed does not match the certificate that the server observed (same chains means same issuer ->most likely legal change)
+	 * - the host's IP is a normal unicast IP
+	 * 
+	 * In all other cases the function will return false.
+	 * 
+	 * @param request The Request that the client sent
+	 * @param result The CertVerifyResult that has been created for the CertVerifyRequest
+	 * @param observedCertificate The certificate that the Crossbear-Server observed for the server
+	 * @return True if a HuntingTask should be created else false
+	 */
+	private static boolean huntingTaskShouldBeCreated(CertVerifyRequest request, CertVerifyResult result, X509Certificate observedCertificate) {
+		
+		// Did the comparison of the request's and the host's certificates resulted in a "different"-judgment?
+		if(result.getReport().indexOf("CERTCOMPARE: DIFFERENT") == -1){
+			return false;
+		}
+		
+		// Did the client set the "ssl-proxy"-bit
+		if(request.isUserUsingProxy()){
+			return false;
+		}
+		
+		// Has the certificate that the server observed the same certificate chain as the one the client sent?
+		if(request.getCertChain().length>1){
+			try{
+				observedCertificate.verify(request.getCertChain()[1].getPublicKey());
+				return false;
+			} catch (SignatureException | NoSuchProviderException | InvalidKeyException | NoSuchAlgorithmException | CertificateException e){}
+		}
+		
+	
+		// Is the host's IP a link-local or a multicast address? If yes return false if not return true
+		InetAddress hostIP = request.getHostIP();
+		return !hostIP.isMulticastAddress() && !hostIP.isAnyLocalAddress() && !hostIP.isLinkLocalAddress() && !hostIP.isLoopbackAddress() && !hostIP.isSiteLocalAddress();
+	}
 
 	/**
 	 * Check if a byte[] implements a valid Common Name in PASCAL-String representation. The two checks that are performed are:
@@ -638,34 +682,6 @@ public class CVRProcessor {
 	}
 	
 	/**
-	 * After a certificate was judged and a CertVerifyResult was created it might be of use to create a Hunting Task on the server of the CertVerifyRequest. The decision if this is wanted or not is
-	 * made here.
-	 * 
-	 * The current implementation of this function will return true if the comparison of the request's and the host's certificates resulted in a "different"-judgment and if the host's IP is a normal
-	 * unicast IP (and not the one of a proxy). In all other cases the function will return false.
-	 * 
-	 * @param request The Request that the client sent
-	 * @param result The CertVerifyResult that has been created for the CertVerifyRequest
-	 * @return True if a HuntingTask should be created else false
-	 */
-	private boolean huntingTaskShouldBeCreated(CertVerifyRequest request, CertVerifyResult result) {
-		
-		// Did the comparison of the request's and the host's certificates resulted in a "different"-judgment?
-		if(result.getReport().indexOf("CERTCOMPARE: DIFFERENT") == -1){
-			return false;
-		}
-		
-		// Did the client set the "ssl-proxy"-bit
-		if(cvr.isUserUsingProxy()){
-			return false;
-		}
-	
-		// Is the host's IP a link-local or a multicast address? If yes return false if not return true
-		InetAddress hostIP = cvr.getHostIP();
-		return !hostIP.isMulticastAddress() && !hostIP.isAnyLocalAddress() && !hostIP.isLinkLocalAddress() && !hostIP.isLoopbackAddress() && !hostIP.isSiteLocalAddress();
-	}
-	
-	/**
 	 * The process takes as input a CertVerifyRequest and judges its certificate based on various criteria. It returns a MessageList consisting of a CertVerifyResult and optionally a
 	 * CurrentServerTime-message a PublicIPNotification-message and a HuntingTask-message if the CertVerifyResult is worth creating a hunting task.
 	 * 
@@ -738,7 +754,7 @@ public class CVRProcessor {
 		ml.add(result);
 
 		// Is the result such that a Hunting Task should be created?
-		if (huntingTaskShouldBeCreated(cvr, result)) {
+		if (huntingTaskShouldBeCreated(cvr, result, serverCert)) {
 			ml.add(new CurrentServerTime());
 			ml.add(new PublicIPNotification(cvr.getRemoteAddr(), db));
 			ml.add(new HuntingTask(cvr.getHostName(), cvr.getHostIP(), cvr.isUserUsingProxy()?443:cvr.getHostPort(), db));

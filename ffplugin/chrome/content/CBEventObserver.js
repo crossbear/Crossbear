@@ -155,6 +155,23 @@ function CBEventObserver(cbFrontend) {
 					cbFrontend.warnUserAboutBeingUnderAttack("You requested a SSL-secured resource but the server redirected you to an unsafe resource. You might be under attack!",0);
 					return;
 				}
+				
+				// Firefox allows connections to HTTPS-pages using their IPv4-addresses. Crossbear does currently not support this.
+				var hostNoPort = host.split(":")[0];
+				if(hostNoPort.match(ipv4Regex)){
+					
+					// If the IP belongs to a local IP-> allow it anyways
+					if(hostNoPort.match(privateIPRegex)){
+						return;
+						
+					// If not warn the user and cancel the connection
+					} else{
+						cbFrontend.warnUserAboutBeingUnderAttack("You tried to access a HTTPS-page using its IP-Address. This is strongly disencouraged and currently not supported by Crossbear.<html:br /><html:br /> If you want to go on you have to disable the Crossbear-Protector!",0);
+						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
+						return;
+					}
+					
+				}
 
 				// Try to extract the server's certificate
 				var serverCert;
