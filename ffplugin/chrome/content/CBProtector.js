@@ -39,7 +39,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBProtector(cbFrontend) {
+Crossbear.CBProtector = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 
 	// The list of all CertificateVerificationRequests that are to be done. This list does not include any duplicates for performance reasons (see class description).
@@ -66,7 +66,7 @@ function CBProtector(cbFrontend) {
 		 * @param host The host that should or should not be trusted when sending a certificate with hash "hash"
 		 * @param trust "1" if the user want's the certificate to be trusted, else "0"
 		 */
-		CBProtector.prototype.addCacheEntryDefaultValidity = function addCacheEntryDefaultValidity(certHash, host, trust) {
+		Crossbear.CBProtector.prototype.addCacheEntryDefaultValidity = function addCacheEntryDefaultValidity(certHash, host, trust) {
 			// Get a timestamp for the current time
 			var currentTimestamp = Math.round(new Date().getTime() / 1000);
 
@@ -87,7 +87,7 @@ function CBProtector(cbFrontend) {
 		 * 
 		 * Please note: This function is a XMLHTTPRequest-callback-function
 		 */
-		CBProtector.prototype.certVerifyCallback = function certVerifyCallback() {
+		Crossbear.CBProtector.prototype.certVerifyCallback = function certVerifyCallback() {
 
 			// Check if the server's reply has entirely been received
 			if ((this.readyState == 4) && (this.status == 200)) {
@@ -97,13 +97,13 @@ function CBProtector(cbFrontend) {
 				if (output) {
 
 					// Try to Decode the server's reply as an array of CBMessages
-					var serverMessages = messageBuilder(new Uint8Array(output), cbFrontend);
+					var serverMessages = Crossbear.messageBuilder(new Uint8Array(output), cbFrontend);
 
 					// Read the messages and store their content at the appropriate places
 					for ( var i = 0; i < serverMessages.length; i++) {
 
 						// Decode the CertVerifyResponse
-						if (serverMessages[i].constructor.name == "CBMessageCertVerifyResult") {
+						if (serverMessages[i].messageType == "CBMessageCertVerifyResult") {
 
 							// Extract the rating
 							var rating = serverMessages[i].getRating();
@@ -142,15 +142,15 @@ function CBProtector(cbFrontend) {
 							window.openDialog("chrome://crossbear/content/gui/UnknownCertDlg.xul", "", "chrome,centerscreen,dependent=YES,dialog=YES,close=no", params);
 
 						// A HuntingTask will be stored in and then executed by the CBHunter(WorkerThread)
-						} else if (serverMessages[i].constructor.name == "CBMessageHuntingTask") {
+						} else if (serverMessages[i].messageType == "CBMessageHuntingTask") {
 							cbFrontend.cbhunter.addTask(serverMessages[i]);
 
 						// The current server time will be stored in the cbFrontend
-						} else if (serverMessages[i].constructor.name == "CBMessageCurrentServerTime") {
+						} else if (serverMessages[i].messageType == "CBMessageCurrentServerTime") {
 							cbFrontend.calcAndStoreCbServerTimeDiff(serverMessages[i].getCurrentServerTime());
 
 						// The PublicIP will be stored in the CBHunter(WorkerThread)
-						} else if (serverMessages[i].constructor.name == "CBMessagePublicIPNotif") {
+						} else if (serverMessages[i].messageType == "CBMessagePublicIPNotif") {
 							cbFrontend.cbhunter.addPublicIP(serverMessages[i]);
 
 						} else {
@@ -204,7 +204,7 @@ function CBProtector(cbFrontend) {
 		/**
 		 * Remove the current CertVerificationRequest from the todo-list and go on with the next one
 		 */
-		CBProtector.prototype.continueWithNextRequest = function continueWithNextRequest() {
+		Crossbear.CBProtector.prototype.continueWithNextRequest = function continueWithNextRequest() {
 			self.requestsPending.shift();
 			self.executeFirstPendingRequest();
 		};
@@ -212,7 +212,7 @@ function CBProtector(cbFrontend) {
 		/**
 		 * Get the oldest CertVerificationRequest from the todo-list. If there is any: execute it (i.e. forward it to the server)
 		 */
-		CBProtector.prototype.executeFirstPendingRequest = function executeFirstPendingRequest() {
+		Crossbear.CBProtector.prototype.executeFirstPendingRequest = function executeFirstPendingRequest() {
 
 			// Make sure that there is at least one request on the todo-list. If not: terminate the execution of the CertVerificationRequest list.
 			if (self.requestsPending.length == 0) {
@@ -226,10 +226,10 @@ function CBProtector(cbFrontend) {
 			cbFrontend.displayInformation("Requesting Verification for \""+ self.requestsPending[0].host + "\" from the Crossbear server");
 
 			// Create the CertVerifyRequest-message that should be sent
-			var msg = new CBMessageCertVerifyRequest(self.requestsPending[0].certChain, self.requestsPending[0].host, (pps.resolve(ioService.newURI("https://"+self.requestsPending[0].host.split("|")[0], null, null),0) != null)?1:0);
+			var msg = new Crossbear.CBMessageCertVerifyRequest(self.requestsPending[0].certChain, self.requestsPending[0].host, (pps.resolve(ioService.newURI("https://"+self.requestsPending[0].host.split("|")[0], null, null),0) != null)?1:0);
 
 			// Send the message to the server ...
-			cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, null);
+			cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, null);
 
 		};
 
@@ -241,7 +241,7 @@ function CBProtector(cbFrontend) {
 		 * @param certHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
 		 * @param host The host that should or should not be trusted when sending a certificate with hash "hash"
 		 */
-		CBProtector.prototype.requestVerification = function requestVerification(certChain, certHash, host) {
+		Crossbear.CBProtector.prototype.requestVerification = function requestVerification(certChain, certHash, host) {
 
 			// Create a new CertVerificationRequest-object
 			var request = {
@@ -273,7 +273,7 @@ function CBProtector(cbFrontend) {
 		/**
 		 * Check if there is a currently active CertVerificationRequest execution. If there is none start executing the CertVerificationRequest-list
 		 */
-		CBProtector.prototype.verifyRequestIfNoneIsPending = function verifyRequestIfNoneIsPending() {
+		Crossbear.CBProtector.prototype.verifyRequestIfNoneIsPending = function verifyRequestIfNoneIsPending() {
 
 			if (!self.currentlyRequesting) {
 				self.currentlyRequesting = true;
@@ -283,4 +283,4 @@ function CBProtector(cbFrontend) {
 
 	}
 
-}
+};

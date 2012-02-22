@@ -44,7 +44,7 @@
  * @param publicIPcacheValidity The duration in seconds that a PublicIP will be considered as unchanged (after that duration the current PublicIP will be requested)
  * @param serverIPcacheValidity The duration in seconds that the Crossbear Server IP will be considered as unchanged (after that duration the current Server IP  will be requested)
  */
-function CBHunterWorkerInitEvent(tracerouteSamplesPerHop, tracerouteMaxHops, libPaths, osIsWin, publicIPcacheValidity,serverIPcacheValidity) {
+Crossbear.CBHunterWorkerInitEvent = function(tracerouteSamplesPerHop, tracerouteMaxHops, libPaths, osIsWin, publicIPcacheValidity,serverIPcacheValidity) {
 	this.eventtype = "CBHunterWorkerInitEvent";
 	this.tracerouteSamplesPerHop = tracerouteSamplesPerHop;
 	this.tracerouteMaxHops = tracerouteMaxHops;
@@ -52,7 +52,7 @@ function CBHunterWorkerInitEvent(tracerouteSamplesPerHop, tracerouteMaxHops, lib
 	this.osIsWin = osIsWin;
 	this.publicIPcacheValidity = publicIPcacheValidity;
 	this.serverIPcacheValidity = serverIPcacheValidity;
-}
+};
 
 /**
  * Notify the Worker-Thread about a new HuntingTask that it should execute
@@ -64,7 +64,7 @@ function CBHunterWorkerInitEvent(tracerouteSamplesPerHop, tracerouteMaxHops, lib
  * @param targetPort The port of the HuntingTask's target
  * @param targetHostname The Hostname of the HuntingTask's target
  */
-function CBHunterWorkerNewTask(taskID, ipVersion,alreadyKnownHashes, targetIP, targetPort, targetHostname){
+Crossbear.CBHunterWorkerNewTask = function (taskID, ipVersion,alreadyKnownHashes, targetIP, targetPort, targetHostname){
 	this.eventtype = "CBHunterWorkerNewTask";
 	this.taskID = taskID;
 	this.ipVersion = ipVersion;
@@ -72,7 +72,7 @@ function CBHunterWorkerNewTask(taskID, ipVersion,alreadyKnownHashes, targetIP, t
 	this.targetIP = targetIP;
 	this.targetPort = targetPort;
 	this.targetHostname = targetHostname;
-}
+};
 
 /**
  * Notify the Worker-Thread about a current PublicIP of the system
@@ -82,13 +82,13 @@ function CBHunterWorkerNewTask(taskID, ipVersion,alreadyKnownHashes, targetIP, t
  * @param hMac The HMAC that was sent by the Crossbear server along with this PublicIP
  * @param timeOfObservation The local time of when this PublicIP was observed
  */
-function CBHunterWorkerNewPublicIP(ipVersion,ip, hMac, timeOfObservation){
+Crossbear.CBHunterWorkerNewPublicIP = function (ipVersion,ip, hMac, timeOfObservation){
 	this.eventtype = "CBHunterWorkerNewPublicIP";
 	this.ipVersion = ipVersion;
 	this.ip = ip;
 	this.hMac = hMac;
 	this.timeOfObservation = timeOfObservation;
-}
+};
 
 /**
  * Request to get the current system's PublicIP of a specific version
@@ -96,11 +96,11 @@ function CBHunterWorkerNewPublicIP(ipVersion,ip, hMac, timeOfObservation){
  * @param ipVersion The IP-version to get the publicIP for
  * @param serverIP The IP of the Crossbear server that has the same IP-version as is specified by "ipVersion"
  */
-function CBHunterWorkerNewPublicIPRequest(ipVersion,serverIP){
+Crossbear.CBHunterWorkerNewPublicIPRequest = function (ipVersion,serverIP){
 	this.eventtype = "CBHunterWorkerNewPublicIPRequest";
 	this.ipVersion = ipVersion;
 	this.serverIP = serverIP;
-}
+};
 
 /**
  * Notify the Worker-Thread about the Crossbear-Server's current IP(s)
@@ -109,36 +109,36 @@ function CBHunterWorkerNewPublicIPRequest(ipVersion,serverIP){
  * @param IPv6 A current IPv6 address of the Crossbear server
  * @param timeOfObservation The local time when these IPs were observed
  */
-function CBHunterWorkerNewServerIPs(IPv4,IPv6, timeOfObservation){
+Crossbear.CBHunterWorkerNewServerIPs = function (IPv4,IPv6, timeOfObservation){
 	this.eventtype = "CBHunterWorkerNewServerIPs";
 	this.IPv4 = IPv4;
 	this.IPv6 = IPv6;
 	this.timeOfObservation = timeOfObservation;
-}
+};
 
 /**
  * Request to get the current IP(s) of the Crossbear server
  */
-function CBHunterWorkerNewServerIPsRequest(){
+Crossbear.CBHunterWorkerNewServerIPsRequest = function (){
 	this.eventtype = "CBHunterWorkerNewServerIPsRequest";
-}
+};
 
 /**
  * Request to get the current timestamp in server-local-time
  */
-function CBHunterWorkerServerTimeRequest(){
+Crossbear.CBHunterWorkerServerTimeRequest = function (){
 	this.eventtype = "CBHunterWorkerServerTimeRequest";
-}
+};
 
 /**
  * Notify the Worker-Thread about the current local time of the server (required in order to set the HuntingTask-timestamps in server-local-time)
  * 
  * @param currentServerTime The current timestamp in server-local-time
  */
-function CBHunterWorkerServerTimeReply(currentServerTime){
+Crossbear.CBHunterWorkerServerTimeReply = function (currentServerTime){
 	this.eventtype = "CBHunterWorkerServerTimeReply";
 	this.currentServerTime = currentServerTime;
-}
+};
 
 /**
  * Request to store the fact that a HuntingTask was successfully executed in the local database
@@ -147,21 +147,21 @@ function CBHunterWorkerServerTimeReply(currentServerTime){
  * @param publicIP The PublicIP that was used to execute it
  * @param serverTimeOfExecution The server time during which it was executed
  */
-function CBHunterWorkerDBStoreRequest(taskID, publicIP, serverTimeOfExecution) {
+Crossbear.CBHunterWorkerDBStoreRequest = function (taskID, publicIP, serverTimeOfExecution) {
 	this.eventtype = "CBHunterWorkerDBStoreRequest";
 	this.taskID = taskID;
 	this.publicIP = publicIP;
 	this.serverTimeOfExecution = serverTimeOfExecution;
-}
+};
 /**
  * Message containing a list of HuntingTaskResults (to be send to the Crossbear server)
  * 
  * @param results An Array of byte[]s, each representing a CBMessageTaskReply
  */
-function CBHunterWorkerHuntingResults(results) {
+Crossbear.CBHunterWorkerHuntingResults = function (results) {
 	this.eventtype = "CBHunterWorkerHuntingResults";
 	this.results = results;
-}
+};
 
 /**
  * Notification that an Error occured -> To be forwarded to the cbFrontend.displayTechnicalFailure-function
@@ -171,11 +171,11 @@ function CBHunterWorkerHuntingResults(results) {
  * @param what The message that should be displayed
  * @param critical If True Crossbear will be shut down after displaying the exception
  */
-function CBHunterWorkerError(what, critical) {
+Crossbear.CBHunterWorkerError = function (what, critical) {
 	this.eventtype = "CBHunterWorkerError";
 	this.what = what;
 	this.critical = critical;
-}
+};
 
 /**
  * Information that should be displayed by the GUI-Thread -> To be forwarded to the cbFrontend.displayInformation-function
@@ -184,7 +184,7 @@ function CBHunterWorkerError(what, critical) {
  * 
  * @param what The message that should be displayed
  */
-function CBHunterWorkerInformation(what) {
+Crossbear.CBHunterWorkerInformation = function (what) {
 	this.eventtype = "CBHunterWorkerInformation";
 	this.what = what;
-}
+};

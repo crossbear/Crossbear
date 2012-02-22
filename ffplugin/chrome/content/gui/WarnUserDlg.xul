@@ -46,6 +46,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   style="-moz-appearance: none; background-color:#000000; ">
   
 	<!-- Include scripts -->
+	<script type="application/javascript" src="chrome://crossbear/content/CBHelper.js"/>
+	
 	<script type="application/javascript" src="chrome://crossbear/content/gui/WarnUserDlg.js"/>
 
 	<!-- Outer content box (including icon box) -->
@@ -58,12 +60,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		</box>
 		
 		<!-- Inner content box -->
-		<box orient="vertical" id="warning-text">
+		<box orient="vertical" id="crossbear-warning-text">
 		
 			<!-- Warning Text -->
 			<box orient="vertical" pack="start" align="start" flex="1" >
 				<label value="Crossbear detected a potential security threat for your system:" style="text-decoration: underline;font-weight:bold;color:#FFFFFF;margin-left:-2px;"/>
-				<html:div id="warning-text-div" type="content" />
+				<html:div id="crossbear-warning-text-div" type="content" />
 			</box>
 			
 			<!-- Confirm button -->

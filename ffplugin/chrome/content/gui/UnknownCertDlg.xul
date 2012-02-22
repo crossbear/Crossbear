@@ -67,19 +67,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   	</box>
 	
 	<!-- Server-Reply Box -->
-	<box orient="vertical" id="serverReplyBox" align="center" >
-		<label style="font-size:200%; font-weight:bold;" value="?" id="serverReplyRating"/>
-		<html:div id="serverReplyDiv" type="content" />
+	<box orient="vertical" id="crossbear-serverReplyBox" align="center" >
+		<label style="font-size:200%; font-weight:bold;" value="?" id="crossbear-serverReplyRating"/>
+		<html:div id="crossbear-serverReplyDiv" type="content" />
 	</box>
 	
 	<!-- Normal-Reply-Buttons Box -->
-	<box orient="horizontal" pack="center" id="buttonBox">
+	<box orient="horizontal" pack="center" id="crossbear-buttonBox">
 	    <button dlgtype="accept"/>
    		<button dlgtype="cancel"/>
     </box>
     
     <!-- No-Reply-Buttons Box -->
-    <box orient="horizontal" pack="center" hidden="true" id="timeoutButtonBox">
+    <box orient="horizontal" pack="center" hidden="true" id="crossbear-timeoutButtonBox">
     	<button label="Retry" onclick="retry();"/>
     	<button label="Deactivate Protector" onclick="deactivateProtector();"/>
     </box>

@@ -41,13 +41,14 @@ the rest of the system).
 		<script src="chrome://crossbear/content/crypto-js/aes.js"/>
 		<script src="chrome://crossbear/content/crypto-js/sha256.js"/>
 		<script src="chrome://crossbear/content/crypto-js/sha1.js"/>
+		
+		<script src="chrome://crossbear/content/CBHelper.js"/>
 
+		<script src="chrome://crossbear/content/rsa-js/RSA.js"/>
 		<script src="chrome://crossbear/content/rsa-js/BigInt.js"/>
 		<script src="chrome://crossbear/content/rsa-js/Barrett.js"/>
 		<script src="chrome://crossbear/content/rsa-js/OAEP.js"/>
-		<script src="chrome://crossbear/content/rsa-js/RSA.js"/>
 
-		<script src="chrome://crossbear/content/CBHelper.js"/>
 		<script src="chrome://crossbear/content/CBMessages.js"/>
 		<script src="chrome://crossbear/content/CBEvents.js"/>
 		<script src="chrome://crossbear/content/CBDatabase.js"/>
@@ -60,29 +61,29 @@ the rest of the system).
 		<script src="chrome://crossbear/content/CBFrontend.js"/>
 		
 		<!-- Instantiate a new CBFrontend-object and thus initialize the Crossbear system -->
-		<script> var cbfe = new CBFrontend('otranto.net.in.tum.de');</script>
+		<script> var crossbearFrontend = new Crossbear.CBFrontend('otranto.net.in.tum.de');</script>
 
 		<!-- Crossbear Popup Menu -->
 		<popupset >
 		
 				<!-- Call the setPopupValues-function if the user clicks on the popup -->
-				<menupopup id="cb-statusbarpanel-popup" onpopupshowing="cbfe.setPopupValues()" position="before_end">
+				<menupopup id="crossbear-statusbarpanel-popup" onpopupshowing="crossbearFrontend.setPopupValues()" position="before_end">
 				
 						<!-- MenueItem Settings: Open a OptionsDlg -->
-						<menuitem label="Settings" id="cb-statusbarpanel-popup-settings" onclick="var params = {inn : {cbFrontend : cbfe},out : {}}; window.openDialog('chrome://crossbear/content/gui/OptionsDlg.xul', 'Crossbear - Settings', 'chrome,centerscreen,dependent=YES,dialog=YES', params);"/>
+						<menuitem label="Settings" id="crossbear-statusbarpanel-popup-settings" onclick="var params = {inn : {cbFrontend : crossbearFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/OptionsDlg.xul', 'Crossbear - Settings', 'chrome,centerscreen,dependent=YES,dialog=YES', params);"/>
 						<menuseparator/>
 						
 						<!-- MenueItem Protector: Call the protectorCheckBoxClicked-function if the user clicks on it -->
-						<menuitem type="checkbox" autocheck="false" label="Protector" id="cb-statusbarpanel-popup-protector" onclick="cbfe.protectorCheckBoxClicked();"/>
+						<menuitem type="checkbox" autocheck="false" label="Protector" id="crossbear-statusbarpanel-popup-protector" onclick="crossbearFrontend.protectorCheckBoxClicked();"/>
 						
 						<!-- MenueItem Hunter: Call the hunterCheckBoxClicked-function if the user clicks on it -->
-						<menuitem type="checkbox" autocheck="false" label="Hunter" id="cb-statusbarpanel-popup-hunter" onclick="cbfe.hunterCheckBoxClicked();"/>
+						<menuitem type="checkbox" autocheck="false" label="Hunter" id="crossbear-statusbarpanel-popup-hunter" onclick="crossbearFrontend.hunterCheckBoxClicked();"/>
 				</menupopup>
 		</popupset>
 
 		<!-- Add the Crossbear Popup Menu to the Add-on-bar -->
 		<statusbar id="status-bar">  
-				<statusbarpanel id="cb-statusbarpanel" class="statusbarpanel-iconic" src="chrome://crossbear/content/gui/statusbar icon.png" tooltiptext="Crossbear"  popup="cb-statusbarpanel-popup"/>
+				<statusbarpanel id="crossbear-statusbarpanel" class="statusbarpanel-iconic" src="chrome://crossbear/content/gui/statusbar icon.png" tooltiptext="Crossbear"  popup="crossbear-statusbarpanel-popup"/>
 		</statusbar>
 
 </overlay>

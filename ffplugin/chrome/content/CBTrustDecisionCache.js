@@ -28,7 +28,7 @@
 /**
  * The CBTrustDecisionCache can be asked whether a certificate is known for a host and - in case it is - if it should be trusted. It will then give one of the CBTrustDecisionCacheReturnTypes as answer 
  */
-var CBTrustDecisionCacheReturnTypes = {
+Crossbear.CBTrustDecisionCacheReturnTypes = {
 	OK : 0,
 	NOT_VALID : 1,
 	CB_SERVER_OK : 2,
@@ -46,12 +46,12 @@ var CBTrustDecisionCacheReturnTypes = {
  * 
  * @author Thomas Riedmaier
  */
-function CBTrustDecisionCacheEntry(hash, host, trust, validUntil) {
+Crossbear.CBTrustDecisionCacheEntry = function (hash, host, trust, validUntil) {
 	this.hash = hash;
 	this.host = host;
 	this.trust = trust;
 	this.validUntil = validUntil;
-}
+};
 
 /**
  * Crossbear uses multilevel caching on information about certificate trust. This reduces the load on the Crossbear server on the one hand while on the other hand speeding up the page-loading tremendously. When a user observes a certificate for a
@@ -73,7 +73,7 @@ function CBTrustDecisionCacheEntry(hash, host, trust, validUntil) {
  * 
  * @author Thomas Riedmaier
  */
-function CBTrustDecisionCache(cbFrontend) {
+Crossbear.CBTrustDecisionCache = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 
 	// This is the Javascript-object that implements the first-level cache on the information whether or not a certificate should be trusted for a host.
@@ -97,7 +97,7 @@ function CBTrustDecisionCache(cbFrontend) {
 		 * 
 		 * @param hash The SHA256-hash of the only trusted certificate for the Crossbear server
 		 */
-		CBTrustDecisionCache.prototype.setCBServerCertHash = function setCBServerCertHash(hash) {
+		Crossbear.CBTrustDecisionCache.prototype.setCBServerCertHash = function setCBServerCertHash(hash) {
 			self.cbServerCertHash = hash;
 		};
 		
@@ -109,7 +109,7 @@ function CBTrustDecisionCache(cbFrontend) {
 		 * @param trust True if the certificate with hash "hash" should be trusted when received from "host", else false
 		 * @param validUntil A Timestamp telling until when the trust-information given by this CBTDCEntry should be considered valid
 		 */
-		CBTrustDecisionCache.prototype.add = function add(hash, host , trust, validUntil) {
+		Crossbear.CBTrustDecisionCache.prototype.add = function add(hash, host , trust, validUntil) {
 
 			// 1) Add the entry to the database (=persistent) cache
 			var sqlStatement = "INSERT OR REPLACE INTO certTrust ( CertHash, Host, Trust, ValidUntil) VALUES (:hash, :host, :trust, :validUntil)";
@@ -125,7 +125,7 @@ function CBTrustDecisionCache(cbFrontend) {
 			// 2) Add the entry to the internal cache.
 			
 			// Create the new entry ...
-			var newEntry = new CBTrustDecisionCacheEntry(hash, host, trust, validUntil);
+			var newEntry = new Crossbear.CBTrustDecisionCacheEntry(hash, host, trust, validUntil);
 
 			// ... and add it.
 			self.addInternal(newEntry);
@@ -141,10 +141,10 @@ function CBTrustDecisionCache(cbFrontend) {
 		* 
 		* @param entry The entry to add to the internal cache
 		*/
-		CBTrustDecisionCache.prototype.addInternal = function addInternal(entry) {
+		Crossbear.CBTrustDecisionCache.prototype.addInternal = function addInternal(entry) {
 			
 			// Clone the original cache
-			var cacheCopy = clone(self.recentlyUsedCertificatesValidities);
+			var cacheCopy = Crossbear.clone(self.recentlyUsedCertificatesValidities);
 
 			// Add new entry at the front position of the copy
 			cacheCopy.unshift(entry);
@@ -164,14 +164,14 @@ function CBTrustDecisionCache(cbFrontend) {
 		 * @param hash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
 		 * @param host The host that should or should not be trusted when sending a certificate with hash "hash"
 		 */
-		CBTrustDecisionCache.prototype.remove = function remove(hash, host) {
+		Crossbear.CBTrustDecisionCache.prototype.remove = function remove(hash, host) {
 
 			/*
 			 * 1) Remove the entry from the internal cache. 
 			 * 
 			 * Doing this is equal to adding an entry for the "hash"/"host"-combination which is not valid anymore. This entry is created here.
 			 */
-			var newEntry = new CBTrustDecisionCacheEntry(hash, host, false, 0);
+			var newEntry = new Crossbear.CBTrustDecisionCacheEntry(hash, host, false, 0);
 
 			// Insert the new cache entry into the internal cache.
 			self.addInternal(newEntry);
@@ -194,7 +194,7 @@ function CBTrustDecisionCache(cbFrontend) {
 		 * @param host The host that should or should not be trusted when sending a certificate with hash "hash"
 		 * @returns If there is an entry for the "hash"/"host"-combination then it will be returned in its CBTrustDecisionCacheEntry-representation. If there isn't then null will be returned
 		 */
-		CBTrustDecisionCache.prototype.lookForMatchInInternalCache = function lookForMatchInInternalCache(hash, host) {
+		Crossbear.CBTrustDecisionCache.prototype.lookForMatchInInternalCache = function lookForMatchInInternalCache(hash, host) {
 			
 			// Iterate over all of the cache's elements
 			var cacheEntry = null;
@@ -224,7 +224,7 @@ function CBTrustDecisionCache(cbFrontend) {
 		 * @param checkCBServerOnly If set to "true" then only connections to the Crossbear-Server will be checked. All others will return CBTrustDecisionCacheReturnTypes.OK
 		 * @returns One of the CBTrustDecisionCacheReturnTypes stating whether or not a certificate is known for a host and - in case it is - if it should be trusted or not.
 		 */
-		CBTrustDecisionCache.prototype.checkValidity = function checkValidity(hash, host, checkCBServerOnly) {
+		Crossbear.CBTrustDecisionCache.prototype.checkValidity = function checkValidity(hash, host, checkCBServerOnly) {
 
 			// Connections to the Crossbear server MUST use the certificate that ships with the Crossbear-Firefox-plugin. ANY other certificate sent by a server that claims to be the Crossbear server MUST be rejected (Since that is most likely a Mitm's certificate)!
 			if (host == cbFrontend.cbServerName) {
@@ -232,16 +232,16 @@ function CBTrustDecisionCache(cbFrontend) {
 				// Is the certificate the one that ships with the Crossbear-Firefox-plugin?
 				if (hash == self.cbServerCertHash) {
 					// If yes: everything is okay!
-					return CBTrustDecisionCacheReturnTypes.CB_SERVER_OK;
+					return Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_OK;
 				} else {
 					// If no: reject the certificate (and warn the user)
-					return CBTrustDecisionCacheReturnTypes.CB_SERVER_NOT_VALID;
+					return Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_NOT_VALID;
 				}
 			}
 			
 			// In case, the only connections that should be checked are the ones to the Crossbear-Server, all others will return "OK"
 			if(checkCBServerOnly){
-				return CBTrustDecisionCacheReturnTypes.OK;
+				return Crossbear.CBTrustDecisionCacheReturnTypes.OK;
 			}
 
 			// For connections to all other hosts: Look for the "hash"/"host"-combination in the internal cache
@@ -263,11 +263,11 @@ function CBTrustDecisionCache(cbFrontend) {
 
 				// If the local database didn't contain the requested "hash"/"host"-combination either it is not in the cache at all. In that case a request to the CB server is necessary
 				if (databaseCache.length == 0) {
-					return CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE;
+					return Crossbear.CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE;
 				}
 
 				// If it did contain a entry for the requested "hash"/"host"-combination then convert it into a CBTrustDecisionCacheEntry-object ... 
-				cacheEntry = new CBTrustDecisionCacheEntry(databaseCache[0].CertHash, databaseCache[0].Host, databaseCache[0].Trust, databaseCache[0].ValidUntil);
+				cacheEntry = new Crossbear.CBTrustDecisionCacheEntry(databaseCache[0].CertHash, databaseCache[0].Host, databaseCache[0].Trust, databaseCache[0].ValidUntil);
 
 				// ... and add it to the internal cache.
 				self.addInternal(cacheEntry);
@@ -282,9 +282,9 @@ function CBTrustDecisionCache(cbFrontend) {
 				
 				// If it is: check what it states about whether or not to trust the certificate for "host" and return that statement.
 				if (cacheEntry.trust == 1) {
-					return CBTrustDecisionCacheReturnTypes.OK;
+					return Crossbear.CBTrustDecisionCacheReturnTypes.OK;
 				} else {
-					return CBTrustDecisionCacheReturnTypes.NOT_VALID;
+					return Crossbear.CBTrustDecisionCacheReturnTypes.NOT_VALID;
 				}
 			} else {
 				/*
@@ -293,11 +293,11 @@ function CBTrustDecisionCache(cbFrontend) {
 				 * Removing it from the internal cache is not necessary: as soon as a newer entry for the "hash"/"host"-combination is added to the cache, the old one will not be found anymore.
 				 * Removing it from the database cache will be done the next time Firefox is restarted.
 				 */ 
-				return CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE;
+				return Crossbear.CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE;
 			}
 
 		};
 
 	}
 
-}
+};

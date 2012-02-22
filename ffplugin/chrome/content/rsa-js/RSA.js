@@ -13,19 +13,20 @@
 // Dave Shapiro
 // dave@ohdave.com 
 
-function RSAKeyPair(encryptionExponent, decryptionExponent, modulus)
+Crossbear.RSA = {
+		RSAKeyPair : function (encryptionExponent, decryptionExponent, modulus)
 {
-	this.e = biFromHex(encryptionExponent);
-	this.d = biFromHex(decryptionExponent);
-	this.m = biFromHex(modulus);
+	this.e = Crossbear.RSA.BigInt.biFromHex(encryptionExponent);
+	this.d = Crossbear.RSA.BigInt.biFromHex(decryptionExponent);
+	this.m = Crossbear.RSA.BigInt.biFromHex(modulus);
 	// We can do two bytes per digit, so
 	// chunkSize = 2 * (number of digits in modulus - 1).
 	// Since biHighIndex returns the high index, not the number of digits, 1 has
 	// already been subtracted.
-	this.chunkSize = 2 * biHighIndex(this.m)+1; //Added "+1" so RSAencrypt works with OAEPEncoding :)
+	this.chunkSize = 2 * Crossbear.RSA.BigInt.biHighIndex(this.m)+1; //Added "+1" so RSAencrypt works with OAEPEncoding :)
 	this.radix = 16;
-	this.barrett = new BarrettMu(this.m);
-}
+	this.barrett = new Crossbear.RSA.Barrett.BarrettMu(this.m);
+},
 
 
 //Modified version:
@@ -33,10 +34,10 @@ function RSAKeyPair(encryptionExponent, decryptionExponent, modulus)
 // - read bytes instead of string
 // - output byte array
 // - reverse input so java server does not have to do it ;)
-function RSAencrypt(key, byteInput)
+RSAencrypt : function (key, byteInput)
 {
 
-	var a = reverseByteA(byteInput);
+	var a = Crossbear.RSA.BigInt.reverseByteA(byteInput);
 	var i = byteInput.length;
 	
 	while (a.length % key.chunkSize != 0) {
@@ -48,20 +49,20 @@ function RSAencrypt(key, byteInput)
 	var al = a.length;
 	var j, k, block;
 	for (i = 0; i < al; i += key.chunkSize) {
-		block = new BigInt();
+		block = new Crossbear.RSA.BigInt.BigInt();
 		j = 0;
 		for (k = i; k < i + key.chunkSize; ++j) {
 			block.digits[j] = a[k++];
 			block.digits[j] += a[k++] << 8;
 		}
 		var crypt = key.barrett.powMod(block, key.e);
-		output.push.apply(output, Crypto.util.hexToBytes(biToHex(crypt)));
+		output.push.apply(output, Crypto.util.hexToBytes(Crossbear.RSA.BigInt.biToHex(crypt)));
 	}
 
 	return output;
-}
+},
 
-function decryptedString(key, s)
+decryptedString : function (key, s)
 {
 	var blocks = s.split(" ");
 	var result = "";
@@ -69,13 +70,13 @@ function decryptedString(key, s)
 	for (i = 0; i < blocks.length; ++i) {
 		var bi;
 		if (key.radix == 16) {
-			bi = biFromHex(blocks[i]);
+			bi = Crossbear.RSA.BigInt.biFromHex(blocks[i]);
 		}
 		else {
-			bi = biFromString(blocks[i], key.radix);
+			bi = Crossbear.RSA.BigInt.biFromString(blocks[i], key.radix);
 		}
 		block = key.barrett.powMod(bi, key.d);
-		for (j = 0; j <= biHighIndex(block); ++j) {
+		for (j = 0; j <= Crossbear.RSA.BigInt.biHighIndex(block); ++j) {
 			result += String.fromCharCode(block.digits[j] & 255,
 			                              block.digits[j] >> 8);
 		}
@@ -86,3 +87,5 @@ function decryptedString(key, s)
 	}
 	return result;
 }
+
+};

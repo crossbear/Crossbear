@@ -29,15 +29,19 @@
  * This is a simple dialog that is meant to inform the user about a possible attack against his system
  */ 
 
+// Setting the default namespace for xmlToDOM to XUL
+default xml namespace = Namespace("xul", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");    
 
 /**
  * Initialization function (called once when the dialog is about to display)
  */
 function onLoad() {
 
-	// Set the warning-text according to the threat that the user should be warned about
-	var wtd = document.getElementById("warning-text-div");
-	wtd.innerHTML ="<p xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" width=\"350px\" style=\"color:#FFFFFF; word-wrap: break-word;\">"+window.arguments[0].inn.threat+"</p>";
+	// Set the crossbear-warning-text according to the threat that the user should be warned about
+	var nodes = {};
+	var xml = new XML('<hbox xmlns:html="http://www.w3.org/1999/xhtml"><p width="350px" style="color:#FFFFFF; word-wrap: break-word;" >'+window.arguments[0].inn.threat+'</p></hbox>');
+	var wtd = document.getElementById("crossbear-warning-text-div");
+	wtd.appendChild(Crossbear.xmlToDOM(xml, document, nodes));
 
 	//Disable the "I understand" button
 	document.documentElement.getButton("accept").disabled = true;
@@ -58,4 +62,4 @@ function onLoad() {
 function ok() {
 	//do nothing ;)
 	return true;
-}
+};

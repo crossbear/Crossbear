@@ -102,7 +102,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			db.close();
 
 		} catch (Exception e) {
-
+		  	// TODO: make this a configuration option!
 			Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/init.verifycert.error", e);
 
 		}
@@ -165,6 +165,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		out.println("Crossbear");
 
 		// For debugging reasons: Log what went wrong
+		// TODO: make this a configuration option!
 		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/processing.verifycert.error", e);
 
 	} finally {

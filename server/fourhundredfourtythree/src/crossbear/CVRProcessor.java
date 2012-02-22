@@ -36,7 +36,6 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
@@ -286,6 +285,9 @@ public class CVRProcessor {
 
 		// Get the Timestamp of the last observation of the certificate for the host or the current time if it has never been observed (which would result in a LCOP of 0 days)
 		Object[] params = { hostPort };
+		    // WARNING (Ralph): you're interpolating a string
+		    // it's probably OK because you're pulling IDs from the DB where it's guaranteed to be a hash value, but still...
+		    // And you're using prepared statements, of course
 		ResultSet rs = db.executeQuery("SELECT coalesce(MAX(Timeofobservation), 'NOW') AS Time FROM CertObservations WHERE ServerHostPort = ? AND CertID IN ("+IDs+") AND ObserverType = 'CrossbearServer'", params);
 
 		if (!rs.next()) {
@@ -301,6 +303,9 @@ public class CVRProcessor {
 		String sqlSubQuery = "SELECT coalesce(MAX(TimeOfObservation), TIMESTAMP '1900-01-01 00:00') as Time FROM CertObservations WHERE ServerHostPort = ? AND CertID NOT IN ("+IDs+") AND ObserverType = 'CrossbearServer' and TimeOfObservation < ?";
 		
 		// Get the oldest Timestamp of any observation of the current certificate that is still newer than the Timestamp of the sub-querry
+		    // WARNING (Ralph): you're interpolating a string
+		    // it's probably OK because you're pulling IDs from the DB where it's guaranteed to be a hash value, but still...
+		    // And you're using prepared statements, of course
 		rs = db.executeQuery("SELECT coalesce(MIN(TimeOfObservation), 'NOW') as Time FROM CertObservations WHERE ServerHostPort = ? AND CertID IN ("+IDs+")  AND ObserverType = 'CrossbearServer' AND TimeOfObservation > (" + sqlSubQuery + ")", params2);
 
 		if (!rs.next()) {
@@ -351,6 +356,9 @@ public class CVRProcessor {
 		
 		// Get the total number of how often cert has been observed for hostPort by the CrossbearServer
 		Object[] params = { hostPort };
+		    // WARNING (Ralph): you're interpolating a string
+		    // it's probably OK because you're pulling IDs from the DB where it's guaranteed to be a hash value, but still...
+		    // And you're using prepared statements, of course
 		ResultSet rs = db.executeQuery("SELECT COUNT(Id) as Num FROM CertObservations WHERE ServerHostPort = ? AND CertID IN ("+IDs+") AND ObserverType = 'CrossbearServer'", params);
 		
 		if (!rs.next()) {
@@ -419,21 +427,20 @@ public class CVRProcessor {
 	 * 
 	 * The current implementation of this function will return true if all of the following criteria are true:
 	 * - comparison of the request's and the host's certificates resulted in a "different"-judgment
+	 * - the certificate is also unknown to Convergence
 	 * - the IP of the server is not the one of a SSL-Proxy
-	 * - the chain that the client observed does not match the certificate that the server observed (same chains means same issuer ->most likely legal change)
 	 * - the host's IP is a normal unicast IP
 	 * 
 	 * In all other cases the function will return false.
 	 * 
 	 * @param request The Request that the client sent
 	 * @param result The CertVerifyResult that has been created for the CertVerifyRequest
-	 * @param observedCertificate The certificate that the Crossbear-Server observed for the server
 	 * @return True if a HuntingTask should be created else false
 	 */
-	private static boolean huntingTaskShouldBeCreated(CertVerifyRequest request, CertVerifyResult result, X509Certificate observedCertificate) {
+	private static boolean huntingTaskShouldBeCreated(CertVerifyRequest request, CertVerifyResult result) {
 		
-		// Did the comparison of the request's and the host's certificates resulted in a "different"-judgment?
-		if(result.getReport().indexOf("CERTCOMPARE: DIFFERENT") == -1){
+		// Did the comparison of the request's and the host's certificates resulted in a "different"-judgment and is the Certificate also unknown to Convergence?
+		if(result.getReport().indexOf("CERTCOMPARE: DIFFERENT") == -1 || result.getReport().indexOf("CONVERGENCE: UNKNOWN") == -1){
 			return false;
 		}
 		
@@ -441,16 +448,7 @@ public class CVRProcessor {
 		if(request.isUserUsingProxy()){
 			return false;
 		}
-		
-		// Has the certificate that the server observed the same certificate chain as the one the client sent?
-		if(request.getCertChain().length>1){
-			try{
-				observedCertificate.verify(request.getCertChain()[1].getPublicKey());
-				return false;
-			} catch (SignatureException | NoSuchProviderException | InvalidKeyException | NoSuchAlgorithmException | CertificateException e){}
-		}
-		
-	
+			
 		// Is the host's IP a link-local or a multicast address? If yes return false if not return true
 		InetAddress hostIP = request.getHostIP();
 		return !hostIP.isMulticastAddress() && !hostIP.isAnyLocalAddress() && !hostIP.isLinkLocalAddress() && !hostIP.isLoopbackAddress() && !hostIP.isSiteLocalAddress();
@@ -711,11 +709,9 @@ public class CVRProcessor {
 
 		// Get the certificate that the client sent
 		X509Certificate requestCert = cm.getCertFromRequest(cvr, db);
-		
-		X509Certificate serverCert;
 
 		// Try to get the server's real certificate ...
-		serverCert = cm.getCertForHost(cvr, db);
+		 X509Certificate serverCert = cm.getCertForHost(cvr, db);
 
 		//concatenate hostname and hostport to hostport. Hostport is the host's identifier in the database
 		String hostPort = cvr.getHostName()+":"+String.valueOf(cvr.isUserUsingProxy()?443:cvr.getHostPort());
@@ -754,7 +750,7 @@ public class CVRProcessor {
 		ml.add(result);
 
 		// Is the result such that a Hunting Task should be created?
-		if (huntingTaskShouldBeCreated(cvr, result, serverCert)) {
+		if (huntingTaskShouldBeCreated(cvr, result)) {
 			ml.add(new CurrentServerTime());
 			ml.add(new PublicIPNotification(cvr.getRemoteAddr(), db));
 			ml.add(new HuntingTask(cvr.getHostName(), cvr.getHostIP(), cvr.isUserUsingProxy()?443:cvr.getHostPort(), db));

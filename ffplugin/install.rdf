@@ -14,7 +14,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>7.0</em:minVersion>
-        <em:maxVersion>10.*</em:maxVersion>
+        <em:maxVersion>11.*</em:maxVersion>
       </Description>
     </em:targetApplication>
    
@@ -22,7 +22,10 @@
     <em:name>Crossbear</em:name>  
     <em:description>A extension to detect and localize TLS Man-in-the-middle attacks</em:description>  
     <em:creator>Thomas Riedmaier</em:creator>  
-		<em:homepageURL>http://pki.net.in.tum.de</em:homepageURL>  
+		<em:homepageURL>http://pki.net.in.tum.de</em:homepageURL>
+
+		<!-- Specify Option dialogue -->
+		<em:optionsURL>chrome://crossbear/content/gui/OptionsDlg.xul</em:optionsURL>	
 
 		<!-- install unpacked so the shared libraries can be accessed -->
 		<em:unpack>true</em:unpack>

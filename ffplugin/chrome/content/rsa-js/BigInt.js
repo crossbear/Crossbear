@@ -46,14 +46,15 @@
 // Max number = 10^16 - 2 = 9999999999999998;
 //               2^53     = 9007199254740992;
 
-var biRadixBase = 2;
-var biRadixBits = 16;
-var bitsPerDigit = biRadixBits;
-var biRadix = 1 << 16; // = 2^16 = 65536
-var biHalfRadix = biRadix >>> 1;
-var biRadixSquared = biRadix * biRadix;
-var maxDigitVal = biRadix - 1;
-var maxInteger = 9999999999999998; 
+Crossbear.RSA.BigInt = {};
+
+Crossbear.RSA.BigInt.biRadixBase = 2;
+Crossbear.RSA.BigInt.biRadixBits = 16;
+Crossbear.RSA.BigInt.bitsPerDigit = Crossbear.RSA.BigInt.biRadixBits;
+Crossbear.RSA.BigInt.biRadix = 1 << 16; // = 2^16 = 65536
+Crossbear.RSA.BigInt.biHalfRadix = Crossbear.RSA.BigInt.biRadix >>> 1;
+Crossbear.RSA.BigInt.biRadixSquared = Crossbear.RSA.BigInt.biRadix * Crossbear.RSA.BigInt.biRadix;
+Crossbear.RSA.BigInt.maxDigitVal = Crossbear.RSA.BigInt.biRadix - 1;
 
 // maxDigits:
 // Change this to accommodate your largest number size. Use setMaxDigits()
@@ -65,162 +66,101 @@ var maxInteger = 9999999999999998;
 // 1024 * 2 / 16 = 128 digits of storage.
 //
 
-var maxDigits;
-var ZERO_ARRAY;
-var bigZero, bigOne;
+Crossbear.RSA.BigInt.maxDigits;
+Crossbear.RSA.BigInt.ZERO_ARRAY;
+Crossbear.RSA.BigInt.bigZero;
+Crossbear.RSA.BigInt.bigOne;
 
-function setMaxDigits(value)
-{
-	maxDigits = value;
-	ZERO_ARRAY = new Array(maxDigits);
-	for (var iza = 0; iza < ZERO_ARRAY.length; iza++) ZERO_ARRAY[iza] = 0;
-	bigZero = new BigInt();
-	bigOne = new BigInt();
-	bigOne.digits[0] = 1;
-}
-
-setMaxDigits(20);
-
-// The maximum number of digits in base 10 you can convert to an
-// integer without JavaScript throwing up on you.
-var dpl10 = 15;
-// lr10 = 10 ^ dpl10
-var lr10 = biFromNumber(1000000000000000);
-
-function BigInt(flag)
+Crossbear.RSA.BigInt.BigInt = function (flag)
 {
 	if (typeof flag == "boolean" && flag == true) {
 		this.digits = null;
 	}
 	else {
-		this.digits = ZERO_ARRAY.slice(0);
+		this.digits = Crossbear.RSA.BigInt.ZERO_ARRAY.slice(0);
 	}
 	this.isNeg = false;
-}
+};
 
-function biFromDecimal(s)
+Crossbear.RSA.BigInt.setMaxDigits = function (value)
 {
-	var isNeg = s.charAt(0) == '-';
-	var i = isNeg ? 1 : 0;
-	var result;
-	// Skip leading zeros.
-	while (i < s.length && s.charAt(i) == '0') ++i;
-	if (i == s.length) {
-		result = new BigInt();
-	}
-	else {
-		var digitCount = s.length - i;
-		var fgl = digitCount % dpl10;
-		if (fgl == 0) fgl = dpl10;
-		result = biFromNumber(Number(s.substr(i, fgl)));
-		i += fgl;
-		while (i < s.length) {
-			result = biAdd(biMultiply(result, lr10),
-			               biFromNumber(Number(s.substr(i, dpl10))));
-			i += dpl10;
-		}
-		result.isNeg = isNeg;
-	}
-	return result;
-}
+	Crossbear.RSA.BigInt.maxDigits = value;
+	Crossbear.RSA.BigInt.ZERO_ARRAY = new Array(Crossbear.RSA.BigInt.maxDigits);
+	for (var iza = 0; iza < Crossbear.RSA.BigInt.ZERO_ARRAY.length; iza++) Crossbear.RSA.BigInt.ZERO_ARRAY[iza] = 0;
+	Crossbear.RSA.BigInt.bigZero = new Crossbear.RSA.BigInt.BigInt();
+	Crossbear.RSA.BigInt.bigOne = new Crossbear.RSA.BigInt.BigInt();
+	Crossbear.RSA.BigInt.bigOne.digits[0] = 1;
+};
 
-function biCopy(bi)
+Crossbear.RSA.BigInt.setMaxDigits(20);
+
+// The maximum number of digits in base 10 you can convert to an
+// integer without JavaScript throwing up on you.
+Crossbear.RSA.BigInt.dpl10 = 15;
+
+
+Crossbear.RSA.BigInt.biCopy = function (bi)
 {
-	var result = new BigInt(true);
+	var result = new Crossbear.RSA.BigInt.BigInt(true);
 	result.digits = bi.digits.slice(0);
 	result.isNeg = bi.isNeg;
 	return result;
-}
+};
 
-function biFromNumber(i)
+Crossbear.RSA.BigInt.biFromNumber = function (i)
 {
-	var result = new BigInt();
+	var result = new Crossbear.RSA.BigInt.BigInt();
 	result.isNeg = i < 0;
 	i = Math.abs(i);
 	var j = 0;
 	while (i > 0) {
-		result.digits[j++] = i & maxDigitVal;
-		i >>= biRadixBits;
+		result.digits[j++] = i & Crossbear.RSA.BigInt.maxDigitVal;
+		i >>= Crossbear.RSA.BigInt.biRadixBits;
 	}
 	return result;
-}
+};
 
-function reverseStr(s)
+Crossbear.RSA.BigInt.reverseStr = function (s)
 {
 	var result = "";
 	for (var i = s.length - 1; i > -1; --i) {
 		result += s.charAt(i);
 	}
 	return result;
-}
+};
 
-function reverseByteA(b){
+Crossbear.RSA.BigInt.reverseByteA = function (b){
 	var result = [];
 	for (var i = b.length-1;i>-1;--i){
 		result.push(b[i]);
 	}
 	return result;
-}
+};
 
-var hexatrigesimalToChar = new Array(
- '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
- 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
- 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
- 'u', 'v', 'w', 'x', 'y', 'z'
-);
-
-function biToString(x, radix)
-	// 2 <= radix <= 36
-{
-	var b = new BigInt();
-	b.digits[0] = radix;
-	var qr = biDivideModulo(x, b);
-	var result = hexatrigesimalToChar[qr[1].digits[0]];
-	while (biCompare(qr[0], bigZero) == 1) {
-		qr = biDivideModulo(qr[0], b);
-		digit = qr[1].digits[0];
-		result += hexatrigesimalToChar[qr[1].digits[0]];
-	}
-	return (x.isNeg ? "-" : "") + reverseStr(result);
-}
-
-function biToDecimal(x)
-{
-	var b = new BigInt();
-	b.digits[0] = 10;
-	var qr = biDivideModulo(x, b);
-	var result = String(qr[1].digits[0]);
-	while (biCompare(qr[0], bigZero) == 1) {
-		qr = biDivideModulo(qr[0], b);
-		result += String(qr[1].digits[0]);
-	}
-	return (x.isNeg ? "-" : "") + reverseStr(result);
-}
-
-var hexToChar = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+Crossbear.RSA.BigInt.hexToChar = new Array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                           'a', 'b', 'c', 'd', 'e', 'f');
 
-function digitToHex(n)
+Crossbear.RSA.BigInt.digitToHex = function (n)
 {
 	var mask = 0xf;
 	var result = "";
 	for (var i = 0; i < 4; ++i) {
-		result += hexToChar[n & mask];
+		result += Crossbear.RSA.BigInt.hexToChar[n & mask];
 		n >>>= 4;
 	}
-	return reverseStr(result);
-}
+	return Crossbear.RSA.BigInt.reverseStr(result);
+};
 
-function biToHex(x)
+Crossbear.RSA.BigInt.biToHex = function (x)
 {
 	var result = "";
-	for (var i = biHighIndex(x); i > -1; --i) {
-		result += digitToHex(x.digits[i]);
+	for (var i = Crossbear.RSA.BigInt.biHighIndex(x); i > -1; --i) {
+		result += Crossbear.RSA.BigInt.digitToHex(x.digits[i]);
 	}
 	return result;
-}
+};
 
-function charToHex(c)
+Crossbear.RSA.BigInt.charToHex = function (c)
 {
 	var ZERO = 48;
 	var NINE = ZERO + 9;
@@ -240,91 +180,86 @@ function charToHex(c)
 		result = 0;
 	}
 	return result;
-}
+};
 
-function hexToDigit(s)
+Crossbear.RSA.BigInt.hexToDigit = function (s)
 {
 	var result = 0;
 	var sl = Math.min(s.length, 4);
 	for (var i = 0; i < sl; ++i) {
 		result <<= 4;
-		result |= charToHex(s.charCodeAt(i));
+		result |= Crossbear.RSA.BigInt.charToHex(s.charCodeAt(i));
 	}
 	return result;
-}
+};
 
-function biFromHex(s)
+Crossbear.RSA.BigInt.biFromHex = function (s)
 {
-	var result = new BigInt();
+	var result = new Crossbear.RSA.BigInt.BigInt();
 	var sl = s.length;
 	for (var i = sl, j = 0; i > 0; i -= 4, ++j) {
-		result.digits[j] = hexToDigit(s.substr(Math.max(i - 4, 0), Math.min(i, 4)));
+		result.digits[j] = Crossbear.RSA.BigInt.hexToDigit(s.substr(Math.max(i - 4, 0), Math.min(i, 4)));
 	}
 	return result;
-}
+};
 
-function biFromString(s, radix)
+Crossbear.RSA.BigInt.biFromString = function (s, radix)
 {
 	var isNeg = s.charAt(0) == '-';
 	var istop = isNeg ? 1 : 0;
-	var result = new BigInt();
-	var place = new BigInt();
+	var result = new Crossbear.RSA.BigInt.BigInt();
+	var place = new Crossbear.RSA.BigInt.BigInt();
 	place.digits[0] = 1; // radix^0
 	for (var i = s.length - 1; i >= istop; i--) {
 		var c = s.charCodeAt(i);
-		var digit = charToHex(c);
-		var biDigit = biMultiplyDigit(place, digit);
-		result = biAdd(result, biDigit);
-		place = biMultiplyDigit(place, radix);
+		var digit = Crossbear.RSA.BigInt.charToHex(c);
+		var biDigit = Crossbear.RSA.BigInt.biMultiplyDigit(place, digit);
+		result = Crossbear.RSA.BigInt.biAdd(result, biDigit);
+		place = Crossbear.RSA.BigInt.biMultiplyDigit(place, radix);
 	}
 	result.isNeg = isNeg;
 	return result;
-}
+};
 
-function biDump(b)
-{
-	return (b.isNeg ? "-" : "") + b.digits.join(" ");
-}
-
-function biAdd(x, y)
+Crossbear.RSA.BigInt.biAdd = function (x, y)
 {
 	var result;
 
 	if (x.isNeg != y.isNeg) {
 		y.isNeg = !y.isNeg;
-		result = biSubtract(x, y);
+		result = Crossbear.RSA.BigInt.biSubtract(x, y);
 		y.isNeg = !y.isNeg;
 	}
 	else {
-		result = new BigInt();
+		result = new Crossbear.RSA.BigInt.BigInt();
 		var c = 0;
 		var n;
 		for (var i = 0; i < x.digits.length; ++i) {
 			n = x.digits[i] + y.digits[i] + c;
 			result.digits[i] = n & 0xffff;
-			c = Number(n >= biRadix);
+			c = Number(n >= Crossbear.RSA.BigInt.biRadix);
 		}
 		result.isNeg = x.isNeg;
 	}
 	return result;
-}
+};
 
-function biSubtract(x, y)
+Crossbear.RSA.BigInt.biSubtract = function (x, y)
 {
 	var result;
 	if (x.isNeg != y.isNeg) {
 		y.isNeg = !y.isNeg;
-		result = biAdd(x, y);
+		result = Crossbear.RSA.BigInt.biAdd(x, y);
 		y.isNeg = !y.isNeg;
 	} else {
-		result = new BigInt();
+		result = new Crossbear.RSA.BigInt.BigInt();
 		var n, c;
 		c = 0;
 		for (var i = 0; i < x.digits.length; ++i) {
 			n = x.digits[i] - y.digits[i] + c;
 			result.digits[i] = n & 0xffff;
 			// Stupid non-conforming modulus operation.
-			if (result.digits[i] < 0) result.digits[i] += biRadix;
+			if (result.digits[i] < 0) result.digits[i] += Crossbear.RSA.BigInt.biRadix;
 			c = 0 - Number(n < 0);
 		}
 		// Fix up the negative sign, if any.
@@ -334,7 +269,7 @@ function biSubtract(x, y)
 				n = 0 - result.digits[i] + c;
 				result.digits[i] = n & 0xffff;
 				// Stupid non-conforming modulus operation.
-				if (result.digits[i] < 0) result.digits[i] += biRadix;
+				if (result.digits[i] < 0) result.digits[i] += Crossbear.RSA.BigInt.biRadix;
 				c = 0 - Number(n < 0);
 			}
 			// Result is opposite sign of arguments.
@@ -345,34 +280,34 @@ function biSubtract(x, y)
 		}
 	}
 	return result;
-}
+};
 
-function biHighIndex(x)
+Crossbear.RSA.BigInt.biHighIndex = function (x)
 {
 	var result = x.digits.length - 1;
 	while (result > 0 && x.digits[result] == 0) --result;
 	return result;
-}
+};
 
-function biNumBits(x)
+Crossbear.RSA.BigInt.biNumBits = function (x)
 {
-	var n = biHighIndex(x);
+	var n = Crossbear.RSA.BigInt.biHighIndex(x);
 	var d = x.digits[n];
-	var m = (n + 1) * bitsPerDigit;
+	var m = (n + 1) * Crossbear.RSA.BigInt.bitsPerDigit;
 	var result;
-	for (result = m; result > m - bitsPerDigit; --result) {
+	for (result = m; result > m - Crossbear.RSA.BigInt.bitsPerDigit; --result) {
 		if ((d & 0x8000) != 0) break;
 		d <<= 1;
 	}
 	return result;
-}
+};
 
-function biMultiply(x, y)
+Crossbear.RSA.BigInt.biMultiply = function (x, y)
 {
-	var result = new BigInt();
+	var result = new Crossbear.RSA.BigInt.BigInt();
 	var c;
-	var n = biHighIndex(x);
-	var t = biHighIndex(y);
+	var n = Crossbear.RSA.BigInt.biHighIndex(x);
+	var t = Crossbear.RSA.BigInt.biHighIndex(y);
 	var uv, k;
 
 	for (var i = 0; i <= t; ++i) {
@@ -380,105 +315,105 @@ function biMultiply(x, y)
 		k = i;
 		for (var j = 0; j <= n; ++j, ++k) {
 			uv = result.digits[k] + x.digits[j] * y.digits[i] + c;
-			result.digits[k] = uv & maxDigitVal;
-			c = uv >>> biRadixBits;
+			result.digits[k] = uv & Crossbear.RSA.BigInt.maxDigitVal;
+			c = uv >>> Crossbear.RSA.BigInt.biRadixBits;
 		}
 		result.digits[i + n + 1] = c;
 	}
 	// Someone give me a logical xor, please.
 	result.isNeg = x.isNeg != y.isNeg;
 	return result;
-}
+};
 
-function biMultiplyDigit(x, y)
+Crossbear.RSA.BigInt.biMultiplyDigit = function (x, y)
 {
 	var n, c, uv;
 
-	result = new BigInt();
-	n = biHighIndex(x);
+	result = new Crossbear.RSA.BigInt.BigInt();
+	n = Crossbear.RSA.BigInt.biHighIndex(x);
 	c = 0;
 	for (var j = 0; j <= n; ++j) {
 		uv = result.digits[j] + x.digits[j] * y + c;
-		result.digits[j] = uv & maxDigitVal;
-		c = uv >>> biRadixBits;
+		result.digits[j] = uv & Crossbear.RSA.BigInt.maxDigitVal;
+		c = uv >>> Crossbear.RSA.BigInt.biRadixBits;
 	}
 	result.digits[1 + n] = c;
 	return result;
-}
+};
 
-function arrayCopy(src, srcStart, dest, destStart, n)
+Crossbear.RSA.BigInt.arrayCopy = function (src, srcStart, dest, destStart, n)
 {
 	var m = Math.min(srcStart + n, src.length);
 	for (var i = srcStart, j = destStart; i < m; ++i, ++j) {
 		dest[j] = src[i];
 	}
-}
+};
 
-var highBitMasks = new Array(0x0000, 0x8000, 0xC000, 0xE000, 0xF000, 0xF800,
+Crossbear.RSA.BigInt.highBitMasks = new Array(0x0000, 0x8000, 0xC000, 0xE000, 0xF000, 0xF800,
                              0xFC00, 0xFE00, 0xFF00, 0xFF80, 0xFFC0, 0xFFE0,
                              0xFFF0, 0xFFF8, 0xFFFC, 0xFFFE, 0xFFFF);
 
-function biShiftLeft(x, n)
+Crossbear.RSA.BigInt.biShiftLeft = function (x, n)
 {
-	var digitCount = Math.floor(n / bitsPerDigit);
-	var result = new BigInt();
-	arrayCopy(x.digits, 0, result.digits, digitCount,
+	var digitCount = Math.floor(n / Crossbear.RSA.BigInt.bitsPerDigit);
+	var result = new Crossbear.RSA.BigInt.BigInt();
+	Crossbear.RSA.BigInt.arrayCopy(x.digits, 0, result.digits, digitCount,
 	          result.digits.length - digitCount);
-	var bits = n % bitsPerDigit;
-	var rightBits = bitsPerDigit - bits;
+	var bits = n % Crossbear.RSA.BigInt.bitsPerDigit;
+	var rightBits = Crossbear.RSA.BigInt.bitsPerDigit - bits;
 	for (var i = result.digits.length - 1, i1 = i - 1; i > 0; --i, --i1) {
-		result.digits[i] = ((result.digits[i] << bits) & maxDigitVal) |
-		                   ((result.digits[i1] & highBitMasks[bits]) >>>
+		result.digits[i] = ((result.digits[i] << bits) & Crossbear.RSA.BigInt.maxDigitVal) |
+		                   ((result.digits[i1] & Crossbear.RSA.BigInt.highBitMasks[bits]) >>>
 		                    (rightBits));
 	}
-	result.digits[0] = ((result.digits[i] << bits) & maxDigitVal);
+	result.digits[0] = ((result.digits[i] << bits) & Crossbear.RSA.BigInt.maxDigitVal);
 	result.isNeg = x.isNeg;
 	return result;
-}
+};
 
-var lowBitMasks = new Array(0x0000, 0x0001, 0x0003, 0x0007, 0x000F, 0x001F,
+Crossbear.RSA.BigInt.lowBitMasks = new Array(0x0000, 0x0001, 0x0003, 0x0007, 0x000F, 0x001F,
                             0x003F, 0x007F, 0x00FF, 0x01FF, 0x03FF, 0x07FF,
                             0x0FFF, 0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF);
 
-function biShiftRight(x, n)
+Crossbear.RSA.BigInt.biShiftRight = function (x, n)
 {
-	var digitCount = Math.floor(n / bitsPerDigit);
-	var result = new BigInt();
-	arrayCopy(x.digits, digitCount, result.digits, 0,
+	var digitCount = Math.floor(n / Crossbear.RSA.BigInt.bitsPerDigit);
+	var result = new Crossbear.RSA.BigInt.BigInt();
+	Crossbear.RSA.BigInt.arrayCopy(x.digits, digitCount, result.digits, 0,
 	          x.digits.length - digitCount);
-	var bits = n % bitsPerDigit;
-	var leftBits = bitsPerDigit - bits;
+	var bits = n % Crossbear.RSA.BigInt.bitsPerDigit;
+	var leftBits = Crossbear.RSA.BigInt.bitsPerDigit - bits;
 	for (var i = 0, i1 = i + 1; i < result.digits.length - 1; ++i, ++i1) {
 		result.digits[i] = (result.digits[i] >>> bits) |
-		                   ((result.digits[i1] & lowBitMasks[bits]) << leftBits);
+		                   ((result.digits[i1] & Crossbear.RSA.BigInt.lowBitMasks[bits]) << leftBits);
 	}
 	result.digits[result.digits.length - 1] >>>= bits;
 	result.isNeg = x.isNeg;
 	return result;
-}
+};
 
-function biMultiplyByRadixPower(x, n)
+Crossbear.RSA.BigInt.biMultiplyByRadixPower = function (x, n)
 {
-	var result = new BigInt();
-	arrayCopy(x.digits, 0, result.digits, n, result.digits.length - n);
+	var result = new Crossbear.RSA.BigInt.BigInt();
+	Crossbear.RSA.BigInt.arrayCopy(x.digits, 0, result.digits, n, result.digits.length - n);
 	return result;
-}
+};
 
-function biDivideByRadixPower(x, n)
+Crossbear.RSA.BigInt.biDivideByRadixPower = function (x, n)
 {
-	var result = new BigInt();
-	arrayCopy(x.digits, n, result.digits, 0, result.digits.length - n);
+	var result = new Crossbear.RSA.BigInt.BigInt();
+	Crossbear.RSA.BigInt.arrayCopy(x.digits, n, result.digits, 0, result.digits.length - n);
 	return result;
-}
+};
 
-function biModuloByRadixPower(x, n)
+Crossbear.RSA.BigInt.biModuloByRadixPower = function (x, n)
 {
-	var result = new BigInt();
-	arrayCopy(x.digits, 0, result.digits, 0, n);
+	var result = new Crossbear.RSA.BigInt.BigInt();
+	Crossbear.RSA.BigInt.arrayCopy(x.digits, 0, result.digits, 0, n);
 	return result;
-}
+};
 
-function biCompare(x, y)
+Crossbear.RSA.BigInt.biCompare = function (x, y)
 {
 	if (x.isNeg != y.isNeg) {
 		return 1 - 2 * Number(x.isNeg);
@@ -493,54 +428,54 @@ function biCompare(x, y)
 		}
 	}
 	return 0;
-}
+};
 
-function biDivideModulo(x, y)
+Crossbear.RSA.BigInt.biDivideModulo = function (x, y)
 {
-	var nb = biNumBits(x);
-	var tb = biNumBits(y);
+	var nb = Crossbear.RSA.BigInt.biNumBits(x);
+	var tb = Crossbear.RSA.BigInt.biNumBits(y);
 	var origYIsNeg = y.isNeg;
 	var q, r;
 	if (nb < tb) {
 		// |x| < |y|
 		if (x.isNeg) {
-			q = biCopy(bigOne);
+			q = Crossbear.RSA.BigInt.biCopy(Crossbear.RSA.BigInt.bigOne);
 			q.isNeg = !y.isNeg;
 			x.isNeg = false;
 			y.isNeg = false;
-			r = biSubtract(y, x);
+			r = Crossbear.RSA.BigInt.biSubtract(y, x);
 			// Restore signs, 'cause they're references.
 			x.isNeg = true;
 			y.isNeg = origYIsNeg;
 		} else {
-			q = new BigInt();
-			r = biCopy(x);
+			q = new Crossbear.RSA.BigInt.BigInt();
+			r = Crossbear.RSA.BigInt.biCopy(x);
 		}
 		return new Array(q, r);
 	}
 
-	q = new BigInt();
+	q = new Crossbear.RSA.BigInt.BigInt();
 	r = x;
 
 	// Normalize Y.
-	var t = Math.ceil(tb / bitsPerDigit) - 1;
+	var t = Math.ceil(tb / Crossbear.RSA.BigInt.bitsPerDigit) - 1;
 	var lambda = 0;
-	while (y.digits[t] < biHalfRadix) {
-		y = biShiftLeft(y, 1);
+	while (y.digits[t] < Crossbear.RSA.BigInt.biHalfRadix) {
+		y = Crossbear.RSA.BigInt.biShiftLeft(y, 1);
 		++lambda;
 		++tb;
-		t = Math.ceil(tb / bitsPerDigit) - 1;
+		t = Math.ceil(tb / Crossbear.RSA.BigInt.bitsPerDigit) - 1;
 	}
 	// Shift r over to keep the quotient constant. We'll shift the
 	// remainder back at the end.
-	r = biShiftLeft(r, lambda);
+	r = Crossbear.RSA.BigInt.biShiftLeft(r, lambda);
 	nb += lambda; // Update the bit count for x.
-	var n = Math.ceil(nb / bitsPerDigit) - 1;
+	var n = Math.ceil(nb / Crossbear.RSA.BigInt.bitsPerDigit) - 1;
 
-	var b = biMultiplyByRadixPower(y, n - t);
-	while (biCompare(r, b) != -1) {
+	var b = Crossbear.RSA.BigInt.biMultiplyByRadixPower(y, n - t);
+	while (Crossbear.RSA.BigInt.biCompare(r, b) != -1) {
 		++q.digits[n - t];
-		r = biSubtract(r, b);
+		r = Crossbear.RSA.BigInt.biSubtract(r, b);
 	}
 	for (var i = n; i > t; --i) {
     var ri = (i >= r.digits.length) ? 0 : r.digits[i];
@@ -549,83 +484,45 @@ function biDivideModulo(x, y)
     var yt = (t >= y.digits.length) ? 0 : y.digits[t];
     var yt1 = (t - 1 >= y.digits.length) ? 0 : y.digits[t - 1];
 		if (ri == yt) {
-			q.digits[i - t - 1] = maxDigitVal;
+			q.digits[i - t - 1] = Crossbear.RSA.BigInt.maxDigitVal;
 		} else {
-			q.digits[i - t - 1] = Math.floor((ri * biRadix + ri1) / yt);
+			q.digits[i - t - 1] = Math.floor((ri * Crossbear.RSA.BigInt.biRadix + ri1) / yt);
 		}
 
-		var c1 = q.digits[i - t - 1] * ((yt * biRadix) + yt1);
-		var c2 = (ri * biRadixSquared) + ((ri1 * biRadix) + ri2);
+		var c1 = q.digits[i - t - 1] * ((yt * Crossbear.RSA.BigInt.biRadix) + yt1);
+		var c2 = (ri * Crossbear.RSA.BigInt.biRadixSquared) + ((ri1 * Crossbear.RSA.BigInt.biRadix) + ri2);
 		while (c1 > c2) {
 			--q.digits[i - t - 1];
-			c1 = q.digits[i - t - 1] * ((yt * biRadix) | yt1);
-			c2 = (ri * biRadix * biRadix) + ((ri1 * biRadix) + ri2);
+			c1 = q.digits[i - t - 1] * ((yt * Crossbear.RSA.BigInt.biRadix) | yt1);
+			c2 = (ri * Crossbear.RSA.BigInt.biRadix * Crossbear.RSA.BigInt.biRadix) + ((ri1 * Crossbear.RSA.BigInt.biRadix) + ri2);
 		}
 
-		b = biMultiplyByRadixPower(y, i - t - 1);
-		r = biSubtract(r, biMultiplyDigit(b, q.digits[i - t - 1]));
+		b = Crossbear.RSA.BigInt.biMultiplyByRadixPower(y, i - t - 1);
+		r = Crossbear.RSA.BigInt.biSubtract(r, Crossbear.RSA.BigInt.biMultiplyDigit(b, q.digits[i - t - 1]));
 		if (r.isNeg) {
-			r = biAdd(r, b);
+			r = Crossbear.RSA.BigInt.biAdd(r, b);
 			--q.digits[i - t - 1];
 		}
 	}
-	r = biShiftRight(r, lambda);
+	r = Crossbear.RSA.BigInt.biShiftRight(r, lambda);
 	// Fiddle with the signs and stuff to make sure that 0 <= r < y.
 	q.isNeg = x.isNeg != origYIsNeg;
 	if (x.isNeg) {
 		if (origYIsNeg) {
-			q = biAdd(q, bigOne);
+			q = Crossbear.RSA.BigInt.biAdd(q, Crossbear.RSA.BigInt.bigOne);
 		} else {
-			q = biSubtract(q, bigOne);
+			q = Crossbear.RSA.BigInt.biSubtract(q, Crossbear.RSA.BigInt.bigOne);
 		}
-		y = biShiftRight(y, lambda);
-		r = biSubtract(y, r);
+		y = Crossbear.RSA.BigInt.biShiftRight(y, lambda);
+		r = Crossbear.RSA.BigInt.biSubtract(y, r);
 	}
 	// Check for the unbelievably stupid degenerate case of r == -0.
-	if (r.digits[0] == 0 && biHighIndex(r) == 0) r.isNeg = false;
+	if (r.digits[0] == 0 && Crossbear.RSA.BigInt.biHighIndex(r) == 0) r.isNeg = false;
 
 	return new Array(q, r);
-}
+};
 
-function biDivide(x, y)
+Crossbear.RSA.BigInt.biDivide = function (x, y)
 {
-	return biDivideModulo(x, y)[0];
-}
-
-function biModulo(x, y)
-{
-	return biDivideModulo(x, y)[1];
-}
-
-function biMultiplyMod(x, y, m)
-{
-	return biModulo(biMultiply(x, y), m);
-}
-
-function biPow(x, y)
-{
-	var result = bigOne;
-	var a = x;
-	while (true) {
-		if ((y & 1) != 0) result = biMultiply(result, a);
-		y >>= 1;
-		if (y == 0) break;
-		a = biMultiply(a, a);
-	}
-	return result;
-}
-
-function biPowMod(x, y, m)
-{
-	var result = bigOne;
-	var a = x;
-	var k = y;
-	while (true) {
-		if ((k.digits[0] & 1) != 0) result = biMultiplyMod(result, a, m);
-		k = biShiftRight(k, 1);
-		if (k.digits[0] == 0 && biHighIndex(k) == 0) break;
-		a = biMultiplyMod(a, a, m);
-	}
-	return result;
-}
-
+	return Crossbear.RSA.BigInt.biDivideModulo(x, y)[0];
+};

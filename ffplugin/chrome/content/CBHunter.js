@@ -35,7 +35,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBHunter(cbFrontend) {
+Crossbear.CBHunter = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 	
 	// The CBHunterWorkerThread to which all information will be forwarded and which will then execute the HuntingTasks
@@ -57,7 +57,7 @@ function CBHunter(cbFrontend) {
 		/**
 		 * Initialize the CBHunter and the CBHunterWorkerThread
  		 */
-		CBHunter.prototype.init = function init() {
+		Crossbear.CBHunter.prototype.init = function init() {
 			
 			// First: Check if the Hunter is already initialized. If not: initialize it
 			if (self.worker == null) {
@@ -69,10 +69,10 @@ function CBHunter(cbFrontend) {
 				self.worker.onmessage = self.wtcallback;
 
 				// Check if the current system is a Windows or a Unix/Linuy system
-				var osIsWin = navigator.platform.toUpperCase().startsWith("WIN");
+				var osIsWin = Crossbear.startsWith(navigator.platform.toUpperCase(), "WIN");
 				
 				// Create a CBHunterWorkerInitEvent that contains all parameters related to Hunting (read them from the user's preferences) and the paths to the native libraries (different depending on the current operating system)
-				var wie = new CBHunterWorkerInitEvent(cbFrontend.getUserPref("hunter.tracerouteSamplesPerHop", "int"), cbFrontend.getUserPref("hunter.tracerouteMaxHops", "int"), getLibPaths(cbFrontend, osIsWin), osIsWin, cbFrontend.getUserPref("hunter.publicIPcacheValidity", "int"), cbFrontend.getUserPref("hunter.serverIPcacheValidity", "int"));
+				var wie = new Crossbear.CBHunterWorkerInitEvent(cbFrontend.getUserPref("hunter.tracerouteSamplesPerHop", "int"), cbFrontend.getUserPref("hunter.tracerouteMaxHops", "int"), Crossbear.getLibPaths(cbFrontend, osIsWin), osIsWin, cbFrontend.getUserPref("hunter.publicIPcacheValidity", "int"), cbFrontend.getUserPref("hunter.serverIPcacheValidity", "int"));
 				
 				// Initialize the CBHunterWorkerThread with that Event
 				self.worker.postMessage(wie);
@@ -85,7 +85,7 @@ function CBHunter(cbFrontend) {
 		 * 
 		 * @param event A nsIWorkerMessageEvent that is sent from the CBHunterWorkerThread using the postMessage() function. The event.data field is expected to be a Event defined within the CBEvents-file.
 		 */
-		CBHunter.prototype.wtcallback = function wtcallback(event) {
+		Crossbear.CBHunter.prototype.wtcallback = function wtcallback(event) {
 
 			// Look on the eventtype of the Event an perform actions according to it
 			if (event.data.eventtype) {
@@ -99,7 +99,7 @@ function CBHunter(cbFrontend) {
 					
 				} else if (event.data.eventtype == "CBHunterWorkerServerTimeRequest") {
 					// Estimate the current server time and send it to the CBHunterWorkerThread
-					self.worker.postMessage(new CBHunterWorkerServerTimeReply(cbFrontend.getServerTime()));
+					self.worker.postMessage(new Crossbear.CBHunterWorkerServerTimeReply(cbFrontend.getServerTime()));
 					return;
 					
 				} else if (event.data.eventtype == "CBHunterWorkerDBStoreRequest") {
@@ -109,11 +109,11 @@ function CBHunter(cbFrontend) {
 				} else if (event.data.eventtype == "CBHunterWorkerHuntingResults") {
 					
 					// Concatenate the bytes of the HuntingTaskResults into a single byte[]
-					var replyRawData = event.data.results.implode();
+					var replyRawData = Crossbear.implodeArray(event.data.results);
 					
 					// Try to send the byte[]-representation of the HuntingTaskResult-array to the Crossbear Server
 					cbFrontend.displayInformation("Sending "+event.data.results.length+" results to the Crossbear Server ...");
-					cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/reportHTResults.jsp", cbFrontend.cbServerName + ":443", jsArrayToUint8Array(replyRawData),self.sendHuntingTaskResultsCallback,{ replyRawData: replyRawData, numOfFailedAttempts : 0});
+					cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/reportHTResults.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(replyRawData),self.sendHuntingTaskResultsCallback,{ replyRawData: replyRawData, numOfFailedAttempts : 0});
 					return;
 
 				} else if (event.data.eventtype == "CBHunterWorkerError") {
@@ -131,7 +131,7 @@ function CBHunter(cbFrontend) {
 		/**
 		 * Terminate and destroy the object's CBHunterWorkerThread (in case it is not active: do nothing)
 		 */
-		CBHunter.prototype.terminate = function terminate() {
+		Crossbear.CBHunter.prototype.terminate = function terminate() {
 			if (self.worker != null) {
 				self.worker.terminate();
 				self.worker = null;
@@ -143,12 +143,12 @@ function CBHunter(cbFrontend) {
 		 * 
 		 * @param CBMessageHuntingTask A CBMessageHuntingTask-object that represents the Task that should be added to the todo-list
 		 */
-		CBHunter.prototype.addTask = function addTask(CBMessageHuntingTask) {
+		Crossbear.CBHunter.prototype.addTask = function addTask(CBMessageHuntingTask) {
 			
 			cbFrontend.displayInformation("Adding execution of task " + CBMessageHuntingTask.getTaskID()+ " to local \"todo\"-list.");
 			
 			// Convert the CBMessageHuntingTask-message into a CBHunterWorkerNewTask-Event so it can be send to the CBHunterWorkerThread ...
-			var newTask = new CBHunterWorkerNewTask(CBMessageHuntingTask.getTaskID(), CBMessageHuntingTask.getIPVersion(),CBMessageHuntingTask.getAlreadyKnownHashes(), CBMessageHuntingTask.getTargetIP(), CBMessageHuntingTask.getTargetPort(), CBMessageHuntingTask.getHostname());
+			var newTask = new Crossbear.CBHunterWorkerNewTask(CBMessageHuntingTask.getTaskID(), CBMessageHuntingTask.getIPVersion(),CBMessageHuntingTask.getAlreadyKnownHashes(), CBMessageHuntingTask.getTargetIP(), CBMessageHuntingTask.getTargetPort(), CBMessageHuntingTask.getHostname());
 	
 			// ... and send it.
 			self.worker.postMessage(newTask);
@@ -159,12 +159,12 @@ function CBHunter(cbFrontend) {
 		 * 
 		 * @param CBMessagePublicIPNotif A CBMessagePublicIPNotif-object that represents the PublicIP that has been observed for this client by the Crossbear server
 		 */
-		CBHunter.prototype.addPublicIP = function addPublicIP(CBMessagePublicIPNotif) {	
+		Crossbear.CBHunter.prototype.addPublicIP = function addPublicIP(CBMessagePublicIPNotif) {	
 			
 			cbFrontend.displayInformation("Crossbear server sent a new public ip: "+CBMessagePublicIPNotif.getPublicIP() + "(verified by "+ Crypto.util.bytesToBase64(CBMessagePublicIPNotif.getHMac()) +")");
 			
 			// Convert the CBMessagePublicIPNotif-message into a CBHunterWorkerNewPublicIP-Event so it can be send to the CBHunterWorkerThread ...
-			var newIP = new CBHunterWorkerNewPublicIP(CBMessagePublicIPNotif.getIPVersion(),CBMessagePublicIPNotif.getPublicIP(), CBMessagePublicIPNotif.getHMac(), Math.round(new Date().getTime() / 1000));
+			var newIP = new Crossbear.CBHunterWorkerNewPublicIP(CBMessagePublicIPNotif.getIPVersion(),CBMessagePublicIPNotif.getPublicIP(), CBMessagePublicIPNotif.getHMac(), Math.round(new Date().getTime() / 1000));
 			
 			// ... and send it.
 			self.worker.postMessage(newIP);
@@ -190,22 +190,22 @@ function CBHunter(cbFrontend) {
 		 * @param ipVersion The IPVersion of the serverIP
 		 * @param callback The function that will be executed after the receivePublicIP-function has finished and the systems publicIP is known
 		 */
-		CBHunter.prototype.requestPublicIP = function requestPublicIP(serverIP, ipVersion, callback) {
+		Crossbear.CBHunter.prototype.requestPublicIP = function requestPublicIP(serverIP, ipVersion, callback) {
 			
 			// Genereate a random AES256-key
-			var currentAESKey = generate256BitAESKey();
+			var currentAESKey = Crossbear.generate256BitAESKey();
 			
 			// Encrypt it with RSA/OAEP-padding using the Crossbear server's public key
-			var paddedAESKey = OAEP.padBlock(currentAESKey,0,currentAESKey.length);
+			var paddedAESKey = Crossbear.RSA.OAEP.padBlock(currentAESKey,0,currentAESKey.length);
 			
 			// Then generate a CBMessagePublicIPNotifRequest containing the encrypted AES-key
-			var publicIPNotifRequest = new CBMessagePublicIPNotifRequest(RSAencrypt(self.cbFrontend.ServerRSAKeyPair, paddedAESKey));
+			var publicIPNotifRequest = new Crossbear.CBMessagePublicIPNotifRequest(Crossbear.RSA.RSAencrypt(self.cbFrontend.ServerRSAKeyPair, paddedAESKey));
 
 			// Finally send it to the Crossbear server. In order to be able to parse the server's reply, the callback-function of the XMLHTTPRequest (which is the receivePublicIP-function) must know the generated AES key. Therefore the it is passed within the callBackParams-object
 			if (ipVersion == 4) {
-				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://" + serverIP + ":8080/getPublicIP.jsp", cbFrontend.cbServerName + ":8080", jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
+				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://" + serverIP + ":8080/getPublicIP.jsp", cbFrontend.cbServerName + ":8080", Crossbear.jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
 			} else if (ipVersion == 6) {
-				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://[" + serverIP + "]:8080/getPublicIP.jsp", cbFrontend.cbServerName + ":8080", jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
+				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://[" + serverIP + "]:8080/getPublicIP.jsp", cbFrontend.cbServerName + ":8080", Crossbear.jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
 			} else {
 				cbFrontend.displayTechnicalFailure("CBHunter:requestPublicIP: Invalid ipVersion", true);
 			}
@@ -218,7 +218,7 @@ function CBHunter(cbFrontend) {
 		 * 
 		 * Please note: This function is a XMLHTTPRequest-callback-function
 		 */
-		CBHunter.prototype.receivePublicIP = function receivePublicIP() {
+		Crossbear.CBHunter.prototype.receivePublicIP = function receivePublicIP() {
 
 			// Check if the server's reply has entirely been received
 			if ((this.readyState == 4) && (this.status == 200)) {
@@ -228,7 +228,7 @@ function CBHunter(cbFrontend) {
 				if (output) {
 
 					// If yes: decrypt the reply using the AES key
-					var encryptedServerResponse = uint8ArrayToJSArray(new Uint8Array(output));
+					var encryptedServerResponse = Crossbear.uint8ArrayToJSArray(new Uint8Array(output));
 					var plaintext = Crypto.AES.decrypt(encryptedServerResponse, this.cbCallBackParams.currentAESKey, {
 						mode : new Crypto.mode.CBC(Crypto.pad.pkcs7),
 						asBytes : true
@@ -241,14 +241,14 @@ function CBHunter(cbFrontend) {
 					});
 					
 					// If somebody tampered with the data: Warn the user!
-					if (!arrayCompare(supposedHash, actualHash)) {
+					if (!Crossbear.arrayCompare(supposedHash, actualHash)) {
 						cbFrontend.warnUserAboutBeingUnderAttack("Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.",5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: received invalid input: "+plaintext+supposedHash+":"+actualHash, true);
 						return;
 					}
 
 					// If the verification was successful cast the plaintext into a CBMessage-array
-					var decodedMessages = messageBuilder(jsArrayToUint8Array(plaintext),cbFrontend);
+					var decodedMessages = Crossbear.messageBuilder(Crossbear.jsArrayToUint8Array(plaintext),cbFrontend);
 					
 					// If the message[] has more than one element then something went wrong
 					if(decodedMessages.length != 1){
@@ -257,7 +257,7 @@ function CBHunter(cbFrontend) {
 					}
 					
 					// If the CBMessage that has been received is not a CBMessagePublicIPNotif then something went wrong
-					if(decodedMessages[0].constructor.name  != "CBMessagePublicIPNotif"){
+					if(decodedMessages[0].messageType  != "CBMessagePublicIPNotif"){
 						cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: received a message of unexpected type!", true);
 						return;
 					}
@@ -300,7 +300,7 @@ function CBHunter(cbFrontend) {
 		 * 
 		 * @param callback The function that will be executed after the receiveCBServerIPs-function has finished and Crosssbear's IPs (both version 4 and 6) are known
 		 */
-		CBHunter.prototype.requestCBServerIPs = function requestCBServerIPs(callback) {
+		Crossbear.CBHunter.prototype.requestCBServerIPs = function requestCBServerIPs(callback) {
 			// Remember the callback function (won't be overwritten by a null-value and there is only one piece of code that calls it with a value != null)
 			if(callback != null){
 				self.receiveCBServerIPsCallback = callback;
@@ -318,8 +318,8 @@ function CBHunter(cbFrontend) {
 		 * 
 		 * @param see http://www.oxymoronical.com/experiments/apidocs/platform/1.9.1/interface/nsIDNSListener
 		 */
-		CBHunter.prototype.receiveCBServerIPs = function receiveCBServerIPs() {};
-		CBHunter.prototype.receiveCBServerIPs.onLookupComplete = function(aRequest, aRecord, aStatus) {
+		Crossbear.CBHunter.prototype.receiveCBServerIPs = function receiveCBServerIPs() {};
+		Crossbear.CBHunter.prototype.receiveCBServerIPs.onLookupComplete = function(aRequest, aRecord, aStatus) {
 
 			// There is no guarantee that IPs for both IP-versions will be observed. Therefore, initialize the serverIPs to "" 
 			var serverIPv4 = "";
@@ -335,11 +335,11 @@ function CBHunter(cbFrontend) {
 					var currentAddr = aRecord.getNextAddrAsString();
 					
 					// Check if it's a IPv4-Address
-					if (currentAddr.match(ipv4Regex)) {
+					if (currentAddr.match(Crossbear.ipv4Regex)) {
 						serverIPv4 = currentAddr;
 						
 					// Check if it's a IPv6-Address
-					} else if (currentAddr.match(ipRegex)) {
+					} else if (currentAddr.match(Crossbear.ipRegex)) {
 						serverIPv6 = currentAddr;
 						
 					// If it's neither then something went wrong
@@ -350,7 +350,7 @@ function CBHunter(cbFrontend) {
 				}
 				
 				// Generate a new CBHunterWorkerNewServerIPs-Event containing the server's IPs that have just been observed
-				var newServerIP = new CBHunterWorkerNewServerIPs(serverIPv4,serverIPv6,Math.round(new Date().getTime() / 1000));
+				var newServerIP = new Crossbear.CBHunterWorkerNewServerIPs(serverIPv4,serverIPv6,Math.round(new Date().getTime() / 1000));
 				
 				// Send that Event to the CBHunterWorkerThread
 				self.worker.postMessage(newServerIP);
@@ -377,7 +377,7 @@ function CBHunter(cbFrontend) {
 		 * @param publicIP The publicIP from which it has been executed
 		 * @param serverTimeOfExecution The server time of when the execution took place
 		 */
-		CBHunter.prototype.storeHuntingTaskResultLocal = function storeHuntingTaskResultLocal(taskID, publicIP, serverTimeOfExecution) {
+		Crossbear.CBHunter.prototype.storeHuntingTaskResultLocal = function storeHuntingTaskResultLocal(taskID, publicIP, serverTimeOfExecution) {
 			
 			// Build the SQL-Statement that will store the fact of the successful execution ...
 			var sqlStatement = "INSERT INTO performedTasks (TaskID, PublicIP, ServerTimeOfExecution) VALUES (:tid, :pip, :time)";
@@ -396,7 +396,7 @@ function CBHunter(cbFrontend) {
 		 * 
 		 * Please note: This function is a XMLHTTPRequest-callback-function
 		 */
-		CBHunter.prototype.sendHuntingTaskResultsCallback = function sendHuntingTaskResultsCallback() {
+		Crossbear.CBHunter.prototype.sendHuntingTaskResultsCallback = function sendHuntingTaskResultsCallback() {
 
 			// Check if the sending succeeded. If it did return ;)
 			if ((this.readyState == 4) && (this.status == 200)) {
@@ -411,7 +411,7 @@ function CBHunter(cbFrontend) {
 				// Resend if there haven't already been three resending-attempts
 				if(this.cbCallBackParams.numOfFailedAttempts<3){
 					cbFrontend.displayInformation("Attempting to resend the Hunting Task replies");
-					cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/reportHTResults.jsp", cbFrontend.cbServerName + ":443", jsArrayToUint8Array(this.cbCallBackParams.replyRawData),self.sendHuntingTaskResultsCallback,{ replyRawData: this.cbCallBackParams.replyRawData, numOfFailedAttempts : this.cbCallBackParams.numOfFailedAttempts+1});
+					cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/reportHTResults.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(this.cbCallBackParams.replyRawData),self.sendHuntingTaskResultsCallback,{ replyRawData: this.cbCallBackParams.replyRawData, numOfFailedAttempts : this.cbCallBackParams.numOfFailedAttempts+1});
 				} else{
 					// Give up if resending the results three times didn't work either.
 				}
@@ -426,4 +426,4 @@ function CBHunter(cbFrontend) {
 		};
 	}
 	
-}
+};

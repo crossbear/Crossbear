@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<dialog id="cb-settings-dlg" title="Crossbear - Settings"
+<dialog id="crossbear-settings-dlg" title="Crossbear - Settings"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept,cancel"
   buttonlabelcancel="Cancel"
@@ -55,22 +55,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     
     <!-- Radio Buttons for the automatic trust option -->
     <label value="Trust Certificates Automatically"/>
-    <radiogroup orient="horizontal" id="opt-trust-automatically">   
-     <radio label="YES" id="opt-trust-automatically-yes"/>  
-     <radio label="NO" id="opt-trust-automatically-no"/>  
+    <radiogroup orient="horizontal" id="crossbear-opt-trust-automatically">   
+     <radio label="YES" id="crossbear-opt-trust-automatically-yes"/>  
+     <radio label="NO" id="crossbear-opt-trust-automatically-no"/>  
     </radiogroup> 
     
     <separator orient="horizontal" class="groove-thin"/>
     
     <!-- Textbox for the minimal required rating for automatic trust -->
     <label value="Required Rating For Automatic Trust"/>
-    <box><textbox maxwidth="100" type="number" min="0" max="255" id="opt-trust-req-rating" /></box>
+    <box><textbox maxwidth="100" type="number" min="0" max="255" id="crossbear-opt-trust-req-rating" /></box>
     
     <separator orient="horizontal" class="groove-thin"/>
     
     <!-- Textbox for the duration that a trust decision will be kept in the local cache -->
     <label value="Cache Validity For Trust Decisions (s)"/>
-    <box><textbox maxwidth="100" type="number" min="0" id="opt-tdc-validity" /></box>
+    <box><textbox maxwidth="100" type="number" min="0" id="crossbear-opt-tdc-validity" /></box>
     
     <separator orient="horizontal" class="groove-thin"/>
     
@@ -80,33 +80,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   </groupbox>
   
-  <!-- Right Group: The Protector's preferences -->
+  <!-- Right Group: The Hunter's preferences -->
   <groupbox align="center">
     <caption label="Hunter"/>
     
     <!-- Textbox for the minimal interval between two HuntingTaskList processings -->
     <label value="Hunting Interval (s)"/>
-    <box><textbox maxwidth="100" type="number" min="0" id="opt-hunting-interval" /></box>
+    <box><textbox maxwidth="100" type="number" min="0" id="crossbear-opt-hunting-interval" /></box>
     
     <!-- Textbox for the minimal time that needs to pass before a HuntingTask can be executed again from the same IP -->
     <label value="Task Re-execution Interval (s)"/>
-    <box><textbox maxwidth="100" type="number" min="0" id="opt-hunting-reexecution-interval" /></box>
+    <box><textbox maxwidth="100" type="number" min="0" id="crossbear-opt-hunting-reexecution-interval" /></box>
     
     <!-- Textbox for the maximal number of Hops that will be traced during a Traceroute -->
     <label value="Traceroute Max Hops"/>
-    <box><textbox maxwidth="100" type="number" min="0" max="50" id="opt-traceroute-max-hops" /></box>
+    <box><textbox maxwidth="100" type="number" min="0" max="50" id="crossbear-opt-traceroute-max-hops" /></box>
     
     <!-- Textbox for the number of samples that will be made with the same TTL-value during a Traceroute -->
     <label value="Traceroute Samples Per Hop"/>
-    <box><textbox maxwidth="100" type="number" min="1" id="opt-traceroute-samples-per-hop" /></box>
+    <box><textbox maxwidth="100" type="number" min="1" id="crossbear-opt-traceroute-samples-per-hop" /></box>
     
     <!-- Textbox for the time that a PublicIP will be considered valid after it was observed -->
     <label value="Cache Validity For Public IPs (s)"/>
-    <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-pub-ip-cache-validity" /></box>
+    <box><textbox maxwidth="100" type="number" min="0" id="crossbear-opt-trust-pub-ip-cache-validity" /></box>
     
     <!-- Textbox for the time that a Crossbear server IP will be considered valid after it was observed -->
     <label value="Cache Validity For Server IPs (s)"/>
-    <box><textbox maxwidth="100" type="number" min="0" id="opt-trust-serv-ip-cache-validity"/></box>
+    <box><textbox maxwidth="100" type="number" min="0" id="crossbear-opt-trust-serv-ip-cache-validity"/></box>
   </groupbox>
   </box>
   

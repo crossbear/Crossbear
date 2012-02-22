@@ -34,7 +34,7 @@
  */
 
 // Declare namespace OAEP
-var OAEP = {};
+Crossbear.RSA.OAEP = {
 
 /**
  * Convert an integer into a byte[] of length 4. The byte[] will be in network byte-order (i.e. big-endian byte-order).
@@ -42,12 +42,12 @@ var OAEP = {};
  * @param i The Integer to convert
  * @param sp The byte[] holding the converted integer
  */
-OAEP.ItoOSP = function(i, sp) {
+ItoOSP : function(i, sp) {
 	sp[0] = (i >>> 24) & 255;
 	sp[1] = (i >>> 16) & 255;
 	sp[2] = (i >>> 8) & 255;
 	sp[3] = i & 255;
-};
+},
 
 /**
  * Mask generator function, as described in PKCS1v2.
@@ -57,7 +57,7 @@ OAEP.ItoOSP = function(i, sp) {
  * @param zLen Number of bytes to take from "Z" for seeding
  * @param length Intended length in octets of the mask
  */
-OAEP.maskGeneratorFunction1 = function(Z, zOff, zLen, length) {
+maskGeneratorFunction1 : function(Z, zOff, zLen, length) {
 	
 	var mask = [];
 	var hashBuf = [];
@@ -65,7 +65,7 @@ OAEP.maskGeneratorFunction1 = function(Z, zOff, zLen, length) {
 	var counter = 0;
 
 	do {
-		OAEP.ItoOSP(counter, C);
+		Crossbear.RSA.OAEP.ItoOSP(counter, C);
 
 		hashBuf = Crypto.SHA1(Z.slice(zOff, zOff + zLen).concat(C), {
 			asBytes : true
@@ -76,7 +76,7 @@ OAEP.maskGeneratorFunction1 = function(Z, zOff, zLen, length) {
 	} while (++counter < Math.floor(length / hashBuf.length));
 
 	if ((counter * hashBuf.length) < length) {
-		OAEP.ItoOSP(counter, C);
+		Crossbear.RSA.OAEP.ItoOSP(counter, C);
 
 		hashBuf = Crypto.SHA1(Z.slice(zOff, zOff + zLen).concat(C), {
 			asBytes : true
@@ -86,7 +86,7 @@ OAEP.maskGeneratorFunction1 = function(Z, zOff, zLen, length) {
 	}
 
 	return mask;
-};
+},
 
 /**
  * OAEP padding, as described in PKCS1v2.
@@ -95,7 +95,7 @@ OAEP.maskGeneratorFunction1 = function(Z, zOff, zLen, length) {
  * @param inOff The Offset inside "inBytes" that will be considered as the starting point of the plaintext
  * @param inLen The number of bytes that will be taken from "inBytes" and that will be padded
  */
-OAEP.padBlock = function(inBytes, inOff, inLen) {
+padBlock : function(inBytes, inOff, inLen) {
 	
 	/*
 	 * OAEP padding is performed on 255 byte blocks that are structured like this:
@@ -126,7 +126,7 @@ OAEP.padBlock = function(inBytes, inOff, inLen) {
 	var seed = prng.getService(Components.interfaces.nsIRandomGenerator).generateRandomBytes(20, (new Date).getUTCMilliseconds());
 	
 	// Mask the message block.
-	var mask = OAEP.maskGeneratorFunction1(seed, 0, seed.length, block.length - 20);
+	var mask = Crossbear.RSA.OAEP.maskGeneratorFunction1(seed, 0, seed.length, block.length - 20);
 	for ( var i = 20; i != block.length; i++) {
 		block[i] ^= mask[i - 20];
 	}
@@ -137,11 +137,13 @@ OAEP.padBlock = function(inBytes, inOff, inLen) {
 	}
 
 	// Mask the seed.
-	mask = OAEP.maskGeneratorFunction1(block, 20, block.length - 20, 20);
+	mask = Crossbear.RSA.OAEP.maskGeneratorFunction1(block, 20, block.length - 20, 20);
 	for ( var i = 0; i != 20; i++) {
 		block[i] ^= mask[i];
 	}
 
 	// Return the OAEP-encoded plaintext
 	return block;
+}
+
 };

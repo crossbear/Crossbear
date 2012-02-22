@@ -32,7 +32,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBHTLProcessor(cbFrontend) {
+Crossbear.CBHTLProcessor = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 	
 	// The list of HuntingTasks that was received from the Crossbear server in its CBMessageHuntingTask[]-representation.
@@ -59,7 +59,7 @@ function CBHTLProcessor(cbFrontend) {
 		/**
 		 * Request the current HuntingTaskList from the Crossbear server using parseHuntingTaskList as callback-function (i.e. parseHuntingTaskList will parse the HuntingTaskList after it is received)
 		 */
-		CBHTLProcessor.prototype.requestHuntingTaskList = function requestHuntingTaskList() {
+		Crossbear.CBHTLProcessor.prototype.requestHuntingTaskList = function requestHuntingTaskList() {
 			cbFrontend.displayInformation("Pulling Hunting Tasks from CrossbearServer");
 			cbFrontend.cbnet.retrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/getHuntingTaskList.jsp", cbFrontend.cbServerName + ":443", self.parseHuntingTaskList,null);
 		};
@@ -71,7 +71,7 @@ function CBHTLProcessor(cbFrontend) {
 		 * 
 		 * Please note: This function is a XMLHTTPRequest-callback-function
 		 */
-		CBHTLProcessor.prototype.parseHuntingTaskList = function parseHuntingTaskList() {
+		Crossbear.CBHTLProcessor.prototype.parseHuntingTaskList = function parseHuntingTaskList() {
 			
 			// Check if the server's reply has entirely been received
 			if ((this.readyState == 4) && (this.status == 200)) {
@@ -91,22 +91,22 @@ function CBHTLProcessor(cbFrontend) {
 					self.publicIPv4 = '';
 					
 					// Try to Decode the server's reply as an array of CBMessages
-					var serverMessages = messageBuilder(new Uint8Array(output),cbFrontend);
+					var serverMessages = Crossbear.messageBuilder(new Uint8Array(output),cbFrontend);
 					
 					// Read the messages and store their content at the appropriate places
 					for(var i = 0;i<serverMessages.length;i++){
 						
 						// Hunting tasks will be stored locally (will be checked later and depending on that forwarded to the CBHunter(WorkerThread) )
-						if(serverMessages[i].constructor.name  == "CBMessageHuntingTask"){
+						if(serverMessages[i].messageType  == "CBMessageHuntingTask"){
 							self.taskList.push(serverMessages[i]);
 							self.taskIDList.push(serverMessages[i].getTaskID());
 						
 						// The current server time will be stored in the cbFrontend
-						} else if(serverMessages[i].constructor.name  == "CBMessageCurrentServerTime"){
+						} else if(serverMessages[i].messageType  == "CBMessageCurrentServerTime"){
 							cbFrontend.calcAndStoreCbServerTimeDiff(serverMessages[i].getCurrentServerTime());
 						
 						// The PublicIP will be stored locally and in the CBHunter(WorkerThread)
-						} else if (serverMessages[i].constructor.name  == "CBMessagePublicIPNotif"){
+						} else if (serverMessages[i].messageType  == "CBMessagePublicIPNotif"){
 							if(serverMessages[i].getIPVersion() ==4){
 								self.publicIPv4 = serverMessages[i].getPublicIP();
 							} else {
@@ -143,7 +143,7 @@ function CBHTLProcessor(cbFrontend) {
 		 * Receive the current IPs of the Crossbear Server and store them. A known serverIP of a specific IP-version means that the system supports that IP-version. Therefore a PublicIP of that IP-version will be requested for that version
 		 * (if not already known). It will be stored using either the "storePublicIPv4"-function or the "storePublicIPv6"-function.
 		 */
-		CBHTLProcessor.prototype.storeCurrentServerIps = function storeCurrentServerIps(serverIPv4, serverIPv6) {
+		Crossbear.CBHTLProcessor.prototype.storeCurrentServerIps = function storeCurrentServerIps(serverIPv4, serverIPv6) {
 			
 			// Store the IPs of the Crossbear server
 			self.serverIPv4 = serverIPv4;
@@ -184,7 +184,7 @@ function CBHTLProcessor(cbFrontend) {
 		/**
 		 * Store the system's current PublicIPv4 and check if the system supports IPv6. If it does: Request the system's current PublicIPv6 (if not already known). If not: go on with the parsing of the HTL. That is "Get the time during which the HTL's Tasks were executed from the current system's publicIP for the last time."
 		 */
-		CBHTLProcessor.prototype.storePublicIPv4 = function storePublicIPv4(publicIPv4) {
+		Crossbear.CBHTLProcessor.prototype.storePublicIPv4 = function storePublicIPv4(publicIPv4) {
 			
 			// Store the PublicIP
 			self.publicIPv4 = publicIPv4;
@@ -214,7 +214,7 @@ function CBHTLProcessor(cbFrontend) {
 		/**
 		 * Store the system's current PublicIPv6 and go on with the parsing of the HTL. That is "Get the time during which the HTL's Tasks were executed from the current system's publicIP for the last time."
 		 */
-		CBHTLProcessor.prototype.storePublicIPv6 = function storePublicIPv6(publicIPv6) {
+		Crossbear.CBHTLProcessor.prototype.storePublicIPv6 = function storePublicIPv6(publicIPv6) {
 			
 			// Store the PublicIP
 			self.publicIPv6 = publicIPv6;
@@ -228,7 +228,7 @@ function CBHTLProcessor(cbFrontend) {
 		/**
 		 * Request the time during which the HTL's Tasks were executed from the current system's publicIP for the last time. This information is stored in the performedTasks-table
 		 */
-		CBHTLProcessor.prototype.getLastExecutionTimesForTasks = function getLastExecutionTimesForTasks() {
+		Crossbear.CBHTLProcessor.prototype.getLastExecutionTimesForTasks = function getLastExecutionTimesForTasks() {
 
 			// Build a SQL-Query that will look for the maximal LastExecutionTime-value of a Task whose ID is in the taskIDList.
 			var params = new Object();
@@ -262,7 +262,7 @@ function CBHTLProcessor(cbFrontend) {
 		 * 
 		 * @param lastExecutionTimesOfTasks An array of mozIStorageRows generated by a SQL-Query requesting the time for all tasks ( whose IDs are in the taskIDList[] ) during which they were executed from the current system's publicIP for the last time.
 		 */
-		CBHTLProcessor.prototype.getAndApplyTaskPolicys = function getAndApplyTaskPolicys(lastExecutionTimesOfTasks) {
+		Crossbear.CBHTLProcessor.prototype.getAndApplyTaskPolicys = function getAndApplyTaskPolicys(lastExecutionTimesOfTasks) {
 
 			// Count the number of accepted Tasks
 			var tasksAccepted = 0;
@@ -316,7 +316,7 @@ function CBHTLProcessor(cbFrontend) {
 		 * @param lastExecutionTime The last time the Task has been executed from the current system's public IP ("" if never)
 		 * @returns One of the CBTaskExecutionPolicies
 		 */
-		CBHTLProcessor.prototype.getPolicyForTask = function getPolicyForTask(publicIP, lastExecutionTime) {
+		Crossbear.CBHTLProcessor.prototype.getPolicyForTask = function getPolicyForTask(publicIP, lastExecutionTime) {
 
 
 			// Scanning a target with a unavailable protocol version is simply not possible -> SKIP
@@ -336,4 +336,4 @@ function CBHTLProcessor(cbFrontend) {
 			return CBTaskExecutionPolicies.OK;
 		};
 	}
-}
+};

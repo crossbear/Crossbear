@@ -32,7 +32,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBDatabase(cbFrontend) {
+Crossbear.CBDatabase = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 
 	// Load the Firefox Components required to work with SQLite databases
@@ -66,7 +66,7 @@ function CBDatabase(cbFrontend) {
 		 * 
 		 * @param sqlStatement The SQL-statement to execute
 		 */
-		CBDatabase.prototype.executeSimple = function executeSimple(sqlStatement) {
+		Crossbear.CBDatabase.prototype.executeSimple = function executeSimple(sqlStatement) {
 			self.DBConn.executeSimpleSQL(sqlStatement);
 		};
 
@@ -80,7 +80,7 @@ function CBDatabase(cbFrontend) {
 		 * @param expectedResultColumns An array containing all column-names of the result of the SQL-statement.
 		 * @returns A 2D-array representing the result of the SQL-Statement. Accessing an entry can be done by result[rownumber].ColumnName
 		 */
-		CBDatabase.prototype.executeSynchronous = function executeSynchronous(sqlStatement, sqlParams, expectedResultColumns) {
+		Crossbear.CBDatabase.prototype.executeSynchronous = function executeSynchronous(sqlStatement, sqlParams, expectedResultColumns) {
 			var stmt = null;
 			var allrows = [];
 			
@@ -132,7 +132,7 @@ function CBDatabase(cbFrontend) {
 		 * @param sqlParams An object holding the named parameters of the SQL-Statement (e.g. {'hash' : '1234567890ABCDEF'})
 		 * @param callbackFunction The function that will receive an array of mozIStorageRows representing the result of the database query
 		 */
-		CBDatabase.prototype.executeAsynchronous = function executeAsynchronous(sqlStatement, sqlParams, callbackFunction) {
+		Crossbear.CBDatabase.prototype.executeAsynchronous = function executeAsynchronous(sqlStatement, sqlParams, callbackFunction) {
 			try {
 				var allrows = [];
 				
@@ -180,4 +180,4 @@ function CBDatabase(cbFrontend) {
 			}
 		};
 	}
-}
+};

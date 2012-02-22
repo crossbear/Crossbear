@@ -82,7 +82,7 @@ function checkIfCertIsInCache(forceWindowClose) {
 	var cacheStatus = window.arguments[0].inn.cbFrontend.cbtrustdecisioncache.checkValidity(window.arguments[0].inn.certHash, window.arguments[0].inn.host.split("|")[0],window.arguments[0].inn.cbFrontend.cbeventobserver.checkCBServerOnly);
 
 	// If the cache can answer that question or if the window must be closed ...
-	if (cacheStatus != CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE || forceWindowClose) {
+	if (cacheStatus != Crossbear.CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE || forceWindowClose) {
 		
 		// ... close it.
 		window.close();
@@ -91,7 +91,10 @@ function checkIfCertIsInCache(forceWindowClose) {
 
 	// If the question can't be answered then set the focus on the oldest UnknownCertDlg. The user is then forced to answer the trust-question for the oldest window's certificate.
 	bringToFront();
-}
+};
+
+// Setting the default namespace for xmlToDOM to XUL
+default xml namespace = Namespace("xul", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
 
 /**
  * Initialization function (called once when the dialog is about to display). This function sets all GUI-elements according to the window.arguments[0].inn-parameters and creates a timer that will periodically execute the checkIfCertIsInCache-function.
@@ -99,33 +102,38 @@ function checkIfCertIsInCache(forceWindowClose) {
 function onLoad() {
 
 	// Display the "Trust" & "Don't Trust" buttons or the "Retry" & "Deactivate Protector" buttons depending on whether a timeout occurred or not
-	document.getElementById('buttonBox').hidden = window.arguments[0].inn.wasTimeout;
-	document.getElementById('timeoutButtonBox').hidden = !window.arguments[0].inn.wasTimeout;
+	document.getElementById('crossbear-buttonBox').hidden = window.arguments[0].inn.wasTimeout;
+	document.getElementById('crossbear-timeoutButtonBox').hidden = !window.arguments[0].inn.wasTimeout;
 
 	// Put the rating in the dialog's "server-reply"-box
-	document.getElementById('serverReplyRating').value = window.arguments[0].inn.rating;
+	document.getElementById('crossbear-serverReplyRating').value = window.arguments[0].inn.rating;
 
 	// Convert the judgment from Text-only to HTML
 	var contentHTML = window.arguments[0].inn.judgment.replace(/\n/g,"<html:br />").replace(/<crit>/g,"<html:font color=\"red\"><html:b>").replace(/<\/crit>/g,"</html:b></html:font>");
 	
 	// Put the judgment in the dialog's "server-reply"-box
-	var srd = document.getElementById("serverReplyDiv");
-	srd.innerHTML ="<p xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" style=\"word-wrap: break-word;\">"+contentHTML+"</p>";
+	var nodes = {};
+	var xml = new XML('<hbox xmlns:html="http://www.w3.org/1999/xhtml"><p style=" word-wrap: break-word;" >'+contentHTML+'</p></hbox>');
+	var srd = document.getElementById("crossbear-serverReplyDiv");
+	var child = Crossbear.xmlToDOM(xml, document, nodes);
+	srd.appendChild(child);
 
 	// If the box became too big: Limit its width
 	if(srd.offsetWidth>415){
-		srd.innerHTML ="<p xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" width=\"415px\" style=\"word-wrap: break-word;\">"+contentHTML+"</p>";
+		srd.removeChild(child);
+		xml = new XML('<hbox xmlns:html="http://www.w3.org/1999/xhtml"><p  width=\"415px\" style=" word-wrap: break-word;" >'+contentHTML+'</p></hbox>');
+		srd.appendChild(Crossbear.xmlToDOM(xml, document, nodes));
 	}
 
 	// Color the rating based on whether it is below or above the user's ratingToTrustAutomatically-value
 	if (window.arguments[0].inn.rating > window.arguments[0].inn.ratingToTrustAutomatically) {
 
 		// If it's above: color the rating green
-		document.getElementById('serverReplyRating').style.color = "#22B14C";
+		document.getElementById('crossbear-serverReplyRating').style.color = "#22B14C";
 
 	} else {
 		// If it's below: color the rating red
-		document.getElementById('serverReplyRating').style.color = "#FF0000";
+		document.getElementById('crossbear-serverReplyRating').style.color = "#FF0000";
 	}
 
 	// Resize the window so it is big enough to display its content (especially important on linux-systems)
@@ -167,7 +175,7 @@ function retry() {
 
 	// ... and close the dialog.
 	window.close();
-}
+};
 
 /**
  * This is the function that will add the host's "certificate"/"domain"-combination to the local cache.
@@ -185,4 +193,4 @@ function setTrust(trust) {
 
 	// Return true so the dialog will close
 	return true;
-}
+};

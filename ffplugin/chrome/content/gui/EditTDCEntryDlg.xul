@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<dialog id="cb-settings-dlg" title="Crossbear - Edit Trust Decision Cache Entry"
+<dialog id="crossbear-tdc-edit-dlg" title="Crossbear - Edit Trust Decision Cache Entry"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept,cancel"
   buttonlabelcancel="Cancel"
@@ -55,27 +55,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<!-- Box for displaying the entry's Host-->
 			<groupbox align="left">
 				<label value="Host:"/>
-				<label id="ce-host" />
+				<label id="crossbear-ce-host" />
 			</groupbox>
 
 			<!-- Box for displaying entry's Certificate ID-->
 			<groupbox align="left">
 				<label value="Certificate ID:"/>
-				<label  id="ce-hash" />
+				<label  id="crossbear-ce-hash" />
 			</groupbox>
 
 			<!-- Box for displaying and modifying the entry's Validity-->
 			<groupbox align="left">
 				<label value="Valid Until:"/>
-				<textbox  id="ce-valid-until" /> 
+				<textbox  id="crossbear-ce-valid-until" /> 
 			</groupbox>
 
 			<!-- Box for displaying and modifying the entry's Trust-->
 			<groupbox align="left">
 				<label value="Trust:"/>
-				<radiogroup orient="horizontal" id="ce-trust">   
-					<radio label="YES" id="ce-trust-yes"/>  
-					<radio label="NO" id="ce-trust-no"/>  
+				<radiogroup orient="horizontal" id="crossbear-ce-trust">   
+					<radio label="YES" id="crossbear-ce-trust-yes"/>  
+					<radio label="NO" id="crossbear-ce-trust-no"/>  
 				</radiogroup> 
 			</groupbox>
 

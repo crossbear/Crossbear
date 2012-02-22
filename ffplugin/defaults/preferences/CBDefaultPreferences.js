@@ -1,16 +1,16 @@
-pref("crossbear.activateHunter", true);
-pref("crossbear.hunter.huntingInterval", 900);
-pref("crossbear.hunter.taskReexecutionInterval", 21600);
+pref("extensions.crossbear.activateHunter", true);
+pref("extensions.crossbear.hunter.huntingInterval", 900);
+pref("extensions.crossbear.hunter.taskReexecutionInterval", 21600);
 
-pref("crossbear.hunter.tracerouteMaxHops", 20);
-pref("crossbear.hunter.tracerouteSamplesPerHop", 5);
+pref("extensions.crossbear.hunter.tracerouteMaxHops", 20);
+pref("extensions.crossbear.hunter.tracerouteSamplesPerHop", 5);
 
-pref("crossbear.hunter.publicIPcacheValidity", 60);
-pref("crossbear.hunter.serverIPcacheValidity", 3600);
+pref("extensions.crossbear.hunter.publicIPcacheValidity", 60);
+pref("extensions.crossbear.hunter.serverIPcacheValidity", 3600);
 
-pref("crossbear.activateProtector", true);
-pref("crossbear.protector.tdcValidity", 604800);
+pref("extensions.crossbear.activateProtector", true);
+pref("extensions.crossbear.protector.tdcValidity", 604800);
 
-pref("crossbear.protector.trustAutomatically", true);
-pref("crossbear.protector.ratingToTrustAutomatically", 100);
+pref("extensions.crossbear.protector.trustAutomatically", true);
+pref("extensions.crossbear.protector.ratingToTrustAutomatically", 100);
 

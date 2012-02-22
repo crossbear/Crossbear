@@ -37,7 +37,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBCertificateChainFetcher(cbFrontend) {
+Crossbear.CBCertificateChainFetcher = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 	
 	// Container for opened libraries
@@ -62,7 +62,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param libs The container that will hold the references to the libraries once they are opened
 		 * @param libPaths The container that holds the paths of the native libraries
 		 */
-		CBCertificateChainFetcher.prototype.openFFLibraries = function openFFLibraries(libs, libPaths) {
+		Crossbear.CBCertificateChainFetcher.prototype.openFFLibraries = function openFFLibraries(libs, libPaths) {
 
 			// Load the nss3-library 
 			try {
@@ -97,7 +97,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param types The container that will hold these c-type definitions
 		 * @param osIsWin A flag indicating whether the current system is a Windows system or not
 		 */
-		CBCertificateChainFetcher.prototype.defineFFLibTypes = function defineFFLibTypes(types, osIsWin) {
+		Crossbear.CBCertificateChainFetcher.prototype.defineFFLibTypes = function defineFFLibTypes(types, osIsWin) {
 			
 			// Boolean constants
 			types.PR_TRUE = 1;
@@ -261,7 +261,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param types The container that contains the c-type-definitions
 		 * @param libs The container that contains references to the native libraries
 		 */
-		CBCertificateChainFetcher.prototype.defineFFlibFunctions = function defineFFlibFunctions(functions, types, libs) {
+		Crossbear.CBCertificateChainFetcher.prototype.defineFFlibFunctions = function defineFFlibFunctions(functions, types, libs) {
 			
 			// See https://developer.mozilla.org/en/PR_calloc
 			functions.PR_Calloc = libs.nsprLib.declare("PR_Calloc",
@@ -427,7 +427,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param libPaths The container that holds the paths of the native libraries
 		 * @param osIsWin A Flag indicating if Crossbear is currently executed on a Windows OS
 		 */
-		CBCertificateChainFetcher.prototype.init = function init(libPaths, osIsWin) {
+		Crossbear.CBCertificateChainFetcher.prototype.init = function init(libPaths, osIsWin) {
 			try{
 			
 			// First define the handles to the native libraries
@@ -456,7 +456,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param port The Port to add to the NetAddress
 		 * @returns The NetAddress-struct-representation of the IP and the Port.
 		 */
-		CBCertificateChainFetcher.prototype.getNetAddress = function getNetAddress(ip, port) {
+		Crossbear.CBCertificateChainFetcher.prototype.getNetAddress = function getNetAddress(ip, port) {
 
 			// Allocate a buffer for 1024 bits and initialize it with zero
 			var netAddressBuffer = self.functions.PR_Calloc(1, 1024);
@@ -496,7 +496,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * 
 		 * @param netAddress A Pointer to the NetAddress-struct that should bee freed
 		 */
-		CBCertificateChainFetcher.prototype.freeNetAddress = function freeNetAddress(netAddress) {
+		Crossbear.CBCertificateChainFetcher.prototype.freeNetAddress = function freeNetAddress(netAddress) {
 			var netAddressBuffer = ctypes.cast(netAddress, ctypes.voidptr_t);
 			self.functions.PR_Free(netAddressBuffer);
 		};
@@ -509,7 +509,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param compatibilityMode If set to "true" TLS will be disabled and support for the "SSLv2Hello"-Protocol will be enabled. Some older servers require this option
 		 * @returns The converted socket if no error occurred else false.
 		 */
-		CBCertificateChainFetcher.prototype.prepareSocketForSSL = function prepareSocketForSSL(socket, host, compatibilityMode) {
+		Crossbear.CBCertificateChainFetcher.prototype.prepareSocketForSSL = function prepareSocketForSSL(socket, host, compatibilityMode) {
 
 			// Convert the socket into a SSL-socket
 			var sock = self.functions.SSL_ImportFD(null, socket);
@@ -557,7 +557,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param isServer PR_TRUE means the callback function should evaluate the certificate as a server does, treating the remote end is a client. PR_FALSE means the callback function should evaluate the certificate as a client does, treating the remote end as a server
 		 * @returns PR_SUCCESS (i.e. accept)
 		 */
-		CBCertificateChainFetcher.prototype.acceptAllCerts = function acceptAllCerts(arg, fd, checksig, isServer) {
+		Crossbear.CBCertificateChainFetcher.prototype.acceptAllCerts = function acceptAllCerts(arg, fd, checksig, isServer) {
 			return self.types.PR_SUCCESS;
 		};
 
@@ -567,7 +567,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param socket The SSL-socket connected to the peer from which the certificate should be obtained
 		 * @returns A CERTCertificate* pointing to the peer's certificate. If something went wrong while performing the handshake either null or a numeric error code is returned.
 		 */
-		CBCertificateChainFetcher.prototype.getPeerCertificate = function getPeerCertificate(socket) {
+		Crossbear.CBCertificateChainFetcher.prototype.getPeerCertificate = function getPeerCertificate(socket) {
 
 			// Set the certificate authentication callback function to "acceptAllCerts" so the handshake will not fail no matter what certificate the server is using
 			var certAuthCallback = self.types.SSL_AuthCertificate(self.acceptAllCerts);
@@ -618,7 +618,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param certChain A pointer to the certificate chain to the first element from 
 		 * @returns A CERTCertListNode* pointing to the first element of the certificate chain
 		 */
-		CBCertificateChainFetcher.prototype.CERT_LIST_HEAD = function CERT_LIST_HEAD(certChain) {
+		Crossbear.CBCertificateChainFetcher.prototype.CERT_LIST_HEAD = function CERT_LIST_HEAD(certChain) {
 			return ctypes.cast(certChain.contents.list.next, self.types.CERTCertListNode.ptr);
 		};
 
@@ -632,7 +632,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param certChain The certificate chain
 		 * @returns True if the node IS the last element in the chain else false
 		 */
-		CBCertificateChainFetcher.prototype.CERT_LIST_END = function CERT_LIST_END(node, certChain) {
+		Crossbear.CBCertificateChainFetcher.prototype.CERT_LIST_END = function CERT_LIST_END(node, certChain) {
 
 			// Cast both pointers into void-pointers so their string-representation will be the same
 			var rhs = ctypes.cast(certChain.contents.list.address(), ctypes.voidptr_t);
@@ -651,7 +651,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param node The node for which the successor should be returned
 		 * @returns A CERTCertListNode * pointing to the successor of "node"
 		 */
-		CBCertificateChainFetcher.prototype.CERT_LIST_NEXT = function CERT_LIST_NEXT(node) {
+		Crossbear.CBCertificateChainFetcher.prototype.CERT_LIST_NEXT = function CERT_LIST_NEXT(node) {
 
 			return ctypes.cast(node.contents.links.next, self.types.CERTCertListNode.ptr);
 		};
@@ -662,7 +662,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param cert A CERTCertificate* pointing to the certificate for which the chain should be obtained
 		 * @returns An array of DER-encoded certificates of which the first element is "cert" and the others are "cert"'s chain or null if something went wrong
 		 */
-		CBCertificateChainFetcher.prototype.getCertificateChainForCert = function getCertificateChainForCert(cert) {
+		Crossbear.CBCertificateChainFetcher.prototype.getCertificateChainForCert = function getCertificateChainForCert(cert) {
 
 			// Use CERT_GetCertChainFromCert to obtain the certificate's chain
 			var certChain = self.functions.CERT_GetCertChainFromCert(cert, self.functions.PR_Now(), 0);
@@ -680,7 +680,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 				var asArray = ctypes.cast(node.contents.cert.contents.derCert.data, ctypes.ArrayType(ctypes.unsigned_char, node.contents.cert.contents.derCert.len).ptr).contents;
 
 				// Quick & Dirty binary copy of the DER-encoded certificate into the output array :D
-				certRawArray.push(uint8ArrayToJSArray(jsArrayToUint8Array(asArray)));
+				certRawArray.push(Crossbear.uint8ArrayToJSArray(Crossbear.jsArrayToUint8Array(asArray)));
 			}
 
 			// Free the certificate chain that CERT_GetCertChainFromCert generated
@@ -700,7 +700,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param compatibilityMode If set to "true" TLS will be disabled and support for the "SSLv2Hello"-Protocol will be enabled. Some older servers require this option
 		 * @returns An array of DER-encoded certificates of which the first element is the server's certificate and the others are its chain. If something went wrong either null or a numeric error code is returned.
 		 */
-		CBCertificateChainFetcher.prototype.getCertificateChainFromServer = function getCertificateChainFromServer(ip, ipVersion, port, host, compatibilityMode) {
+		Crossbear.CBCertificateChainFetcher.prototype.getCertificateChainFromServer = function getCertificateChainFromServer(ip, ipVersion, port, host, compatibilityMode) {
 
 			// Convert the server's IP and port into a NetAddress
 			var netAddress = self.getNetAddress(ip, port);
@@ -796,7 +796,7 @@ function CBCertificateChainFetcher(cbFrontend) {
 		 * @param host The Hostname of the server (required for SNI)
 		 * @returns An array of DER-encoded certificates of which the first element is the server's certificate and the others are its chain. If something went wrong null will be returned
 		 */
-		CBCertificateChainFetcher.prototype.getCertificateChainFromServerFB = function getCertificateChainFromServer(ip, ipVersion , port, host) {
+		Crossbear.CBCertificateChainFetcher.prototype.getCertificateChainFromServerFB = function getCertificateChainFromServer(ip, ipVersion , port, host) {
 
 			// Try to get the server's certificate using TLS/SSLV3 with SNI enabled
 			var certChain = self.getCertificateChainFromServer(ip, ipVersion, port, host, false);
@@ -811,4 +811,4 @@ function CBCertificateChainFetcher(cbFrontend) {
 			return (typeof certChain == "number")?null:certChain;
 		};
 	}
-}
+};

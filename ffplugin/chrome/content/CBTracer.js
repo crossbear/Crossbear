@@ -36,7 +36,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBTracer(cbFrontend) {
+Crossbear.CBTracer = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 	
 	// Flag indicating if Crossbear is currently executed on a Windows OS
@@ -68,7 +68,7 @@ function CBTracer(cbFrontend) {
 		 * @param libs The container that will hold the references to the libraries once they are opened
 		 * @param libPaths The container that holds the paths of the native libraries
 		 */
-		CBTracer.prototype.openNativeLibraries = function openNativeLibraries(libs, libPaths) {
+		Crossbear.CBTracer.prototype.openNativeLibraries = function openNativeLibraries(libs, libPaths) {
 
 			// Load crossbear.dll on windows 
 			if (self.osIsWin) {
@@ -99,7 +99,7 @@ function CBTracer(cbFrontend) {
 		 * 
 		 * @param types The container that will hold these c-type definitions
 		 */
-		CBTracer.prototype.defineNativeLibTypes = function defineNativeLibTypes(types) {
+		Crossbear.CBTracer.prototype.defineNativeLibTypes = function defineNativeLibTypes(types) {
 
 			// Defining all of the used structs inflates the source code a lot and is not necessary. Therefore I only define the structs that are actually necessary. All others will be represented by "someStruct" which is a generic struct.
 			types.someStruct = ctypes.StructType("someStruct");
@@ -124,7 +124,7 @@ function CBTracer(cbFrontend) {
 		 * @param types The container that contains the c-type-definitions
 		 * @param libs The container that contains references to the native libraries
 		 */
-		CBTracer.prototype.defineNativelibFunctions = function defineNativelibFunctions(functions, types, libs) {
+		Crossbear.CBTracer.prototype.defineNativelibFunctions = function defineNativelibFunctions(functions, types, libs) {
 			
 			
 			if(self.osIsWin){
@@ -190,7 +190,7 @@ function CBTracer(cbFrontend) {
 		 * @param samplesPerHop How many samples should be taken per hop (i.e. should be sent with the same TTL) during a Traceroute?
 		 * @param MaxHops How many hops should be taken into account before terminating a Traceroute?
 		 */
-		CBTracer.prototype.init = function init(libPaths, osIsWin, samplesPerHop, MaxHops) {
+		Crossbear.CBTracer.prototype.init = function init(libPaths, osIsWin, samplesPerHop, MaxHops) {
 			try {
 				
 				// Store the parameters that will be used to perform the Traceroutes
@@ -225,7 +225,7 @@ function CBTracer(cbFrontend) {
 		 * @param referenceIP The IP to compare all found IPs with
 		 * @returns Null if no non-matching IP is found or the first non-matching IP
 		 */
-		CBTracer.prototype.getFirstNonMatchIP = function getFirstNonMatchIP(pingOutput, referenceIP) {
+		Crossbear.CBTracer.prototype.getFirstNonMatchIP = function getFirstNonMatchIP(pingOutput, referenceIP) {
 			
 			// Allocate a buffer that can be used by c-types-functions
 			var addressBuf = self.functions.malloc(128);
@@ -276,7 +276,7 @@ function CBTracer(cbFrontend) {
 		 * @param ttl The Time-To-Live of the ping that should be sent
 		 * @returns "TARGET "+TargetIP if the target was reached, "HOP "+HopIP if an intermediate Host was reached or "NO_REPLY" if an error occurred during the execution of "ping"
 		 */
-		CBTracer.prototype.ping_linux = function ping_linux(ip, ipVersion, ttl) {
+		Crossbear.CBTracer.prototype.ping_linux = function ping_linux(ip, ipVersion, ttl) {
 
 			// Execute ping and pipe its output
 			var pipe = self.functions.popen("/bin/ping" + ((ipVersion == 6) ? "6" : "") + " -c 1 -n -t " + ttl + " " + ip + " 2>&1", "r");
@@ -300,7 +300,7 @@ function CBTracer(cbFrontend) {
 			}
 
 			// Convert the output to a Javascript string
-			var pingOutput = Crypto.charenc.Binary.bytesToString(jsArrayToUint8Array(pingRawOutput));
+			var pingOutput = Crypto.charenc.Binary.bytesToString(Crossbear.jsArrayToUint8Array(pingRawOutput));
 
 			// Check if all occurences of IPs inside the output match the IP that was pinged
 			var firstNonMatchIP = self.getFirstNonMatchIP(pingOutput, ip);
@@ -337,7 +337,7 @@ function CBTracer(cbFrontend) {
 		 * @param ttl The Time-To-Live of the ping that should be sent
 		 * @returns "TARGET "+TargetIP if the target was reached, "HOP "+HopIP if an intermediate Host was reached or "NO_REPLY" if an error occurred during the execution of "ping"
 		 */
-		CBTracer.prototype.ping_win = function ping_win(ip, ttl) {
+		Crossbear.CBTracer.prototype.ping_win = function ping_win(ip, ttl) {
 
 			// Define a buffer to receive a UTF-16 string from native code
 			var buffersize = 150;
@@ -361,7 +361,7 @@ function CBTracer(cbFrontend) {
 		 * @param ttl The Time-To-Live of the ping that should be sent
 		 * @returns "TARGET "+TargetIP if the target was reached, "HOP "+HopIP if an intermediate Host was reached or "NO_REPLY" if an error occurred during the execution of "ping"
 		 */
-		CBTracer.prototype.ping = function ping(ip, ipVersion, ttl) {
+		Crossbear.CBTracer.prototype.ping = function ping(ip, ipVersion, ttl) {
 			
 			if (self.osIsWin) {
 				return self.ping_win(ip, ttl);
@@ -381,7 +381,7 @@ function CBTracer(cbFrontend) {
 		 * @param ipVersion The version of the IP-Address (4 or 6)
 		 * @returns The Traceroute in the format described above
 		 */
-		CBTracer.prototype.traceroute = function traceroute(ip, ipVersion) {
+		Crossbear.CBTracer.prototype.traceroute = function traceroute(ip, ipVersion) {
 			var re = [];
 
 			// Perform pings with an increasing TTL (starting at 1 and ending with self.MaxHops)
@@ -429,7 +429,7 @@ function CBTracer(cbFrontend) {
 		 * @param tracerouteOutput The output of the CBTracer.traceroute-function
 		 * @returns publicIP.concat(tracerouteOutput) but without private IPs
 		 */
-		CBTracer.prototype.addOwnPublicIPAndRemovePrivateIPs = function addOwnPublicIPAndRemovePrivateIPs(ownPublicIP, tracerouteOutput) {
+		Crossbear.CBTracer.prototype.addOwnPublicIPAndRemovePrivateIPs = function addOwnPublicIPAndRemovePrivateIPs(ownPublicIP, tracerouteOutput) {
 			
 			// Split up the tracerouteOutput into the HOP-lines
 			var arrayOfHops = tracerouteOutput.split("\n");
@@ -446,7 +446,7 @@ function CBTracer(cbFrontend) {
 				for ( var j = 0; j < elementsOfCurrentHop.length; j++) {
 
 					// And check if they are private
-					if (!elementsOfCurrentHop[j].match(privateIPRegex)) {
+					if (!elementsOfCurrentHop[j].match(Crossbear.privateIPRegex)) {
 						
 						// If they are remove them
 						cleanedElementsOfCurrentHop.push(elementsOfCurrentHop[j]);
@@ -467,4 +467,4 @@ function CBTracer(cbFrontend) {
 
 	}
 
-}
+};

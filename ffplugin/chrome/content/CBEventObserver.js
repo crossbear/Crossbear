@@ -43,7 +43,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBEventObserver(cbFrontend) {
+Crossbear.CBEventObserver = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 	
 	// Flag indicating if the Protector is currently active
@@ -68,7 +68,7 @@ function CBEventObserver(cbFrontend) {
 		/**
 		 * Initialize the Protector
 		 */
-		CBEventObserver.prototype.initProtector = function initProtector() {
+		Crossbear.CBEventObserver.prototype.initProtector = function initProtector() {
 			
 			// Check if the Protector is already active
 			if(!self.protectorIsActive){
@@ -84,7 +84,7 @@ function CBEventObserver(cbFrontend) {
 		/**
 		 * Shut the Protector down
 		 */
-		CBEventObserver.prototype.shutdownProtector = function shutdownProtector() {
+		Crossbear.CBEventObserver.prototype.shutdownProtector = function shutdownProtector() {
 			
 			// Check if the Protector is active
 			if(self.protectorIsActive){
@@ -102,7 +102,7 @@ function CBEventObserver(cbFrontend) {
 		/**
 		 * (De-)Activate the Protector. Activating the Protector will cause all connections to be checked. Deactivating the Protector will limit the connection-checking to connections to the Crossbear-server
 		 */
-		CBEventObserver.prototype.setProtectorActivity = function setProtectorActivity(active) {
+		Crossbear.CBEventObserver.prototype.setProtectorActivity = function setProtectorActivity(active) {
 			self.checkCBServerOnly = !active;
 		};
 
@@ -114,7 +114,7 @@ function CBEventObserver(cbFrontend) {
 		 * @param aTopic Indicates the specific change or action(e.g. 'quit-application-requested' or 'http-on-examine-response').
 		 * @param aData An optional parameter or other auxiliary data further describing the change or action(not used).
 		 */
-		CBEventObserver.prototype.observe = function observe(aSubject, aTopic, aData) {
+		Crossbear.CBEventObserver.prototype.observe = function observe(aSubject, aTopic, aData) {
 			
 			//SUGG: Implement a event observer for the "private-browsing" and disable the Protector every time the user switches to private browsing mode
 			
@@ -133,7 +133,7 @@ function CBEventObserver(cbFrontend) {
 				
 				// Try to extract the Hostname from the url (will fail in case the connection itself failed)
 				try{
-					var host = url.getHostname();
+					var host = Crossbear.extractHostname(url).split(":")[0];
 				} catch(e){
 					//In case the connection failed do nothing
 					return;
@@ -157,11 +157,10 @@ function CBEventObserver(cbFrontend) {
 				}
 				
 				// Firefox allows connections to HTTPS-pages using their IPv4-addresses. Crossbear does currently not support this.
-				var hostNoPort = host.split(":")[0];
-				if(hostNoPort.match(ipv4Regex)){
+				if(host.match(Crossbear.ipv4Regex)){
 					
 					// If the IP belongs to a local IP-> allow it anyways
-					if(hostNoPort.match(privateIPRegex)){
+					if(host.match(Crossbear.privateIPRegex)){
 						return;
 						
 					// If not warn the user and cancel the connection
@@ -209,26 +208,26 @@ function CBEventObserver(cbFrontend) {
 				while (self.protectorIsActive) {
 
 					// In case the user considers the connection's certificate valid for this domain -> Load the page.
-					if (cacheStatus == CBTrustDecisionCacheReturnTypes.OK || cacheStatus == CBTrustDecisionCacheReturnTypes.CB_SERVER_OK) {
+					if (cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.OK || cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_OK) {
 						return;
 					}
 					
 					// In case the conection was targeted for the Crossbear Server but did not use the correct certificate: Warn the user and cancel the connection
-					if (cacheStatus == CBTrustDecisionCacheReturnTypes.CB_SERVER_NOT_VALID) {
-						cbFrontend.warnUserAboutBeingUnderAttack("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Don't visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style=\"text-decoration:underline\" href=\"mailto:crossbear@pki.net.in.tum.de?subject=Observation%20of%20an%20invalid%20certificate%20for%20the%20Crossbear-Server&amp;body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20the%20following%20certificate%20chain%20for%20the%20Crossbear-Server("+remoteAddress+") on "+new Date().toGMTString() +"%0D%0A%0D%0A"+Crypto.util.bytesToBase64(getCertChainBytes(serverCert).implode())+"\">sending an email</html:a> to the Crossbear-Team.<html:br /><html:br />",5);
+					if (cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_NOT_VALID) {
+						cbFrontend.warnUserAboutBeingUnderAttack("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Don't visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style=\"text-decoration:underline\" href=\"mailto:crossbear@pki.net.in.tum.de?subject=Observation%20of%20an%20invalid%20certificate%20for%20the%20Crossbear-Server&amp;body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20the%20following%20certificate%20chain%20for%20the%20Crossbear-Server("+remoteAddress+") on "+new Date().toGMTString() +"%0D%0A%0D%0A"+Crypto.util.bytesToBase64(Crossbear.implodeArray(Crossbear.getCertChainBytes(serverCert)))+"\">sending an email</html:a> to the Crossbear-Team.<html:br /><html:br />",5);
 						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
 						return;
 					}
 					
 					// In case the user considers the connection's certificate INVALID for this domain -> Abort the page loading
-					if (cacheStatus == CBTrustDecisionCacheReturnTypes.NOT_VALID) {
+					if (cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.NOT_VALID) {
 						cbFrontend.warnUserAboutBeingUnderAttack("You tried to access " + host + " with a certificate you don't trust. This attempt was canceled.",0);
 						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
 						return;
 					}
 
 					// If the cacheStatus is not "OK", "NOT_VALID", "CB_SERVER_OK", "CB_SERVER_NOT_VALID" or "NOT_IN_CACHE" then something is seriously going wrong -> Rise an exception
-					if (cacheStatus != CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE) {
+					if (cacheStatus != Crossbear.CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE) {
 						cbFrontend.displayTechnicalFailure("CBEventObserver:observe: TrustDecisionCache returned unknown value:"+cacheStatus, true);
 						return;
 					}
@@ -250,4 +249,4 @@ function CBEventObserver(cbFrontend) {
 		};
 	}
 
-}
+};

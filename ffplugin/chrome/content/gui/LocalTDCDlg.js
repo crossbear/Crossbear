@@ -54,10 +54,10 @@ var orderBy = orderByConstants.Host;
  * 
  * @param allrows The array of mozIStorageRows.
  */
-function displayCertificates(allrows){
+function displayTrustDecisions(allrows){
 	
 	// Get a handle to the dialog's ListBox
-	var certList = document.getElementById('certList');
+	var certList = document.getElementById('crossbear-certList');
 	
 	// Clear the ListBox (i.e. remove all of its elements)
 	while(certList.itemCount >0){
@@ -100,16 +100,16 @@ function displayCertificates(allrows){
 }
 
 /**
- * Request the content of the local TDC from the database using displayCertificates as callback-function (i.e. displayCertificates will handle the database reply containing the cache entries)
+ * Request the content of the local TDC from the database using displayTrustDecisions as callback-function (i.e. displayTrustDecisions will handle the database reply containing the cache entries)
  */
-function loadCertificatesFromDatabase(){
+function loadTrustDecisionsFromDatabase(){
 	
 	// Build the SQL-Statement to request the content of the TDC ...
 	var sqlStatement = "SELECT ID, Host, CertHash, datetime(ValidUntil, 'unixepoch', 'localtime') AS VU, Trust FROM certTrust ORDER BY "+orderBy+orderAscending[asc?1:0];
 	var params = new Object();
 	
 	// ... and execute it.
-	window.arguments[0].inn.cbFrontend.cbdatabase.executeAsynchronous(sqlStatement,params,displayCertificates);
+	window.arguments[0].inn.cbFrontend.cbdatabase.executeAsynchronous(sqlStatement,params,displayTrustDecisions);
 }
 
 /**
@@ -117,7 +117,7 @@ function loadCertificatesFromDatabase(){
  */
 function onLoad() {
 	// Fill the dialog's ListBox with data
-	loadCertificatesFromDatabase();
+	loadTrustDecisionsFromDatabase();
 }
 
 /**

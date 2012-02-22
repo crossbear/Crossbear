@@ -71,7 +71,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 		} catch (Exception e) {
 
-			Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/eightthousandeighty/init.getpublicip.error", e);
+			Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/eighty/init.getpublicip.error", e);
 		}
 	}
 	%><%
@@ -106,7 +106,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		out.println("Crossbear");
 		
 		// For debugging reasons: Log what went wrong
-		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/eightthousandeighty/processing.getpublicip.error", e);
+		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/eighty/processing.getpublicip.error", e);
 			
 	} finally {
 		if (db != null)

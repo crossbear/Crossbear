@@ -36,7 +36,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBFrontend(cbServerName) {
+Crossbear.CBFrontend = function (cbServerName) {
 
 	// The Hostname of the Crossbear server
 	this.cbServerName = cbServerName;
@@ -48,13 +48,13 @@ function CBFrontend(cbServerName) {
 	this.shutdownWasRequested = false;
 
 	// Initialize the rest of the Crossbear system (if possible)
-	this.cbdatabase = new CBDatabase(this);
-	this.cbnet = new CBNet(this);
-	this.cbhunter = new CBHunter(this);
-	this.cbprotector = new CBProtector(this);
-	this.cbhtlprocessor = new CBHTLProcessor(this);
-	this.cbtrustdecisioncache = new CBTrustDecisionCache(this);
-	this.cbeventobserver = new CBEventObserver(this);
+	this.cbdatabase = new Crossbear.CBDatabase(this);
+	this.cbnet = new Crossbear.CBNet(this);
+	this.cbhunter = new Crossbear.CBHunter(this);
+	this.cbprotector = new Crossbear.CBProtector(this);
+	this.cbhtlprocessor = new Crossbear.CBHTLProcessor(this);
+	this.cbtrustdecisioncache = new Crossbear.CBTrustDecisionCache(this);
+	this.cbeventobserver = new Crossbear.CBEventObserver(this);
 
 	// Some elements require functions from CBFrontend and will therefore initialized below.
 	this.TaskPullTimer = null;
@@ -62,8 +62,8 @@ function CBFrontend(cbServerName) {
 	
 	// Open Firefox components related to logging into the Console and Accessing User-Preferences
 	var consoleService = Components.classes["@mozilla.org/consoleservice;1"].getService(Components.interfaces.nsIConsoleService);
-	var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("crossbear.");
-	var defPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getDefaultBranch("crossbear.");
+	var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.crossbear.");
+	var defPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getDefaultBranch("extensions.crossbear.");
 	
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
 	if (typeof (_cbfrontend_prototype_called) == 'undefined') {
@@ -75,7 +75,7 @@ function CBFrontend(cbServerName) {
 		 * @param what The message that should be displayed
 		 * @param critical If True Crossbear will be shut down after the displaying the exception
 		 */
-		CBFrontend.prototype.displayTechnicalFailure = function displayTechnicalFailure(what, critical) {
+		Crossbear.CBFrontend.prototype.displayTechnicalFailure = function displayTechnicalFailure(what, critical) {
 			
 			// Display the message of the failure in the "Error"-tab of the Error Console
 			Components.utils.reportError(what);
@@ -98,7 +98,7 @@ function CBFrontend(cbServerName) {
 		 * Get an estimation of the current local time of the Crossbear server
 		 * @returns A timestamp that is an estimation of the current local time of the Crossbear server
 		 */
-		CBFrontend.prototype.getServerTime = function getServerTime() {
+		Crossbear.CBFrontend.prototype.getServerTime = function getServerTime() {
 			
 			// Check if the difference between the local time and the Crossbear server time is known
 			if(this.cbServerTimeDiff != 'undefined'){
@@ -119,7 +119,7 @@ function CBFrontend(cbServerName) {
 		 * 
 		 * @param currentServerTime A timestamp of the current local time of the Crossbear server
 		 */
-		CBFrontend.prototype.calcAndStoreCbServerTimeDiff = function calcAndStoreCbServerTimeDiff(currentServerTime) {
+		Crossbear.CBFrontend.prototype.calcAndStoreCbServerTimeDiff = function calcAndStoreCbServerTimeDiff(currentServerTime) {
 			this.cbServerTimeDiff = currentServerTime-Math.round(new Date().getTime() / 1000);
 		};
 		
@@ -128,7 +128,7 @@ function CBFrontend(cbServerName) {
 		 * 
 		 * @param what The message to display
 		 */
-		CBFrontend.prototype.displayInformation = function displayInformation(what) {
+		Crossbear.CBFrontend.prototype.displayInformation = function displayInformation(what) {
 			// Alternative for the line below: console.log
 			consoleService.logStringMessage("CB:"+new Date().toUTCString()+":"+what);
 		};
@@ -139,7 +139,7 @@ function CBFrontend(cbServerName) {
 		 * @param threat The message explaining the threat that the user is supposingly facing
 		 * @param timeoutSec A Timeout parameter specifying how long the warning is minimally displayed
 		 */
-		CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(threat, timeoutSec) {
+		Crossbear.CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(threat, timeoutSec) {
 
 			// Build an object containing the parameters for the WarnUserDlg
 			var params = {
@@ -163,12 +163,12 @@ function CBFrontend(cbServerName) {
 		 * @param type The type of the Preference ("bool", "int", "string")
 		 * @returns The default value of type "type" of the Crossbear preference with name "name"
 		 */
-		CBFrontend.prototype.getDefaultPref = function getDefaultPref(name, type) {
+		Crossbear.CBFrontend.prototype.getDefaultPref = function getDefaultPref(name, type) {
 			try {
 				// Read the preference according to its type and return it
-				if (type.startsWith("bool")) {
+				if (Crossbear.startsWith(type,"bool")) {
 					return defPrefs.getBoolPref(name);
-				} else if (type.startsWith("int")) {
+				} else if (Crossbear.startsWith(type,"int")) {
 					return defPrefs.getIntPref(name);
 				} else {
 					return defPrefs.getCharPref(name);
@@ -187,12 +187,12 @@ function CBFrontend(cbServerName) {
 		 * @param type The type of the Preference ("bool", "int", "string")
 		 * @returns The user defined value of type "type" of the Crossbear preference with name "name"
 		 */
-		CBFrontend.prototype.getUserPref = function getUserPref(name, type) {
+		Crossbear.CBFrontend.prototype.getUserPref = function getUserPref(name, type) {
 			try {
 				// Read the preference according to its type and return it
-				if (type.startsWith("bool")) {
+				if (Crossbear.startsWith(type,"bool")) {
 					return prefs.getBoolPref(name);
-				} else if (type.startsWith("int")) {
+				} else if (Crossbear.startsWith(type,"int")) {
 					return prefs.getIntPref(name);
 				} else {
 					return prefs.getCharPref(name);
@@ -211,12 +211,12 @@ function CBFrontend(cbServerName) {
 		 * @param type The type of the Preference ("bool", "int", "string")
 		 * @param value The new value of the Preference
 		 */
-		CBFrontend.prototype.setUserPref = function setUserPref(name, type, value) {
+		Crossbear.CBFrontend.prototype.setUserPref = function setUserPref(name, type, value) {
 			try {
 				// Set the preference according to its type
-				if (type.startsWith("bool")) {
+				if (Crossbear.startsWith(type,"bool")) {
 					prefs.setBoolPref(name, value);
-				} else if (type.startsWith("int")) {
+				} else if (Crossbear.startsWith(type,"int")) {
 					prefs.setIntPref(name, value);
 				} else {
 					prefs.setCharPref(name, value);
@@ -231,7 +231,7 @@ function CBFrontend(cbServerName) {
 		 * 
 		 * @param systemCrashed Flag indicating if the system performs a normal shutdown or if it crashed.
 		 */
-		CBFrontend.prototype.shutdown = function shutdown(systemCrashed) {
+		Crossbear.CBFrontend.prototype.shutdown = function shutdown(systemCrashed) {
 			
 			// Only shut down if the system is active
 			if(!this.shutdownWasRequested){
@@ -258,7 +258,7 @@ function CBFrontend(cbServerName) {
 		/**
 		 * Enable Crossbear's Hunting-functionality
 		 */
-		CBFrontend.prototype.activateHunter = function activateHunter() {
+		Crossbear.CBFrontend.prototype.activateHunter = function activateHunter() {
 
 			// Store the fact that hunting should be done (so it will be reactivated after a new start)
 			this.setUserPref("activateHunter", "bool", true);
@@ -277,7 +277,7 @@ function CBFrontend(cbServerName) {
 		 * 
 		 * @param changeUserPref Flag indicating whether the Hunter should merely be disabled (e.g. because the system shuts down) or if the user additionally wants this state to be permanent.
 		 */
-		CBFrontend.prototype.deactivateHunter = function deactivateHunter(changeUserPref) {
+		Crossbear.CBFrontend.prototype.deactivateHunter = function deactivateHunter(changeUserPref) {
 			
 			// If the deactivation of the Hunter should be permanent this decision needs to be stored
 			if (changeUserPref) {
@@ -294,7 +294,7 @@ function CBFrontend(cbServerName) {
 		/**
 		 * Enable Crossbear's Protector-functionality
 		 */
-		CBFrontend.prototype.activateProtector = function activateProtector() {
+		Crossbear.CBFrontend.prototype.activateProtector = function activateProtector() {
 
 			// Store the fact that protectoring should be done (so it will be reactivated after a new start)
 			this.setUserPref("activateProtector", "bool", true);
@@ -308,7 +308,7 @@ function CBFrontend(cbServerName) {
 		 * 
 		 * @param changeUserPref Flag indicating whether the Protector should merely be disabled (e.g. because the system shuts down) or if the user additionally wants this state to be permanent.
 		 */
-		CBFrontend.prototype.deactivateProtector = function deactivateProtector(changeUserPref) {
+		Crossbear.CBFrontend.prototype.deactivateProtector = function deactivateProtector(changeUserPref) {
 
 			// If the deactivation of the Protector should be permanent this decision needs to be stored
 			if (changeUserPref) {
@@ -323,7 +323,7 @@ function CBFrontend(cbServerName) {
 		/**
 		 * Function that handles the event that the user clicked on the Protector-Checkbox. It will invert the current activation state of the Protector.
 		 */
-		CBFrontend.prototype.protectorCheckBoxClicked = function protectorCheckBoxClicked() {
+		Crossbear.CBFrontend.prototype.protectorCheckBoxClicked = function protectorCheckBoxClicked() {
 			
 			// Get the current activation state of the Protector
 			var oldPrefVal = this.getUserPref("activateProtector", "bool");
@@ -340,7 +340,7 @@ function CBFrontend(cbServerName) {
 		/**
 		 * Function that handles the event that the user clicked on the Hunter-Checkbox. It will invert the current activation state of the Hunter.
 		 */
-		CBFrontend.prototype.hunterCheckBoxClicked = function hunterCheckBoxClicked() {
+		Crossbear.CBFrontend.prototype.hunterCheckBoxClicked = function hunterCheckBoxClicked() {
 			
 			// Get the current activation state of the Hunter
 			var oldPrefVal = this.getUserPref("activateHunter", "bool");
@@ -355,28 +355,28 @@ function CBFrontend(cbServerName) {
 		};
 		
 		/**
-		 * Read the Hunter's and the Protector's current activation states and set the ticks in the cb-statusbarpanel-popup according to them.
+		 * Read the Hunter's and the Protector's current activation states and set the ticks in the crossbear-statusbarpanel-popup according to them.
 		 */
-		CBFrontend.prototype.setPopupValues = function setPopupValues() {
+		Crossbear.CBFrontend.prototype.setPopupValues = function setPopupValues() {
 			
 			// Get the current activation state of the Hunter ... 
 			var hunterActive = this.getUserPref("activateHunter", "bool");
 
-			// ... and set the tick in the cb-statusbarpanel-popup according to it.
+			// ... and set the tick in the crossbear-statusbarpanel-popup according to it.
 			if(hunterActive){
-				document.getElementById('cb-statusbarpanel-popup-hunter').setAttribute("checked", "true");
-			} else if (document.getElementById('cb-statusbarpanel-popup-hunter').hasAttribute("checked")){
-				document.getElementById('cb-statusbarpanel-popup-hunter').removeAttribute("checked");
+				document.getElementById('crossbear-statusbarpanel-popup-hunter').setAttribute("checked", "true");
+			} else if (document.getElementById('crossbear-statusbarpanel-popup-hunter').hasAttribute("checked")){
+				document.getElementById('crossbear-statusbarpanel-popup-hunter').removeAttribute("checked");
 			}
 			
 			// Get the current activation state of the Protector ...
 			var protectorActive = this.getUserPref("activateProtector", "bool");
 
-			// ... and set the tick in the cb-statusbarpanel-popup according to it.
+			// ... and set the tick in the crossbear-statusbarpanel-popup according to it.
 			if(protectorActive){
-				document.getElementById('cb-statusbarpanel-popup-protector').setAttribute("checked", "true");
-			} else if (document.getElementById('cb-statusbarpanel-popup-protector').hasAttribute("checked")){
-				document.getElementById('cb-statusbarpanel-popup-protector').removeAttribute("checked");
+				document.getElementById('crossbear-statusbarpanel-popup-protector').setAttribute("checked", "true");
+			} else if (document.getElementById('crossbear-statusbarpanel-popup-protector').hasAttribute("checked")){
+				document.getElementById('crossbear-statusbarpanel-popup-protector').removeAttribute("checked");
 			}
 			
 			
@@ -384,7 +384,7 @@ function CBFrontend(cbServerName) {
 	}
 
 	// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBTrustDecisionCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
-	this.ServerRSAKeyPair = addCBCertToLocalStoreAndCache(this.cbtrustdecisioncache);
+	this.ServerRSAKeyPair = Crossbear.addCBCertToLocalStoreAndCache(this.cbtrustdecisioncache);
 	
 	// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
 	this.cbhunter.init();
@@ -396,4 +396,4 @@ function CBFrontend(cbServerName) {
 	if(this.getUserPref("activateHunter", "bool"))this.activateHunter();
 	if(this.getUserPref("activateProtector", "bool"))this.activateProtector();
 	
-}
+};

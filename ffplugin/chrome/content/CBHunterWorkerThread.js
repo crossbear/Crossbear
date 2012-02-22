@@ -109,34 +109,37 @@ var currentTaksPublicIP = null;
  * class also implements the displayTechnicalFailure and the displayInformation-functions but instead of actually displaying the information it relays them to the real cbFrontend using the CBHunterWorkerError and the CBHunterWorkerInformation events.
  * 
  */
-function CBMiniFrontend() {
+Crossbear.CBMiniFrontend = function () {
 	
+	
+	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
+	if (typeof (_cbminifrontend_prototype_called) == 'undefined') {
+		_cbminifrontend_prototype_called = true;
+
 	/**
 	 * Send a CBHunterWorkerError-event to the CBHunter which will relay its content to the CBFronend.displayTechnicalFailure-function
 	 * @param what The Error-message to display
 	 * @param critical Is The error a critical one (i.e. should Crossbear be terminated)?
 	 */
-	function signalFailure(what, critical) {
-		var error = new CBHunterWorkerError("CBHunterWorkerThread: "+what, critical);
+	Crossbear.CBMiniFrontend.prototype.displayTechnicalFailure = function displayTechnicalFailure(what, critical) {
+		var error = new Crossbear.CBHunterWorkerError("CBHunterWorkerThread: "+what, critical);
 		postMessage(error);
-	}
+	};
 
 	/**
 	 * Send a CBHunterWorkerInformation-event to the CBHunter which will relay its content to the CBFrontend.displayInformation-function
 	 * @param what The information to display
 	 */
-	function signalInformation(what) {
-		var information = new CBHunterWorkerInformation(what);
+	Crossbear.CBMiniFrontend.prototype.displayInformation = function displayInformation(what) {
+		var information = new Crossbear.CBHunterWorkerInformation(what);
 		postMessage(information);
-	}
+	};
 
-	// Define aliases for the internal functions so they can be accessed from outside the CBMiniFrontend-class
-	this.displayTechnicalFailure = signalFailure;
-	this.displayInformation = signalInformation;
-}
+	}
+};
 
 // The cbFrontend that will be used to display information and warnings
-var cbFrontend = new CBMiniFrontend();
+var cbFrontend = new Crossbear.CBMiniFrontend();
 
 /**
  * Get the oldest HuntingTask from the tasksToDo-list and check if all prerequisites are met so it can be executed. The prerequisites for that are:
@@ -165,7 +168,7 @@ function executeFirstHuntingTaskInList() {
 		if ((tasksToDo[0].data.ipVersion == 4 && theTime > serverIPv4OT + serverIPcacheValidity) || (tasksToDo[0].data.ipVersion == 6 && theTime > serverIPv6OT + serverIPcacheValidity)) {
 			
 			// If not: request a more recent server ip
-			var servIPreq = new CBHunterWorkerNewServerIPsRequest();
+			var servIPreq = new Crossbear.CBHunterWorkerNewServerIPsRequest();
 			
 			// And suspend the HuntingTask-execution
 			currentlyHunting = false;
@@ -177,7 +180,7 @@ function executeFirstHuntingTaskInList() {
 		if ((tasksToDo[0].data.ipVersion == 4 && theTime > publicIPv4OT + publicIPcacheValidity) || (tasksToDo[0].data.ipVersion == 6 && theTime > publicIPv6OT + publicIPcacheValidity)) {
 			
 			// If not: request a more recent public ip
-			var pubIPreq = new CBHunterWorkerNewPublicIPRequest(tasksToDo[0].data.ipVersion, (tasksToDo[0].data.ipVersion == 4) ? serverIPv4 : serverIPv6);
+			var pubIPreq = new Crossbear.CBHunterWorkerNewPublicIPRequest(tasksToDo[0].data.ipVersion, (tasksToDo[0].data.ipVersion == 4) ? serverIPv4 : serverIPv6);
 			
 			// And suspend the HuntingTask-execution
 			currentlyHunting = false;
@@ -205,7 +208,7 @@ function executeFirstHuntingTaskInList() {
 		currentTaskTR = cbtracer.addOwnPublicIPAndRemovePrivateIPs(currentTaksPublicIP, tracerouteResult);
 		
 		// Request the current server time to add it to the HuntingTaskResult and continue the execution within the processServerTimeReply-function
-		postMessage(new CBHunterWorkerServerTimeRequest());
+		postMessage(new Crossbear.CBHunterWorkerServerTimeRequest());
 
 	} catch (e) {
 		cbFrontend.displayTechnicalFailure("executeFirstHuntingTaskInList:  a failure occured: "+ e, true);	
@@ -242,11 +245,11 @@ function init(event) {
 		serverIPcacheValidity = event.data.serverIPcacheValidity;
 
 		// Create and initialize a new CBTracer
-		cbtracer = new CBTracer(cbFrontend);
+		cbtracer = new Crossbear.CBTracer(cbFrontend);
 		cbtracer.init(event.data.libPaths, event.data.osIsWin, event.data.tracerouteSamplesPerHop, event.data.tracerouteMaxHops);
 
 		// Create and initialize a new CBCertificateChainFetcher
-		cbccf = new CBCertificateChainFetcher(cbFrontend);
+		cbccf = new Crossbear.CBCertificateChainFetcher(cbFrontend);
 		cbccf.init(event.data.libPaths, event.data.osIsWin);
 
 	} catch (e) {
@@ -368,7 +371,7 @@ function processServerTimeReply(event) {
 	try {
 
 		// Store the fact of the successful execution of the HuntingTask in the local database
-		var dbStoreReq = new CBHunterWorkerDBStoreRequest(tasksToDo[0].data.taskID, currentTaksPublicIP, event.data.currentServerTime);
+		var dbStoreReq = new Crossbear.CBHunterWorkerDBStoreRequest(tasksToDo[0].data.taskID, currentTaksPublicIP, event.data.currentServerTime);
 		postMessage(dbStoreReq);
 
 		/*
@@ -376,12 +379,12 @@ function processServerTimeReply(event) {
 		 */ 
 		
 		// First: Calculate the Hash of the target's certificate chain
-		var serverCertChainHash = calculateCertChainHash(currentTaskChain);
+		var serverCertChainHash = Crossbear.calculateCertChainHash(currentTaskChain);
 		
 		// Check if the certificate that has been observed is already well known to the server (i.e. if its hash is within the alreadyKnownHashes-list)
 		var alreadyKnown = false;
 		for ( var i = 0; i < tasksToDo[0].data.alreadyKnownHashes.length; i++) {
-			if (arrayCompare(tasksToDo[0].data.alreadyKnownHashes[i], serverCertChainHash)) {
+			if (Crossbear.arrayCompare(tasksToDo[0].data.alreadyKnownHashes[i], serverCertChainHash)) {
 				alreadyKnown = true;
 				break;
 			}
@@ -393,9 +396,9 @@ function processServerTimeReply(event) {
 		// Third: Build the actual HuntingTaskReply depending on whether the observed certificate is already well known to the server
 		var taskReply = null;
 		if (alreadyKnown) {
-			taskReply = new CBMessageTaskReplyKnownCertChain(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, serverCertChainHash, currentTaskTR);
+			taskReply = new Crossbear.CBMessageTaskReplyKnownCertChain(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, serverCertChainHash, currentTaskTR);
 		} else {
-			taskReply = new CBMessageTaskReplyNewCertChain(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, currentTaskChain, currentTaskTR);
+			taskReply = new Crossbear.CBMessageTaskReplyNewCertChain(tasksToDo[0].data.taskID, event.data.currentServerTime, hMac, currentTaskChain, currentTaskTR);
 		}
 		
 		// Fourth: Add the HuntingTaskReply to the tasksDone-list
@@ -405,7 +408,7 @@ function processServerTimeReply(event) {
 		if (tasksDone.length >= 5 || tasksToDo.length == 1) {
 			
 			// Sending the Results to the server means sending them to the CBHunter via a CBHunterWorkerHuntingResults-Event. The CBHunter will then send the results to the Crossbear server.
-			var huntingResults = new CBHunterWorkerHuntingResults(tasksDone);
+			var huntingResults = new Crossbear.CBHunterWorkerHuntingResults(tasksDone);
 			postMessage(huntingResults);
 			tasksDone = [];
 		}

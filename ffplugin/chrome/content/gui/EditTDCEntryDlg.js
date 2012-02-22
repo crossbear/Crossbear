@@ -44,16 +44,16 @@ function onLoad() {
 	var databaseEntry = window.arguments[0].inn.cbFrontend.cbdatabase.executeSynchronous(sqlStatement, params, expectedRows);
 
 	// Put the data that was returned by the SQL-statement into the GUI-elements meant to display it:
-	document.getElementById("ce-host").value = databaseEntry[0].Host;
+	document.getElementById("crossbear-ce-host").value = databaseEntry[0].Host;
 
-	document.getElementById("ce-hash").value = databaseEntry[0].CertHash;
+	document.getElementById("crossbear-ce-hash").value = databaseEntry[0].CertHash;
 
-	document.getElementById("ce-valid-until").value = databaseEntry[0].VU;
+	document.getElementById("crossbear-ce-valid-until").value = databaseEntry[0].VU;
 
 	if (databaseEntry[0].Trust == 1) {
-		document.getElementById("ce-trust").selectedIndex = 0;
+		document.getElementById("crossbear-ce-trust").selectedIndex = 0;
 	} else {
-		document.getElementById("ce-trust").selectedIndex = 1;
+		document.getElementById("crossbear-ce-trust").selectedIndex = 1;
 	}
 }
 
@@ -62,8 +62,8 @@ function onLoad() {
  */
 function removeEntry() {
 	// Get the "hostname"/"certificate"-combination whose entry should be removed from the cache ...
-	var hash = document.getElementById("ce-hash").value;
-	var host = document.getElementById("ce-host").value;
+	var hash = document.getElementById("crossbear-ce-hash").value;
+	var host = document.getElementById("crossbear-ce-host").value;
 	
 	// ... remove it from the cache ...
 	window.arguments[0].inn.cbFrontend.cbtrustdecisioncache.remove(hash, host);
@@ -79,14 +79,14 @@ function removeEntry() {
  */
 function accept() {
 	// Get the "hostname"/"certificate"-combination for which the entry should be changed
-	var hash = document.getElementById("ce-hash").value;
-	var host = document.getElementById("ce-host").value;
+	var hash = document.getElementById("crossbear-ce-hash").value;
+	var host = document.getElementById("crossbear-ce-host").value;
 	
 	// Get the new Trust-value for that combination
-	var trust = document.getElementById("ce-trust-yes").selected;
+	var trust = document.getElementById("crossbear-ce-trust-yes").selected;
 	
 	// Read the new "valid-until"-date from the GUI. It should have the format YYYY-MM-DD HH:MM:SS.
-	var dateTime = document.getElementById("ce-valid-until").value.split(" ");
+	var dateTime = document.getElementById("crossbear-ce-valid-until").value.split(" ");
 	
 	// Therefore there should be two parts when it is split up at the " "-char
 	if (dateTime.length != 2){

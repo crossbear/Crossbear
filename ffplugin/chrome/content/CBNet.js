@@ -32,7 +32,7 @@
  * 
  * @author Thomas Riedmaier
  */
-function CBNet(cbFrontend) {
+Crossbear.CBNet = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 
 	// "this" does not always point to THIS object (especially in callback functions). Therefore I use the "self" variable to hold a handle on THIS object
@@ -49,7 +49,7 @@ function CBNet(cbFrontend) {
 		 * 
 		 * @param e The DOM-Event representing the error that occured
 		 */
-		CBNet.prototype.networkConnectionError = function networkConnectionError(e) {
+		Crossbear.CBNet.prototype.networkConnectionError = function networkConnectionError(e) {
 			// Display a critical technical failure in all cases but the case that a timeout occurred (e.target.status == 0)
 			cbFrontend.displayTechnicalFailure("CBNet: Error " + e.target.status + " occurred while performing a XMLHttpRequest.", (e.target.status != 0));
 		};
@@ -66,7 +66,7 @@ function CBNet(cbFrontend) {
 		 * @param callBackFunction The function that will be called to handle the server's reply (must be set)
 		 * @param callBackParams Data that should be available to the callBackFunction can be passed here. It will be accessible via "this.cbCallBackParams". If you don't need them just pass "null"
 		 */
-		CBNet.prototype.postBinaryRetrieveBinaryFromUrl = function postDataRetrieveBinaryFromUrl(serverUrl, hostName, postData, callBackFunction, callBackParams) {
+		Crossbear.CBNet.prototype.postBinaryRetrieveBinaryFromUrl = function postDataRetrieveBinaryFromUrl(serverUrl, hostName, postData, callBackFunction, callBackParams) {
 
 			// Posting no data is not possible. Call retrieveBinaryFromUrl instead
 			if ((postData == null) || (postData == "")) {
@@ -117,7 +117,7 @@ function CBNet(cbFrontend) {
 		 * @param callBackFunction The function that will be called to handle the server's reply (must be set)
 		 * @param callBackParams callBackParams Data that should be available to the callBackFunction can be passed here. It will be accessible via "this.cbCallBackParams". If you don't need them just pass "null"
 		 */
-		CBNet.prototype.retrieveBinaryFromUrl = function retrieveBinaryFromUrl(serverUrl, hostName, callBackFunction, callBackParams) {
+		Crossbear.CBNet.prototype.retrieveBinaryFromUrl = function retrieveBinaryFromUrl(serverUrl, hostName, callBackFunction, callBackParams) {
 
 			try {
 				// Create a new XMLHTTPRequest
@@ -155,7 +155,7 @@ function CBNet(cbFrontend) {
 		 * @param serverHostName The Hostname to lookup (e.g. www.somedomain.org)
 		 * @param callbackObject An Object implementing the nsIDNSListener-Interface. Its onLookupComplete-function will be called when the DNS-lookup is completed 
 		 */
-		CBNet.prototype.requestServerDNS = function requestServerDNS(serverHostName, callbackObject) {
+		Crossbear.CBNet.prototype.requestServerDNS = function requestServerDNS(serverHostName, callbackObject) {
 
 			try {
 				// Get a handle for the DNS-service
@@ -174,4 +174,4 @@ function CBNet(cbFrontend) {
 
 	}
 
-}
+};
