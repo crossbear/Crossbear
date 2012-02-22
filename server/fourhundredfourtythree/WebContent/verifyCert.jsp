@@ -24,8 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
---%>
-<%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream"
+--%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream"
 	 language="java"
 	contentType="application/octet-stream"
 	%><%!
@@ -85,7 +84,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			Security.addProvider(new BouncyCastleProvider());
 					
 			// Load the porperties and settings from the config file
-			properties = new Properties("/var/lib/tomcat6/webapps/crossbear.properties");
+			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
 
 			/*
 			* As mentioned above the CertificateManager needs to load the local keystore on initilization.
@@ -102,8 +101,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			db.close();
 
 		} catch (Exception e) {
-		  	// TODO: make this a configuration option!
-			Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/init.verifycert.error", e);
+
+			Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.verifyCert.init.error", e);
 
 		}
 
@@ -162,11 +161,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		* None of the calls above catches exceptions. Whenever something went wrong (e.g. with decoding the client's request)
 		* A exception is thrown and cought here. Since it's not very smart to tell attackers what went wrong a dummy reply is sent to them.
 		*/
-		out.println("Crossbear");
 
 		// For debugging reasons: Log what went wrong
-		// TODO: make this a configuration option!
-		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/processing.verifycert.error", e);
+		Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.verifyCert.processing.error", e);
 
 	} finally {
 		if (db != null)

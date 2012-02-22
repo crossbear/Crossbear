@@ -24,8 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
---%>
-<%@ page import="crossbear.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream"
+--%><%@ page import="crossbear.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream"
 	language="java" 
 	contentType="application/octet-stream"
 %><%!
@@ -60,7 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			Security.addProvider(new BouncyCastleProvider());
 					
 			// Load the porperties and settings from the config file
-			properties = new Properties("/var/lib/tomcat6/webapps/crossbear.properties");
+			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
 
 			/*
 			* Like mentioned above the CertificateManager needs to load the local keystore on initilization.
@@ -79,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 		} catch (Exception e) {
 
-			Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/init.reportHTResult.error", e);
+			Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.reportHTResult.init.error", e);
 
 		}
 
@@ -88,31 +87,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	Database db = null;
 
 	try {
-		// Crossbear works on binary messages. To send these from the server to the client they need to be written into response.getOutputStream()
-		OutputStream outStream = response.getOutputStream();
 
 		//Processing the Hunting Task Result is quite lenghty. Therefore i moved this functionality to the "Hunting Task Result Processor " (HTRProcessor)
 		db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
 		HTRProcessor htrp = new HTRProcessor(request.getInputStream(), cm, db);
 		
-		// Finally: Sent the reply to the client
-		response.flushBuffer();
 
 	} catch (Exception e) {	
 		/*
 		* None of the calls above catches exceptions. Whenever something went wrong (e.g. with decoding the client's request)
-		* A exception is thrown and cought here.
+		* A exception is thrown and cought here. Since it's not very smart to tell attackers what went wrong a dummy reply is sent to them.
 		*/
 
 		// For debugging reasons: Log what went wrong
-		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/processing.reportHTResult.error", e);
+		Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.reportHTResult.processing.error", e);
 
 	} finally {
-		/*
-		* Since it's not very smart to tell attackers if something went wrong a dummy reply is sent to them.
-		*/
-		out.println("Crossbear");
-		
 		if (db != null)
 			db.close();
 	}

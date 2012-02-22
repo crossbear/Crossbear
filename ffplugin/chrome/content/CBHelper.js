@@ -324,9 +324,8 @@ if (typeof Crossbear == "undefined") {
 		},
 
 		/**
-		 * Read the certificate of the Crossbear server from the local file system and add it as a trusted server certificate to the Firefox certificate database. This needs to be done since Firefox doesn't allow connections to servers whose
-		 * certificates it doesn't trust. After this is done Crossbear's own TDC (cbtrustdecisioncache) is informed about the server's certificate. This again is necessary to prevent Mitm-attacks against Crossbear (the Server's certificate that is
-		 * set by this function is THE ONLY one that will be trusted for connections to the Crossbear server).
+		 * Read the certificate of the Crossbear server from the local file system and inform Crossbear's TDC (cbtrustdecisioncache) about the server's certificate. This is necessary to prevent Mitm-attacks against Crossbear (the Server's certificate
+		 * that is set by this function is THE ONLY one that will be trusted for connections to the Crossbear server).
 		 * 
 		 * Finally this function will return the certificate's public key so it can be used to send asymmetrically encrypted data to the Crossbear server.
 		 * 
@@ -335,10 +334,7 @@ if (typeof Crossbear == "undefined") {
 		 * @param cbtrustdecisioncache The CBTrustDecisionCache to notify about the current Crossbear server certificate
 		 * @returns A RSAKeyPair containing the Public-RSA-key of the Crossbear server
 		 */
-		addCBCertToLocalStoreAndCache : function(cbtrustdecisioncache) {
-
-			// Open Firefox's certificate database
-			var certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB2);
+		loadCBCertAndAddToCache : function(cbtrustdecisioncache) {
 
 			// Prepare to read the CBServer-certificate from the file system
 			var scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"].getService(Ci.nsIScriptableInputStream);
@@ -360,8 +356,6 @@ if (typeof Crossbear == "undefined") {
 			var end = certfile.indexOf(endCert);
 			var cert = certfile.substring(begin + beginCert.length, end);
 
-			// Add the certificate to Firefox's certificate database
-			certDB.addCertFromBase64(cert, 'P,p,p', "");
 
 			// Notify the CBTrustDecisionCache about the current Crossbear server certificate
 			var serverCertHash = Crypto.SHA256(Crypto.util.base64ToBytes(cert), {});

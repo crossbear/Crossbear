@@ -24,8 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
---%>
-<%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.net.InetAddress"
+--%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.net.InetAddress"
 	language="java" 
 	contentType="application/octet-stream"
 %><%!
@@ -64,11 +63,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			Security.addProvider(new BouncyCastleProvider());
 					
 			// Load the porperties and settings from the config file
-			properties = new Properties("/var/lib/tomcat6/webapps/crossbear.properties");
+			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
 
 		} catch (Exception e) {
 
-			Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/init.getHuntingTaskList.error", e);
+			Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.getHuntingTaskList.init.error", e);
 		}
 	}
 	%><%
@@ -103,10 +102,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		* None of the calls above catches exceptions. Whenever something went wrong (e.g. with decoding the client's request)
 		* A exception is thrown and cought here. Since it's not very smart to tell attackers what went wrong a dummy reply is sent to them.
 		*/
-		out.println("Crossbear");
 
 		// For debugging reasons: Log what went wrong
-		Logger.dumpExceptionToFile("/var/lib/tomcat6/webapps/fourhundredfourtythree/processing.getHuntingTaskList.error", e);
+		Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.getHuntingTaskList.processing.error", e);
 
 	} finally {
 		if (db != null)

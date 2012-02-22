@@ -61,7 +61,7 @@ the rest of the system).
 		<script src="chrome://crossbear/content/CBFrontend.js"/>
 		
 		<!-- Instantiate a new CBFrontend-object and thus initialize the Crossbear system -->
-		<script> var crossbearFrontend = new Crossbear.CBFrontend('otranto.net.in.tum.de');</script>
+		<script> var crossbearFrontend = new Crossbear.CBFrontend('crossbear.net.in.tum.de');</script>
 
 		<!-- Crossbear Popup Menu -->
 		<popupset >

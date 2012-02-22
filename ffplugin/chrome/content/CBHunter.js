@@ -203,9 +203,9 @@ Crossbear.CBHunter = function (cbFrontend) {
 
 			// Finally send it to the Crossbear server. In order to be able to parse the server's reply, the callback-function of the XMLHTTPRequest (which is the receivePublicIP-function) must know the generated AES key. Therefore the it is passed within the callBackParams-object
 			if (ipVersion == 4) {
-				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://" + serverIP + ":8080/getPublicIP.jsp", cbFrontend.cbServerName + ":8080", Crossbear.jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
+				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://" + serverIP + ":80/getPublicIP.jsp", cbFrontend.cbServerName + ":80", Crossbear.jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
 			} else if (ipVersion == 6) {
-				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://[" + serverIP + "]:8080/getPublicIP.jsp", cbFrontend.cbServerName + ":8080", Crossbear.jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
+				cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("http://[" + serverIP + "]:80/getPublicIP.jsp", cbFrontend.cbServerName + ":80", Crossbear.jsArrayToUint8Array(publicIPNotifRequest.getBytes()), self.receivePublicIP,{ callback: callback, currentAESKey : currentAESKey});
 			} else {
 				cbFrontend.displayTechnicalFailure("CBHunter:requestPublicIP: Invalid ipVersion", true);
 			}

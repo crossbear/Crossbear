@@ -178,7 +178,7 @@ public class PublicIPNotifProcessor {
 	/**
 	 * Extract a keypair from a keystore-file and return it as a KeyPair. 
 	 * 
-	 * @param filePath The path of the keystore that contains the keypair
+	 * @param keystoreFilePath The path of the keystore that contains the keypair
 	 * @param keyStorePassword The password to access the keystore
 	 * @param keyAlias The name of the key
 	 * @param keyPassword The password to extract the key
@@ -189,14 +189,14 @@ public class PublicIPNotifProcessor {
 	 * @throws CertificateException
 	 * @throws UnrecoverableKeyException
 	 */
-	private static KeyPair getKeyPairFromKeystoreFile(String filePath, String keyStorePassword, String keyAlias, String keyPassword) throws IOException, KeyStoreException, NoSuchAlgorithmException,
+	private static KeyPair getKeyPairFromKeystoreFile(String keystoreFilePath, String keyStorePassword, String keyAlias, String keyPassword) throws IOException, KeyStoreException, NoSuchAlgorithmException,
 			CertificateException, UnrecoverableKeyException {
 
 		// Create a keyStore Object
 		KeyStore keyStore = KeyStore.getInstance("jks");
 
 		// Link it to an existing key store on disk
-		FileInputStream keyStoreInputStream = new FileInputStream(filePath);
+		FileInputStream keyStoreInputStream = new FileInputStream(keystoreFilePath);
 
 		// Load it's data
 		keyStore.load(keyStoreInputStream, keyStorePassword.toCharArray());
@@ -271,16 +271,20 @@ public class PublicIPNotifProcessor {
 	 * Creating a new PublicIPNotifProcessor. During the creation the RSA keypair of the server is loaded from disc since it is required to perform the generateEncryptedPublicIPNotif function. Putting
 	 * this functionality in the constructor speeds up per-page-processing a lot.
 	 * 
+	 * @param keystoreFilePath The path of the keystore that contains the keypair
+	 * @param keyStorePassword The password to access the keystore
+	 * @param keyAlias The name of the key
+	 * @param keyPassword The password to extract the key
 	 * @throws UnrecoverableKeyException
 	 * @throws KeyStoreException
 	 * @throws NoSuchAlgorithmException
 	 * @throws CertificateException
 	 * @throws IOException
 	 */
-	public PublicIPNotifProcessor() throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+	public PublicIPNotifProcessor(String keystoreFilePath, String keyStorePassword, String keyAlias, String keyPassword) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 
-		// The server's RSA keypair is stored in /etc/tomcat6/.keystore.
-		crossbearRSAKeyPair = PublicIPNotifProcessor.getKeyPairFromKeystoreFile("/etc/tomcat6/.keystore", "mastertom", "tomcat", "mastertom");
+		// Load the server's RSA keypair from disc
+		crossbearRSAKeyPair = PublicIPNotifProcessor.getKeyPairFromKeystoreFile(keystoreFilePath, keyStorePassword, keyAlias, keyPassword);
 	}
 
 	/**

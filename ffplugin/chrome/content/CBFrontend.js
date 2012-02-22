@@ -32,7 +32,7 @@
  * - (de-)activation of the Hunter/Protector
  * - System initialization and shutdown
  * 
- * @param cbServerName The Hostname of the Crossbear server (e.g. otranto.net.in.tum.de)
+ * @param cbServerName The Hostname of the Crossbear server (e.g. crossbear.net.in.tum.de)
  * 
  * @author Thomas Riedmaier
  */
@@ -384,7 +384,7 @@ Crossbear.CBFrontend = function (cbServerName) {
 	}
 
 	// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBTrustDecisionCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
-	this.ServerRSAKeyPair = Crossbear.addCBCertToLocalStoreAndCache(this.cbtrustdecisioncache);
+	this.ServerRSAKeyPair = Crossbear.loadCBCertAndAddToCache(this.cbtrustdecisioncache);
 	
 	// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
 	this.cbhunter.init();
