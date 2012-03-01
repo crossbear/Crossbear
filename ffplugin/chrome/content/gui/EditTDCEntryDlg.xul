@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   onload="onLoad();">
   
 	<!-- Include scripts -->
+	<script type="application/javascript" src="chrome://crossbear/content/CBHelper.js"/>
 	<script type="application/javascript" src="chrome://crossbear/content/gui/EditTDCEntryDlg.js"/>
 
 	<!-- Dialog Header -->

@@ -50,6 +50,9 @@ function onLoad() {
 	window.setTimeout(function() {
 		document.documentElement.getButton("accept").disabled = false;
 	}, 1000 * window.arguments[0].inn.timeoutSec);
+	
+	// Resize the window so it is big enough to display its content (especially important on linux-systems)
+	window.sizeToContent();
 }
 
 

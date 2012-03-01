@@ -68,7 +68,7 @@ Crossbear.CBHunter = function (cbFrontend) {
 				// Set the callback function (i.e. the function that will receive all Events sent by the worker-thread)
 				self.worker.onmessage = self.wtcallback;
 
-				// Check if the current system is a Windows or a Unix/Linuy system
+				// Check if the current system is a Windows or a Unix/Linux system
 				var osIsWin = Crossbear.startsWith(navigator.platform.toUpperCase(), "WIN");
 				
 				// Create a CBHunterWorkerInitEvent that contains all parameters related to Hunting (read them from the user's preferences) and the paths to the native libraries (different depending on the current operating system)

@@ -269,7 +269,7 @@ Crossbear.CBTracer = function (cbFrontend) {
 		/**
 		 * Perform a ping on a Unix/Linux system. This is currently done by executing "ping"/"ping6" and reading its output. Depending on that output it is then decided if the ping reached the host, a intermediate hop or if an error occurred.
 		 * 
-		 * The command that will be executed is /bin/ping -c 1 -n -t "ttl" "ip"
+		 * The command that will be executed is /bin/ping -c 1 -n -W 1 -t "ttl" "ip"
 		 * 
 		 * @param ip The IP-Address to ping
 		 * @param ipVersion The version of the IP-Address (4 or 6)
@@ -279,7 +279,7 @@ Crossbear.CBTracer = function (cbFrontend) {
 		Crossbear.CBTracer.prototype.ping_linux = function ping_linux(ip, ipVersion, ttl) {
 
 			// Execute ping and pipe its output
-			var pipe = self.functions.popen("/bin/ping" + ((ipVersion == 6) ? "6" : "") + " -c 1 -n -t " + ttl + " " + ip + " 2>&1", "r");
+			var pipe = self.functions.popen("/bin/ping" + ((ipVersion == 6) ? "6" : "") + " -c 1 -n -W 1 -t " + ttl + " " + ip + " 2>&1", "r");
 			if (pipe == 0) {
 				cbFrontend.displayTechnicalFailure("CBTracer:ping_linux: popen failed.", true);
 				return null;

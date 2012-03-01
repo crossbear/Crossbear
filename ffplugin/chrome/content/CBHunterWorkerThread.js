@@ -247,7 +247,7 @@ function init(event) {
 		// Create and initialize a new CBTracer
 		cbtracer = new Crossbear.CBTracer(cbFrontend);
 		cbtracer.init(event.data.libPaths, event.data.osIsWin, event.data.tracerouteSamplesPerHop, event.data.tracerouteMaxHops);
-
+		
 		// Create and initialize a new CBCertificateChainFetcher
 		cbccf = new Crossbear.CBCertificateChainFetcher(cbFrontend);
 		cbccf.init(event.data.libPaths, event.data.osIsWin);

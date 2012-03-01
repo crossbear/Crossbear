@@ -60,6 +60,9 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 	
 	// Mark this object as event-listener for the "quit-application-requested"-event. This allows Crossbear to perform a clean shutdown when the user closes firefox
 	observerService.addObserver(self, "quit-application-requested", false);
+	
+	// Load the utilities required to access the local file system (required to write a forged certificate chain for the Crossbear-Server to a file)
+	Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
 	if (typeof (_cbeventobserver_prototype_called) == 'undefined') {
@@ -150,8 +153,8 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					return;
 				}
 				
-				// If the user requested a HTTPS-ressource but was redirected to an unsafe HTTP-resource -> Rise a warning!
-				if(origUrlIsHttps && !urlIsHttps){
+				// If the user requested a HTTPS-resource but was redirected to an unsafe HTTP-resource -> Rise a warning! (except when the user disabled the protector)
+				if(origUrlIsHttps && !urlIsHttps && !self.checkCBServerOnly){
 					cbFrontend.warnUserAboutBeingUnderAttack("You requested a SSL-secured resource but the server redirected you to an unsafe resource. You might be under attack!",0);
 					return;
 				}
@@ -159,8 +162,8 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 				// Firefox allows connections to HTTPS-pages using their IPv4-addresses. Crossbear does currently not support this.
 				if(host.match(Crossbear.ipv4Regex)){
 					
-					// If the IP belongs to a local IP-> allow it anyways
-					if(host.match(Crossbear.privateIPRegex)){
+					// If the IP belongs to a local IP or if the user deactivated the protector -> allow it anyways
+					if(host.match(Crossbear.privateIPRegex) || self.checkCBServerOnly){
 						return;
 						
 					// If not warn the user and cancel the connection
@@ -212,9 +215,20 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 						return;
 					}
 					
-					// In case the conection was targeted for the Crossbear Server but did not use the correct certificate: Warn the user and cancel the connection
+					// In case the conection was targeted for the Crossbear-Server but did not use the correct certificate: Warn the user and cancel the connection (also ask the user to send the certificate to Crossbear)
 					if (cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_NOT_VALID) {
-						cbFrontend.warnUserAboutBeingUnderAttack("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Don't visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style=\"text-decoration:underline\" href=\"mailto:crossbear@pki.net.in.tum.de?subject=Observation%20of%20an%20invalid%20certificate%20for%20the%20Crossbear-Server&amp;body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20the%20following%20certificate%20chain%20for%20the%20Crossbear-Server("+remoteAddress+") on "+new Date().toGMTString() +"%0D%0A%0D%0A"+Crypto.util.bytesToBase64(Crossbear.implodeArray(Crossbear.getCertChainBytes(serverCert)))+"\">sending an email</html:a> to the Crossbear-Team.<html:br /><html:br />",5);
+						
+						// Get the certificate chain that the Crossbear-Server seems to use and convert it into a string
+						var base64CertChain = Crypto.util.bytesToBase64(Crossbear.implodeArray(Crossbear.getCertChainBytes(serverCert)));
+					    
+						// Create a file in the temp-directory
+						var tempFile = FileUtils.getFile("TmpD", ["crossbear.certchain.txt"]);
+						
+						// Write the certificate chain into that file
+						Crossbear.writeStringToFile(base64CertChain,tempFile);
+						
+						// Display the warning dialog to the user and ask him/her to send the certificate chain to the Crossbear-Team
+						cbFrontend.warnUserAboutBeingUnderAttack("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Don't visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style=\"text-decoration:underline\" href=\"mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&amp;body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+remoteAddress+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User\"> sending an email </html:a> to the Crossbear-Team.<html:br /><html:br />",5);
 						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
 						return;
 					}

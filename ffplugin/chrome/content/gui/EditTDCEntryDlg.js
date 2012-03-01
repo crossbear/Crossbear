@@ -101,10 +101,16 @@ function accept() {
 		return false;
 	}
 
-	// The right part should consist of three ":"-seperated numbers
+	// The right part should consist of three ":"-separated numbers
 	var time = dateTime[1].split(":");
 	if (time.length != 3){
 		// If not -> don't accept the user input
+		return false;
+	}
+	
+	// Make sure that all of the dateTime-elements are numbers
+	if(!Crossbear.isNumber(date[0]) || !Crossbear.isNumber(date[1]) || !Crossbear.isNumber(date[2]) ||
+			!Crossbear.isNumber(time[0]) || !Crossbear.isNumber(time[1]) || !Crossbear.isNumber(time[2])){
 		return false;
 	}
 

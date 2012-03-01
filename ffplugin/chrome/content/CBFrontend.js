@@ -151,7 +151,7 @@ Crossbear.CBFrontend = function (cbServerName) {
 			};
 
 			// Open the Dialog
-			window.openDialog("chrome://crossbear/content/gui/WarnUserDlg.xul", "Crossbear - Warning you about a security Threat", "chrome,centerscreen,dependent=YES,dialog=YES,modal=YES,close=no", params);
+			window.openDialog("chrome://crossbear/content/gui/WarnUserDlg.xul", "Crossbear - Warning you about a security Threat", "chrome,centerscreen,dependent=YES,dialog=YES,modal=YES,close=no,resizable=no", params);
 		};
 
 		/**
@@ -286,7 +286,7 @@ Crossbear.CBFrontend = function (cbServerName) {
 			
 			// Quit pulling HuntingTaskLists from the Crossbear server
 			if (this.TaskPullTimer != null) {
-				clearInterval(this.TaskPullTimer);
+				window.clearInterval(this.TaskPullTimer);
 			}
 			
 		};

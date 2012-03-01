@@ -123,6 +123,12 @@ public abstract class Message {
 	 * @return The byte[] representation of s
 	 */
 	public static byte[] hexStringToByteArray(String s) {
+		
+		// Pad the string to an even number of characters
+		if(s.length() %2 != 0){
+			s = "0"+s;
+		}
+		
 		int len = s.length();
 		byte[] data = new byte[len / 2];
 		for (int i = 0; i < len; i += 2) {

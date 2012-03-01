@@ -63,7 +63,7 @@ if (typeof Crossbear == "undefined") {
 		 * @returns The Hostname-part of "str"
 		 */
 		extractHostname : function(str) {
-			var re = new RegExp('^(?:f|ht)tp(?:s)?\://([^/]+)', 'im');
+			var re = new RegExp('^(?:f|ht)tp(?:s)?\://([^/?&]+)', 'im');
 			return str.match(re)[1].toString();
 		},
 
@@ -114,6 +114,19 @@ if (typeof Crossbear == "undefined") {
 		clone : function(obj) {
 			return Object.create(obj);
 		},
+		
+		/**
+		 * Check whether a variable is a valid number
+		 * 
+		 * This code was created by the use of http://stackoverflow.com/questions/18082/validate-numbers-in-javascript-isnumeric
+		 * 
+		 * @param n The variable to check
+		 * @returns true, if n is a valid number; otherwise false
+		 */
+		isNumber: function (n) {
+			  return !isNaN(parseFloat(n)) && isFinite(n);
+		},
+
 
 		/**
 		 * Get the byte[][]-representation of a certificate's certificate chain
@@ -140,6 +153,38 @@ if (typeof Crossbear == "undefined") {
 			}
 			// Return the byte[][]-representation of "certificate"'s certificate chain
 			return certChain;
+		},
+		
+		/**
+		 * Write a String to a File
+		 * 
+		 * This code was created by the use of https://developer.mozilla.org/en/Code_snippets/File_I%2F%2FO#Write_a_string
+		 * 
+		 * @param string The string to write
+		 * @param file The nsIFile to write to
+		 */
+		writeStringToFile : function(string, file){
+		    Components.utils.import("resource://gre/modules/NetUtil.jsm");  
+		    Components.utils.import("resource://gre/modules/FileUtils.jsm");  
+		      		      
+		    // Open the file with FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE  
+		    var ostream = FileUtils.openSafeFileOutputStream(file)  
+		      
+		    // Create a converter that converts the string into a stream
+		    var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);  
+		    converter.charset = "UTF-8";  
+		    var istream = converter.convertToInputStream(string);  
+		      
+		    // Copy the data from the istream to the ostream
+		    NetUtil.asyncCopy(istream, ostream, function(status) {  
+		      if (!Components.isSuccessCode(status)) { 
+		    	// Something went wrong ...
+		        return false;  
+		      }  
+		      
+		      // String has been written to the file. 
+		      return true;
+		    });  
 		},
 
 		/**
@@ -355,7 +400,6 @@ if (typeof Crossbear == "undefined") {
 			var begin = certfile.indexOf(beginCert);
 			var end = certfile.indexOf(endCert);
 			var cert = certfile.substring(begin + beginCert.length, end);
-
 
 			// Notify the CBTrustDecisionCache about the current Crossbear server certificate
 			var serverCertHash = Crypto.SHA256(Crypto.util.base64ToBytes(cert), {});
