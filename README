@@ -54,7 +54,7 @@ browser.
 During the test period of Crossbear, your data will be stored on the servers
 IN PLAIN. We will change when this Crossbear goes live. Bear in mind, however, 
 that in order to be useful, the Crossbear server will always need to be able
-to access recent data like certificate chains
+to access recent data like certificate chains. It is part of its functionality.
 
 Yes, that does mean we know which sites *some* client (with a certain IP) 
 has accessed. If you don't want us to know about which sites you are visiting, 
