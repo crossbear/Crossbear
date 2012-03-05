@@ -231,6 +231,32 @@ Crossbear.CBFrontend = function (cbServerName) {
 				this.displayTechnicalFailure("CBFrontend:setUserPref: An error occured while setting "+name+"("+type+") to "+value+": " + e, true);
 			}
 		};
+		
+		/**
+		 * Startup Crossbear
+		 */
+		Crossbear.CBFrontend.prototype.startup = function startup() {
+			
+			// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBTrustDecisionCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
+			this.ServerRSAKeyPair = Crossbear.loadCBCertAndAddToCache(this.cbtrustdecisioncache);
+			
+			// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
+			this.cbhunter.init();
+			
+			
+			// Activate Hunter and Protector if specified by the user
+			if(this.getUserPref("activateHunter", "bool"))this.activateHunter();
+			if(this.getUserPref("activateProtector", "bool"))this.activateProtector();
+			
+			// Check if Convergence is installed. If it is: deactivate Crossbear!  
+		    AddonManager.getAddonByID("convergence@extension.thoughtcrime.org", function(addon) {  
+		      if(addon != null && addon.isActive){
+		    	  self.warnUserAboutBeingUnderAttack("You are running Convergence. Since Crossbear can not operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two Add-ons.", 0);
+		    	  self.shutdown(true);
+		      } 
+		    });  
+			
+		};
 
 		/**
 		 * Shutdown Crossbear
@@ -248,8 +274,6 @@ Crossbear.CBFrontend = function (cbServerName) {
 				// Deactivate the Protector
 				this.deactivateProtector(systemCrashed);
 				
-				// Perform a clean shutdown of the Protector
-				this.cbeventobserver.shutdownProtector();
 				
 				// Deactivate the Hunter
 				this.deactivateHunter(systemCrashed);
@@ -388,26 +412,8 @@ Crossbear.CBFrontend = function (cbServerName) {
 			
 		};
 	}
-
-	// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBTrustDecisionCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
-	this.ServerRSAKeyPair = Crossbear.loadCBCertAndAddToCache(this.cbtrustdecisioncache);
 	
-	// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
-	this.cbhunter.init();
-	
-	// Initialize the protector (needs to be active to check at least the connections to the Crossbear server)
-	this.cbeventobserver.initProtector();
-	
-	// Activate Hunter and Protector if specified by the user
-	if(this.getUserPref("activateHunter", "bool"))this.activateHunter();
-	if(this.getUserPref("activateProtector", "bool"))this.activateProtector();
-	
-	// Check if Convergence is installed. If it is: deactivate Crossbear!  
-    AddonManager.getAddonByID("convergence@extension.thoughtcrime.org", function(addon) {  
-      if(addon != null && addon.isActive){
-    	  self.warnUserAboutBeingUnderAttack("You are running Convergence. Since Crossbear can not operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two Add-ons.", 0);
-    	  self.shutdown(true);
-      } 
-    });  
+	// Startup the Crossbear system
+	this.startup();
 	
 };

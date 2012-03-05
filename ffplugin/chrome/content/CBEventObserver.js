@@ -42,9 +42,6 @@
 Crossbear.CBEventObserver = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
 	
-	// Flag indicating if the Protector is currently active
-	this.protectorIsActive = false;
-	
 	// Flag stating whether the Protector should check all connections or only those to the Crossbear-Server
 	this.checkCBServerOnly = true;
 	
@@ -54,44 +51,18 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 	// Load the Firefox Component required to work with event listeners
 	var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
 	
+	// Mark this object as event-listener for the "http-on-examine-response"-event. This allows Crossbear to intercept page loads
+	observerService.addObserver(self, "http-on-examine-response", false);
+	
 	// Mark this object as event-listener for the "quit-application-requested"-event. This allows Crossbear to perform a clean shutdown when the user closes firefox
 	observerService.addObserver(self, "quit-application-requested", false);
+	
+	// Mark this object as event-listener for the "private-browsing"-event. This allows Crossbear to deactivate itself when the user enters the private browsing mode
+	observerService.addObserver(self, "private-browsing", false);
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
 	if (typeof (_cbeventobserver_prototype_called) == 'undefined') {
 		_cbeventobserver_prototype_called = true;
-		
-		/**
-		 * Initialize the Protector
-		 */
-		Crossbear.CBEventObserver.prototype.initProtector = function initProtector() {
-			
-			// Check if the Protector is already active
-			if(!self.protectorIsActive){
-				
-				// If not: initialize it (i.e. add this object as event-listener for the "http-on-examine-response"-event. This will allow Crossbear to inspect each and every page before it is displayed)
-				observerService.addObserver(self, "http-on-examine-response", false);
-			}
-			
-			// Set the activity-flag to true
-			self.protectorIsActive = true;
-		};
-		
-		/**
-		 * Shut the Protector down
-		 */
-		Crossbear.CBEventObserver.prototype.shutdownProtector = function shutdownProtector() {
-			
-			// Check if the Protector is active
-			if(self.protectorIsActive){
-				
-				//If yes: shut it down (i.e. remove this object from the list of event-listeners for the "http-on-examine-response"-event)
-				observerService.removeObserver(self, "http-on-examine-response");
-			}
-			
-			// Set the activity-flag to false
-			self.protectorIsActive = false;
-		};
 		
 		
 		
@@ -112,14 +83,35 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 		 */
 		Crossbear.CBEventObserver.prototype.observe = function observe(aSubject, aTopic, aData) {
 			
-			//SUGG: Implement a event observer for the "private-browsing" and disable the Protector every time the user switches to private browsing mode
-			
 			// In case the user wants to shutdown Firefox
 			if (aTopic == 'quit-application-requested') {
 
 				 // ... Perform a clean shutdown of Crossbear
 				cbFrontend.shutdown(false);
 
+			// In case the user enters or leaves the "private-browsing" mode ...
+			} else if (aTopic == 'private-browsing') {
+				if (aData == "enter") { 
+					
+					// ... notify the user that he will no longer be protected by Crossbear
+					cbFrontend.warnUserAboutBeingUnderAttack("You entered the private-browsing mode. Crossbear will NOT protect you while you are using that mode!",0);
+					
+					// ... deactivate the Protector, and
+					cbFrontend.deactivateProtector(false);
+					
+					// ... deactivate the Hunter
+					cbFrontend.deactivateHunter(false);
+					
+				} else if (aData == "exit") { 
+
+					// ... activate the Protector, and
+					cbFrontend.activateProtector();
+					
+					// ... activate the Hunter
+					cbFrontend.activateHunter(false);
+
+				}
+				
 			// In case a HTTP-Conection was made ...
 			} else if (aTopic == 'http-on-examine-response') {
 				
@@ -146,9 +138,13 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					return;
 				}
 				
-				// If the user requested a HTTPS-resource but was redirected to an unsafe HTTP-resource -> Rise a warning! (except when the user disabled the protector)
-				if(origUrlIsHttps && !urlIsHttps && !self.checkCBServerOnly){
-					cbFrontend.warnUserAboutBeingUnderAttack("You requested a SSL-secured resource but the server redirected you to an unsafe resource. You might be under attack!",0);
+				// If the user requested a HTTPS-resource but was redirected to an unsafe HTTP-resource
+				if(origUrlIsHttps && !urlIsHttps){
+					
+					// Rise a warning! (except when the user disabled the protector or the warning)
+					if(!self.checkCBServerOnly && cbFrontend.getUserPref("protector.showRedirectWarning", "bool")){
+						cbFrontend.warnUserAboutBeingUnderAttack("You requested a SSL-secured resource but the server redirected you to an unsafe resource. You might be under attack!",0);
+					}
 					return;
 				}
 				

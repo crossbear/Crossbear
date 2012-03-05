@@ -137,7 +137,7 @@ function onLoad() {
 
 	// Set a Timer to periodically call the bringToFrontAndCheckShutdown-function
 	bringToFrontAndCheckShutdownTimer = window.setInterval(function() {
-		bringToFrontAndCheckShutdown(window.arguments[0].inn.cbFrontend.cbeventobserver.checkCBServerOnly || !window.arguments[0].inn.cbFrontend.cbeventobserver.protectorIsActive);
+		bringToFrontAndCheckShutdown(window.arguments[0].inn.cbFrontend.cbeventobserver.checkCBServerOnly);
 	}, 500);
 
 };
