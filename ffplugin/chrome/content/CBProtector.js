@@ -29,11 +29,10 @@
  * The CBProtector-class is the local system's interface to the server's certificate verification functionality. When asked to perform a certificate verification this class will forward the request to the server and parse its answer. If the user chose to
  * use the automatic-trust-setting and the server responds with a high rating then the only thing that is done is a Cache-update. In all other cases a UnknownCertDlg will be displayed.
  * 
- * If the same request is uttered more than once while the original one is still to process (i.e. in the queue), then all duplicate requests will be ignored. Although this does not prevent duplicates completely it reduces their number significantly
- * and therefore increases the overall performance of the Crossbear system.
+ * If the same request is uttered more than once, only a single request will be sent to the Crossbear server.
  * 
- * Please Note: This class maintains an internal queue of CertVerificationRequests to filter duplicates. The queue will only work as long as this class is accessed by a single thread only. Therefore it is assumed that there is only one GUI-Thread,
- * which is true to my best knowledge.
+ * Please Note: This class maintains an internal list of CertVerificationRequests which will only work as long as this class is accessed by a single thread only. Therefore it is assumed that there is only one GUI-Thread,
+ * which is true to our best knowledge.
  * 
  * @param cbFrontend The cbFrontend-class that will be used to display information/errors to the user and to read the user preferences and settings.
  * 
@@ -45,9 +44,6 @@ Crossbear.CBProtector = function (cbFrontend) {
 	// The list of all CertificateVerificationRequests that are to be done. This list does not include any duplicates for performance reasons (see class description).
 	this.requestsPending = [];
 
-	// Flag indicating if there is currently a request processed or if the protector is idle
-	this.currentlyRequesting = false;
-
 	// "this" does not always point to THIS object (especially in callback functions). Therefore I use the "self" variable to hold a handle on THIS object
 	var self = this;
 
@@ -55,25 +51,200 @@ Crossbear.CBProtector = function (cbFrontend) {
 	var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"].getService(Components.interfaces.nsIProtocolProxyService);
 	var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 	
+	// Load the utilities required to access the local file system (required to write a forged certificate chain for the Crossbear-Server to a file)
+	Components.utils.import("resource://gre/modules/FileUtils.jsm");
+	
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
 	if (typeof (_cbprotector_prototype_called) == 'undefined') {
 		_cbprotector_prototype_called = true;
 
 		/**
+		 * This function check if the certificate that a connection uses should be trusted for that connection. If that is already known it cancels or accepts the connection.
+		 * 
+		 * If that is not yet known it contacts the Crossbear server and requests a certificate verification. As soon as the server replied, this function displays an UnknownCertDlg to the user and asks whether the certificate should be trusted.
+		 * Based on the user's decision the original connection is either canceled or accepted.
+		 * 
+		 * @param channel The nsIChannel representing the connection
+		 * @param serverCertChain The certificate chain of the connection
+		 * @param serverCertHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
+		 * @param hostIPPort The connection's host ("Hostname|IP|Port")
+		 */
+		Crossbear.CBProtector.prototype.getAndApplyTrustDecision = function getAndApplyTrustDecision(channel, serverCertChain, serverCertHash, hostIPPort) {
+			
+			// Check if the certificate has been seen for the domain. If yes: get the cached policy
+			var cacheStatus = cbFrontend.cbtrustdecisioncache.checkValidity(serverCertHash, hostIPPort.split("|")[0], cbFrontend.cbeventobserver.checkCBServerOnly);
+			
+			// In case the conection was targeted for the Crossbear-Server but did not use the correct certificate: Warn the user and cancel the connection (also ask the user to send the certificate to the Crossbear-Team)
+			if(cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_NOT_VALID){
+				
+				self.handleMitM(channel, serverCertChain, hostIPPort);
+			
+			// In case the user considers the connection's certificate valid for this domain -> Load the page.
+			} else if(cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.OK || cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_OK ){
+
+				self.acceptConnection(channel, false);
+			
+			// In case the user considers the connection's certificate INVALID for this domain -> Abort the page loading
+			} else if(cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.NOT_VALID){
+				
+				self.rejectConnection(channel, false, hostIPPort);
+			
+			// If the certificate/domain combination was not found in the local cache initially: Request the server to verify the certificate
+			} else if(cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE){
+				
+				// Suspend the loading of the page (and resume it after it is known whether the connection should be established or not)
+				channel.suspend();
+				
+				self.requestVerification(channel, serverCertChain, serverCertHash, hostIPPort);
+				
+			// If the cacheStatus is not "OK", "NOT_VALID", "CB_SERVER_OK", "CB_SERVER_NOT_VALID" or "NOT_IN_CACHE" then something is seriously going wrong -> Rise an exception
+			} else {
+				
+				cbFrontend.displayTechnicalFailure("CBProtector:getAndApplyTrustDecision: TrustDecisionCache returned unknown value:"+cacheStatus, true);
+			}
+		};
+		
+		/**
+		 * This function adds a new CertVerificationRequest-object to the list of open requests. If it is the first request of its kind then the Crossbear server is contacted and a certificate verification is requested.
+		 * 
+		 * @param channel The nsIChannel representing the connection
+		 * @param serverCertChain The certificate chain of the connection
+		 * @param serverCertHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
+		 * @param hostIPPort The connection's host ("Hostname|IP|Port")
+		 */
+		Crossbear.CBProtector.prototype.requestVerification = function requestVerification(channel, serverCertChain, serverCertHash, hostIPPort) {
+			
+			// Create a new CertVerificationRequest-object
+			var request = {
+				channel : channel,
+				serverCertChain : serverCertChain,
+				serverCertHash : serverCertHash,
+				hostIPPort : hostIPPort
+			};
+			
+			// Add it to the list of open requests
+			self.requestsPending.push(request);
+			
+			// Check if it is the first request of its kind
+			var isNewRequest = false;
+			for ( var i = 0; i < self.requestsPending.length; i++) {
+
+				// Go through all requests in the queue and compare them with the new request
+				if (self.requestsPending[i].serverCertHash == request.serverCertHash && self.requestsPending[i].hostIPPort == request.hostIPPort) {
+					
+					// If they match the request then check if we found the very request that was created above. If that is the case then the request above is the first of its kind
+					if(self.requestsPending[i].channel === request.channel){
+						isNewRequest = true;
+					}
+					break;
+				}
+			}
+			
+			// If the request is the first request of its kind: contact the Crossbear server
+			if(isNewRequest){
+				
+				self.requestVerificationFromServer(serverCertChain, serverCertHash, hostIPPort);
+				
+			}
+		};
+		
+		/**
+		 * Request a certificate verification from the Crossbear server
+		 * 
+		 * @param serverCertChain The certificate chain that should be verified
+		 * @param serverCertHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
+		 * @param hostIPPort The host from which the certificate chain was observed ("Hostname|IP|Port")
+		 */
+		Crossbear.CBProtector.prototype.requestVerificationFromServer = function requestVerificationFromServer(serverCertChain, serverCertHash, hostIPPort) {
+			
+			// Add an entry in the log
+			cbFrontend.displayInformation("Requesting Verification for \""+ hostIPPort + "\" from the Crossbear server");
+
+			// Create the CertVerifyRequest-message that should be sent
+			var msg = new Crossbear.CBMessageCertVerifyRequest(serverCertChain, hostIPPort, (pps.resolve(ioService.newURI("https://"+ hostIPPort.split("|")[0], null, null),0) != null)?1:0);
+
+			// Send the message to the server ...
+			cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, {serverCertChain: serverCertChain, serverCertHash: serverCertHash, hostIPPort : hostIPPort });
+			
+		};
+		
+		/**
 		 * Add a new entry in the CBTrustDecisionCache for the host's certificate and domain according to the user's choice of trust and his/hers defaultCacheValidity.
 		 * 
-		 * @param certHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
-		 * @param host The host that should or should not be trusted when sending a certificate with hash "hash"
-		 * @param trust "1" if the user want's the certificate to be trusted, else "0"
+		 * @param serverCertHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
+		 * @param hostIPPort The host from which the certificate chain was observed ("Hostname|IP|Port")
+		 * @param trust true if the user want's the certificate to be trusted, otherwise false
 		 */
-		Crossbear.CBProtector.prototype.addCacheEntryDefaultValidity = function addCacheEntryDefaultValidity(certHash, host, trust) {
+		Crossbear.CBProtector.prototype.addCacheEntryDefaultValidity = function addCacheEntryDefaultValidity(serverCertHash, hostIPPort, trust) {
 			// Get a timestamp for the current time
 			var currentTimestamp = Math.round(new Date().getTime() / 1000);
 
 			// Add a new entry in the CBTrustDecisionCache for the host's certificate and domain according to the user's choice of trust and his/hers tdcValidity.
-			cbFrontend.cbtrustdecisioncache.add(certHash, host, trust, currentTimestamp + cbFrontend.getUserPref("protector.tdcValidity", "int"));
+			cbFrontend.cbtrustdecisioncache.add(serverCertHash, hostIPPort, trust, currentTimestamp + cbFrontend.getUserPref("protector.tdcValidity", "int"));
+		};
+		
+		/**
+		 * The user made a trust decision that should be applied to all pending connections and to all future connections. Therefore this function does two things:
+		 * - adding the user's trust decision to the local trust decision cache
+		 * - applying the user's trust decision to all pending connections
+		 * 
+		 * @param serverCertHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
+		 * @param hostIPPort The host from which the certificate chain was observed ("Hostname|IP|Port")
+		 * @param trust true if the user want's the certificate to be trusted, otherwise false
+		 */
+		Crossbear.CBProtector.prototype.applyNewTrustDecision = function applyNewTrustDecision(serverCertHash, hostIPPort, trust) {
+		
+			// Add the user's trust decision to the local trust decision cache
+			self.addCacheEntryDefaultValidity(serverCertHash, hostIPPort.split("|")[0], trust?1:0);
+			
+			// Clone the request list
+			var requestListCopy = Crossbear.clone(self.requestsPending);
+
+			// Iterate over all of the requests
+			for ( var i = requestListCopy.length-1; i >=0 ; i--) {
+
+				// Check if the trust decision applies to them
+				if (requestListCopy[i].serverCertHash == serverCertHash && requestListCopy[i].hostIPPort == hostIPPort) {
+					
+					// If it applies: Accept or reject the connection
+					if(trust){
+						
+						self.acceptConnection(requestListCopy[i].channel, true);
+						
+					} else{
+						
+						self.rejectConnection(requestListCopy[i].channel, true, requestListCopy[i].hostIPPort);
+						
+					}
+					
+					requestListCopy.splice(i, 1);
+					
+				}
+			}
+			
+			// Replace the list of requests with the modified one
+			self.requestsPending = requestListCopy;
+					
 		};
 
+		/**
+		 * Accept all pending connections. 
+		 * 
+		 * Please note: This function does not modify the TDC!
+		 */
+		Crossbear.CBProtector.prototype.acceptAllPendingConnections = function acceptAllPendingConnections() {
+
+			// Iterate over all of the requests
+			for ( var i = self.requestsPending.length-1; i >=0 ; i--) {
+
+				// Accept the connection
+				self.acceptConnection(self.requestsPending[i].channel, true);
+
+			}
+
+		};
+
+		
 		/**
 		 * Parse the server's response on a CertVerifyRequest. This response could be
 		 * - No Response (because of a timeout)
@@ -115,7 +286,7 @@ Crossbear.CBProtector = function (cbFrontend) {
 							// If the user activated automatic trust and the rating is high enough -> create an entry in the cache
 							if (trustAutomatically && rating > ratingToTrustAutomatically) {
 
-								self.addCacheEntryDefaultValidity(self.requestsPending[0].certHash, self.requestsPending[0].host.split("|")[0], 1);
+								self.applyNewTrustDecision(this.cbCallBackParams.serverCertHash, this.cbCallBackParams.hostIPPort, true);
 								continue;
 							}
 
@@ -130,9 +301,9 @@ Crossbear.CBProtector = function (cbFrontend) {
 									rating : rating,
 									ratingToTrustAutomatically : ratingToTrustAutomatically,
 									judgment : serverMessages[i].getJudgments(),
-									certChain : self.requestsPending[0].certChain,
-									certHash : self.requestsPending[0].certHash,
-									host : self.requestsPending[0].host,
+									serverCertChain : this.cbCallBackParams.serverCertChain,
+									serverCertHash : this.cbCallBackParams.serverCertHash,
+									hostIPPort : this.cbCallBackParams.hostIPPort,
 									wasTimeout : false
 								},
 								out : {}
@@ -158,9 +329,6 @@ Crossbear.CBProtector = function (cbFrontend) {
 						}
 					}
 
-					// If there is another request pending-> Execute it (i.e. forward it to the server)
-					self.continueWithNextRequest();
-
 				} else {
 					cbFrontend.displayTechnicalFailure("CBProtector:certVerifyCallback: received empty reply from cbServer.", true);
 				}
@@ -179,10 +347,10 @@ Crossbear.CBProtector = function (cbFrontend) {
 						cbFrontend : cbFrontend,
 						rating : "X",
 						ratingToTrustAutomatically : "X",
-						judgment : "Unable to connect to the Crossbear server. This could be caused have a lot of reasons. One of them is that you are under attack by a powerful attacker.",
-						certChain : self.requestsPending[0].certChain,
-						certHash : self.requestsPending[0].certHash,
-						host : self.requestsPending[0].host,
+						judgment : "Unable to connect to the Crossbear server. This could have a lot of reasons. One of them is that you are under attack by a powerful attacker. Please be careful!",
+						serverCertChain : this.cbCallBackParams.serverCertChain,
+						serverCertHash : this.cbCallBackParams.serverCertHash,
+						hostIPPort : this.cbCallBackParams.hostIPPort,
 						wasTimeout : true
 					},
 					out : {}
@@ -191,94 +359,74 @@ Crossbear.CBProtector = function (cbFrontend) {
 				// Second: Display it 
 				window.openDialog("chrome://crossbear/content/gui/UnknownCertDlg.xul", "", "chrome,centerscreen,dependent=YES,dialog=YES,close=no", params);
 
-				// If there is another request pending-> Execute it (i.e. forward it to the server)
-				self.continueWithNextRequest();
-
 				// In case the server could not be contacted because an error other than a timeout occurred: Throw an exception!
 			} else if ((this.readyState == 4)) {
 				cbFrontend.displayTechnicalFailure("CBProtector:certVerifyCallback: could not connect to cbServer (HTTP-STATUS: " + this.status + ":" + this.statusText + ")!", true);
 			}
 
 		};
-
+		
 		/**
-		 * Remove the current CertVerificationRequest from the todo-list and go on with the next one
+		 * Accept a connection (usually because its certificate has been approved by the user)
+		 * 
+		 * @param channel The nsIChannel representing the connection
+		 * @param isSuspended A flag indicating whether the connection has been suspended earlier
 		 */
-		Crossbear.CBProtector.prototype.continueWithNextRequest = function continueWithNextRequest() {
-			self.requestsPending.shift();
-			self.executeFirstPendingRequest();
-		};
-
-		/**
-		 * Get the oldest CertVerificationRequest from the todo-list. If there is any: execute it (i.e. forward it to the server)
-		 */
-		Crossbear.CBProtector.prototype.executeFirstPendingRequest = function executeFirstPendingRequest() {
-
-			// Make sure that there is at least one request on the todo-list. If not: terminate the execution of the CertVerificationRequest list.
-			if (self.requestsPending.length == 0) {
-
-				// If that's not true return
-				self.currentlyRequesting = false;
-				return;
+		Crossbear.CBProtector.prototype.acceptConnection = function acceptConnection(channel, isSuspended) {
+			
+			// If the connection has been suspended: resume it. If not do not do anything ;)
+			if(isSuspended){
+				channel.resume();
 			}
 			
-			// Add an entry in the log
-			cbFrontend.displayInformation("Requesting Verification for \""+ self.requestsPending[0].host + "\" from the Crossbear server");
-
-			// Create the CertVerifyRequest-message that should be sent
-			var msg = new Crossbear.CBMessageCertVerifyRequest(self.requestsPending[0].certChain, self.requestsPending[0].host, (pps.resolve(ioService.newURI("https://"+self.requestsPending[0].host.split("|")[0], null, null),0) != null)?1:0);
-
-			// Send the message to the server ...
-			cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, null);
-
 		};
-
+		
 		/**
-		 * Request the verification of a Certificate/domain-combination from the server. To do so, add a CertVerificationRequest to the current CertVerificationRequest-todo-list and in case it is the first one: Start executing it. In case the same
-		 * CertVerificationRequest is already waiting in the Todo-list don't add it again.
+		 * Reject a connection (usually because its certificate has been disapproved by the user)
 		 * 
-		 * @param certChain The certificate that should or should not be trusted when received from "host" in DER-encoding along with the certificate chain that Firefox creates for it (also in DER encoding)
-		 * @param certHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
-		 * @param host The host that should or should not be trusted when sending a certificate with hash "hash"
+		 * @param channel The nsIChannel representing the connection
+		 * @param isSuspended A flag indicating whether the connection has been suspended earlier
+		 * @param hostIPPort The connection's host ("Hostname|IP|Port")
 		 */
-		Crossbear.CBProtector.prototype.requestVerification = function requestVerification(certChain, certHash, host) {
-
-			// Create a new CertVerificationRequest-object
-			var request = {
-				certChain : certChain,
-				certHash : certHash,
-				host : host
-			};
-
-			// Check if the CertVerificationRequest is actually new or already in queue
-			var isNew = true;
-			for ( var i = 0; i < self.requestsPending.length; i++) {
-
-				// Go through all requests in the queue and compare them with the new request
-				if (self.requestsPending[i].certHash == request.certHash && self.requestsPending[i].host == request.host) {
-					isNew = false;
-					break;
-				}
+		Crossbear.CBProtector.prototype.rejectConnection = function rejectConnection(channel, isSuspended, hostIPPort) {
+			
+			// Display an information that a connection was canceled
+			cbFrontend.displayInformation("You tried to access " + hostIPPort.split("|")[0] + " with a certificate you don't trust. This attempt was canceled.",0);
+			
+			// If the connection was suspended earlier: resume it
+			if(isSuspended){
+				channel.resume();
 			}
-
-			// Only if the request is new: Add it to the todo-list
-			if (isNew) {
-				self.requestsPending.push(request);
-			}
-
-			// In case there is a CertificateVerificationRequest pending: execute it
-			self.verifyRequestIfNoneIsPending();
+			
+			// Cancel the connection attempt
+			channel.cancel(Components.results.NS_BINDING_SUCCEEDED);
+	
 		};
-
+		
 		/**
-		 * Check if there is a currently active CertVerificationRequest execution. If there is none start executing the CertVerificationRequest-list
+		 * This function is called if a connection that was directed for the Crossbear server did not use the expected certificate. This is considered to be a MitM attack. Consequently, the user is notified about this attack and is asked to send the
+		 * certificate chain that the Crossbear server seems to use to the Crossbear team.
+		 * 
+		 * @param channel The nsIChannel representing the connection
+		 * @param serverCertChain The certificate chain of the connection
+		 * @param hostIPPort The connection's host ("Hostname|IP|Port")
 		 */
-		Crossbear.CBProtector.prototype.verifyRequestIfNoneIsPending = function verifyRequestIfNoneIsPending() {
-
-			if (!self.currentlyRequesting) {
-				self.currentlyRequesting = true;
-				self.executeFirstPendingRequest();
-			}
+		Crossbear.CBProtector.prototype.handleMitM = function handleMitM(channel, serverCertChain, hostIPPort) {
+			
+			// Get the certificate chain that the Crossbear-Server seems to use and convert it into a string
+			var base64CertChain = Crypto.util.bytesToBase64(Crossbear.implodeArray(serverCertChain));
+		    
+			// Create a file in the temp-directory
+			var tempFile = FileUtils.getFile("TmpD", ["crossbear.certchain.txt"]);
+			
+			// Write the certificate chain into that file
+			Crossbear.writeStringToFile(base64CertChain,tempFile);
+			
+			// Display the warning dialog to the user and ask him/her to send the certificate chain to the Crossbear-Team
+			cbFrontend.warnUserAboutBeingUnderAttack("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Don't visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style=\"text-decoration:underline\" href=\"mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&amp;body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+hostIPPort+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User\"> sending an email </html:a> to the Crossbear-Team.<html:br /><html:br />",5);
+			
+			// Cancel the connection attempt
+			channel.cancel(Components.results.NS_BINDING_SUCCEEDED);
 		};
 
 	}

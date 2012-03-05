@@ -27,15 +27,11 @@
 
 /**
  * Crossbear's Protector-functionality is implemented by the use of a "http-on-examine-response"-Event-Observer. To be precise a "http-on-examine-response"-Event-Handler will be active as soon as Crossbear's Protector is initialized. This Handler checks the
- * certificate of each and every HTTPS-connection. The Protector will always monitor the connections to the Crossbear-Server. All others will only be monitored if the protector is set as "active".
+ * certificate of each and every HTTPS-connection. The Protector will always monitor the connections to the Crossbear-Server. All others will only be monitored if the protector is set to "active".
  * 
  * If a certificate has never been seen for the connection's domain, the certificate is sent to the Crossbear server for validation. The result will then be displayed to the user who has to decide whether he/she wan't to trust the certificate for
- * that domain or not. If the certificate has already been seen for that domain before, the user's trust decision is read from the local cache and applied again.
+ * that domain or not. If the certificate has already been seen for that domain before, the user's trust decision is read from the local cache and applied again. Although the validation is requested here, it is done within the CBProtector.
  * 
- * After the Event-Handler returned, the page will be displayed in case the Event-Handler didn't explicitly cancel the page load process. Since Crossbear must never display data of pages that use a untrusted certificate, the
- * "http-on-examine-response"-Event-Handler mustn't return before the user made a decision about the certificate. This means that there has to be some kind of "wait-for-the-server-to-reply-and-the-user-to-choose"-loop in the Event-Handler. The
- * problem with this is that a loop like that will freeze Firefox if it is implemented naively. Therefore, the CBEvent-Observer calls currentThread.processNextEvent() until a reply from the server is received. This permits Firefox to continue working
- * normally (e.g. to download data from the Crossbear server) without returning from the Event-Handler.
  * 
  * Please note: This object implements the nsIObserver-Interface since that is necessary in order to observe Events.
  * 
@@ -60,9 +56,6 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 	
 	// Mark this object as event-listener for the "quit-application-requested"-event. This allows Crossbear to perform a clean shutdown when the user closes firefox
 	observerService.addObserver(self, "quit-application-requested", false);
-	
-	// Load the utilities required to access the local file system (required to write a forged certificate chain for the Crossbear-Server to a file)
-	Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
 	if (typeof (_cbeventobserver_prototype_called) == 'undefined') {
@@ -189,76 +182,17 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 				// Get the Address of the server that sent the certificate in the format "IP|Port"
 				var remoteAddress = aSubject.QueryInterface(Components.interfaces.nsIHttpChannelInternal).remoteAddress +"|"+aSubject.QueryInterface(Components.interfaces.nsIHttpChannelInternal).remotePort;
 				
-				
 				// Get the certificate chain that the server is using
-				var cc = serverCert.getChain();
-				var serverCertChain = [];
-				for ( var i = 0; i < cc.length; i++) {
-
-					var currentCert = cc.queryElementAt(i, Components.interfaces.nsIX509Cert);
-					var currentCertBytesLength = {};
-					serverCertChain.push(currentCert.getRawDER(currentCertBytesLength));
-				}
+				var serverCertChain = Crossbear.getCertChainBytes(serverCert);
 				
 				// Generate the SHA256-Hash for the server certificate (this is its identifier in the local cache)
 				var serverCertHash = Crypto.SHA256(serverCertChain[0], {});
 
-				// Check if the certificate has been seen for the domain. If yes: get the cached policy
-				var cacheStatus = cbFrontend.cbtrustdecisioncache.checkValidity(serverCertHash, host, self.checkCBServerOnly);
-
-				// Loop until the user decided whether to trust the host's certificate for this domain
-				var verificationRequested = false;
-				while (self.protectorIsActive) {
-
-					// In case the user considers the connection's certificate valid for this domain -> Load the page.
-					if (cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.OK || cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_OK) {
-						return;
-					}
-					
-					// In case the conection was targeted for the Crossbear-Server but did not use the correct certificate: Warn the user and cancel the connection (also ask the user to send the certificate to Crossbear)
-					if (cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.CB_SERVER_NOT_VALID) {
-						
-						// Get the certificate chain that the Crossbear-Server seems to use and convert it into a string
-						var base64CertChain = Crypto.util.bytesToBase64(Crossbear.implodeArray(Crossbear.getCertChainBytes(serverCert)));
-					    
-						// Create a file in the temp-directory
-						var tempFile = FileUtils.getFile("TmpD", ["crossbear.certchain.txt"]);
-						
-						// Write the certificate chain into that file
-						Crossbear.writeStringToFile(base64CertChain,tempFile);
-						
-						// Display the warning dialog to the user and ask him/her to send the certificate chain to the Crossbear-Team
-						cbFrontend.warnUserAboutBeingUnderAttack("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Don't visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style=\"text-decoration:underline\" href=\"mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&amp;body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+remoteAddress+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User\"> sending an email </html:a> to the Crossbear-Team.<html:br /><html:br />",5);
-						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
-						return;
-					}
-					
-					// In case the user considers the connection's certificate INVALID for this domain -> Abort the page loading
-					if (cacheStatus == Crossbear.CBTrustDecisionCacheReturnTypes.NOT_VALID) {
-						cbFrontend.warnUserAboutBeingUnderAttack("You tried to access " + host + " with a certificate you don't trust. This attempt was canceled.",0);
-						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
-						return;
-					}
-
-					// If the cacheStatus is not "OK", "NOT_VALID", "CB_SERVER_OK", "CB_SERVER_NOT_VALID" or "NOT_IN_CACHE" then something is seriously going wrong -> Rise an exception
-					if (cacheStatus != Crossbear.CBTrustDecisionCacheReturnTypes.NOT_IN_CACHE) {
-						cbFrontend.displayTechnicalFailure("CBEventObserver:observe: TrustDecisionCache returned unknown value:"+cacheStatus, true);
-						return;
-					}
-					
-					// If the certificate/domain combination was not found in the local cache initially: Request the server to verify the certificate
-					if(!verificationRequested){
-						verificationRequested = true;
-						cbFrontend.cbprotector.requestVerification(serverCertChain, serverCertHash, host+"|"+remoteAddress);
-					}
-					
-					// Since this loop is not left until there is a trust decision about the certificate: Let the GUI-Thread process waiting events to avoid GUI-freezing
-					var currentThread = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager).currentThread;
-					currentThread.processNextEvent(true);
-
-					// Check if the user decided whether or not to trust the certificate on the domain
-					cacheStatus = cbFrontend.cbtrustdecisioncache.checkValidity(serverCertHash, host, self.checkCBServerOnly);
-				}
+				/*
+				 * Check if the certificate that the connection uses should be trusted or not. If that is not yet known, contact the Crossbear server and request a certificate verification. As soon as the server replied, display that reply to the
+				 * user. Finally: apply the user's trust decision.
+				 */
+				cbFrontend.cbprotector.getAndApplyTrustDecision(aSubject.QueryInterface(Components.interfaces.nsIChannel), serverCertChain, serverCertHash, host+"|"+remoteAddress);
 			}
 		};
 	}

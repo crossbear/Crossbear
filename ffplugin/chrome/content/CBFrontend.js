@@ -65,6 +65,12 @@ Crossbear.CBFrontend = function (cbServerName) {
 	var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.crossbear.");
 	var defPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getDefaultBranch("extensions.crossbear.");
 	
+	// Load the AddonManager so it can be checked whether Convergence is installed and active
+	Components.utils.import("resource://gre/modules/AddonManager.jsm");
+	
+	// "this" does not always point to THIS object (especially in callback functions). Therefore I use the "self" variable to hold a handle on THIS object
+	var self = this;
+	
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
 	if (typeof (_cbfrontend_prototype_called) == 'undefined') {
 		_cbfrontend_prototype_called = true;
@@ -395,5 +401,13 @@ Crossbear.CBFrontend = function (cbServerName) {
 	// Activate Hunter and Protector if specified by the user
 	if(this.getUserPref("activateHunter", "bool"))this.activateHunter();
 	if(this.getUserPref("activateProtector", "bool"))this.activateProtector();
+	
+	// Check if Convergence is installed. If it is: deactivate Crossbear!  
+    AddonManager.getAddonByID("convergence@extension.thoughtcrime.org", function(addon) {  
+      if(addon != null && addon.isActive){
+    	  self.warnUserAboutBeingUnderAttack("You are running Convergence. Since Crossbear can not operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two Add-ons.", 0);
+    	  self.shutdown(true);
+      } 
+    });  
 	
 };
