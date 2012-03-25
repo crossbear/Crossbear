@@ -89,8 +89,45 @@ function bringToFrontAndCheckShutdown(forceWindowClose) {
 	bringToFront();
 };
 
-// Setting the default namespace for xmlToDOM to XUL
-default xml namespace = Namespace("xul", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
+/**
+ * Converts the textual representation of the judgment the Crossbear server sends into a XML representation
+ * 
+ * @param judgment The textual representation of the judgment (containing "\n"-characters and "<crit>"-tag)
+ * @returns The XML representation of the judgment
+ */
+function convertJudgmentToXML(judgment){
+	
+	// Wrap the judgment's XML in a paragraph
+	var judgmentXML = new XML("<p xmlns:html=\"http://www.w3.org/1999/xhtml\" />");
+	
+	// Split the textual representation to get the single judgments
+	var judgmentLines = judgment.split("\n");
+	
+	// Add all of the judgments to the judgment paragraph
+	for(var i = 0; i < judgmentLines.length; i++){
+		
+		// Between two consecutive judgments: add a linebreak
+		if(i != 0){
+			judgmentXML.appendChild(new XML("<html:br xmlns:html=\"http://www.w3.org/1999/xhtml\" />"));
+		}
+		
+		// Check if the current judgment is a critical one (i.e. if it is marked with the "<crit>"-tags)
+		if(Crossbear.startsWith(judgmentLines[i], "<crit>") && Crossbear.endsWith(judgmentLines[i], "</crit>")){
+			
+			// Add a critical judgment to the judgment paragraph (color:red and weight:bold)
+			judgmentXML.appendChild(<html:font color="red" xmlns:html="http://www.w3.org/1999/xhtml" ><html:b>{judgmentLines[i].substr(6,judgmentLines[i].length-13)}</html:b></html:font>);
+			
+		} else {
+			
+			// Add a normal judgment to the judgment paragraph
+			judgmentXML.appendChild(<>{judgmentLines[i]}</>);
+			
+		}
+	}
+
+	// Finally: return the judgment paragraph
+	return judgmentXML;
+};
 
 /**
  * Initialization function (called once when the dialog is about to display). This function sets all GUI-elements according to the window.arguments[0].inn-parameters and creates a timer that will periodically execute the bringToFrontAndCheckShutdown-function.
@@ -104,22 +141,17 @@ function onLoad() {
 	// Put the rating in the dialog's "server-reply"-box
 	document.getElementById('crossbear-serverReplyRating').value = window.arguments[0].inn.rating;
 
-	// Convert the judgment from Text-only to HTML
-	var contentHTML = window.arguments[0].inn.judgment.replace(/\n/g,"<html:br />").replace(/<crit>/g,"<html:font color=\"red\"><html:b>").replace(/<\/crit>/g,"</html:b></html:font>");
-	
-	// Put the judgment in the dialog's "server-reply"-box
-	var nodes = {};
-	var xml = new XML('<hbox xmlns:html="http://www.w3.org/1999/xhtml"><p style=" word-wrap: break-word;" >'+contentHTML+'</p></hbox>');
+	// Get the div that is used to display the judgment
 	var srd = document.getElementById("crossbear-serverReplyDiv");
-	var child = Crossbear.xmlToDOM(xml, document, nodes);
-	srd.appendChild(child);
-
-	// If the box became too big: Limit its width
+	
+	// Set the judgment text
+	var nodes = {};
+	srd.appendChild(Crossbear.xmlToDOM(convertJudgmentToXML(window.arguments[0].inn.judgment), document, nodes));
+	
+	// If the judgment div became too big: Limit its width
 	if(srd.offsetWidth>415){
-		srd.removeChild(child);
-		xml = new XML('<hbox xmlns:html="http://www.w3.org/1999/xhtml"><p  width=\"415px\" style=" word-wrap: break-word;" >'+contentHTML+'</p></hbox>');
-		srd.appendChild(Crossbear.xmlToDOM(xml, document, nodes));
-	}
+		srd.style.width = "415px";
+	} 
 
 	// Color the rating based on whether it is below or above the user's ratingToTrustAutomatically-value
 	if (window.arguments[0].inn.rating > window.arguments[0].inn.ratingToTrustAutomatically) {

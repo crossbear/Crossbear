@@ -89,8 +89,8 @@ Crossbear.CBTrustDecisionCache = function (cbFrontend) {
 	var self = this;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbtrustdecisioncache_prototype_called) == 'undefined') {
-		_cbtrustdecisioncache_prototype_called = true;
+	if (typeof (_crossbear_trustdecisioncache_prototype_called) == 'undefined') {
+		_crossbear_trustdecisioncache_prototype_called = true;
 
 		/**
 		 * Set the SHA256-hash value of the ONLY certificate that will be trusted on connections to the Crossbear server

@@ -56,8 +56,8 @@ import crossbear.CertificateManager;
  */
 public class CertVerifyRequest extends Message {
 
-	// Regex to validate Hostnames according to RFC 952 and RFC 1123
-	private static final String validHostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\\-]*[A-Za-z0-9])$";
+	// Regex to validate Hostnames according to RFC 952 and RFC 1123. Additionally it accepts host names containing "_"-characters which seem to be used e.g. by amazonaws.com
+	private static final String validHostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9_\\-]*[a-zA-Z0-9])\\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9_\\-]*[A-Za-z0-9])$";
 
 
 	/**

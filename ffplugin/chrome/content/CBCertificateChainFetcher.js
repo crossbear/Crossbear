@@ -53,8 +53,8 @@ Crossbear.CBCertificateChainFetcher = function (cbFrontend) {
 	var self = this;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbcertificatechainfetcher_prototype_called) == 'undefined') {
-		_cbcertificatechainfetcher_prototype_called = true;
+	if (typeof (_crossbear_certificatechainfetcher_prototype_called) == 'undefined') {
+		_crossbear_certificatechainfetcher_prototype_called = true;
 		
 		/**
 		 * Open the native libraries required to connect to a server and to get its certificate chain (nss3-library, ssl3-library and nspr4-library. All these are shipped with Firefox)

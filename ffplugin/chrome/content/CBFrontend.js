@@ -72,8 +72,8 @@ Crossbear.CBFrontend = function (cbServerName) {
 	var self = this;
 	
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbfrontend_prototype_called) == 'undefined') {
-		_cbfrontend_prototype_called = true;
+	if (typeof (_crossbear_frontend_prototype_called) == 'undefined') {
+		_crossbear_frontend_prototype_called = true;
 
 		/**
 		 * Display an exception caused by a technical failure
@@ -142,15 +142,15 @@ Crossbear.CBFrontend = function (cbServerName) {
 		/**
 		 * Warn the user that system might currently be under attack. This is currently done by displaying a WarnUserDlg
 		 * 
-		 * @param threat The message explaining the threat that the user is supposingly facing
+		 * @param warningXML The message explaining the threat that the user is supposingly facing (MUST be a XML object)
 		 * @param timeoutSec A Timeout parameter specifying how long the warning is minimally displayed
 		 */
-		Crossbear.CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(threat, timeoutSec) {
+		Crossbear.CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(warningXML, timeoutSec) {
 
 			// Build an object containing the parameters for the WarnUserDlg
 			var params = {
 				inn : {
-					threat : threat,
+					warningXML : warningXML,
 					timeoutSec : timeoutSec
 				},
 				out : {}
@@ -251,7 +251,7 @@ Crossbear.CBFrontend = function (cbServerName) {
 			// Check if Convergence is installed. If it is: deactivate Crossbear!  
 		    AddonManager.getAddonByID("convergence@extension.thoughtcrime.org", function(addon) {  
 		      if(addon != null && addon.isActive){
-		    	  self.warnUserAboutBeingUnderAttack("You are running Convergence. Since Crossbear can not operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two Add-ons.", 0);
+		    	  self.warnUserAboutBeingUnderAttack(new XML("<p>You are running Convergence. Since Crossbear can not operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two Add-ons.</p>"), 0);
 		    	  self.shutdown(true);
 		      } 
 		    });  

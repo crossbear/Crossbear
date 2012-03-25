@@ -489,7 +489,7 @@ public class CVRProcessor {
 		Pattern specialCharPat = Pattern.compile("([^a-zA-Z0-9])");
 		
 		// String that will when compiled as Regex match all non-special chars 
-		String validChars = "[a-zA-Z0-9-]*";
+		String validChars = "[a-zA-Z0-9-_]*";
 
 		for (int i = 0; i < domainPatterns.size(); i++) {
 

@@ -58,8 +58,8 @@ Crossbear.CBDatabase = function (cbFrontend) {
 	var self = this;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbdatabase_prototype_called) == 'undefined') {
-		_cbdatabase_prototype_called = true;
+	if (typeof (_crossbear_database_prototype_called) == 'undefined') {
+		_crossbear_database_prototype_called = true;
 
 		/**
 		 * Execute a SQL-statement without using a prepared statement and without reading its result.

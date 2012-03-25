@@ -55,8 +55,8 @@ Crossbear.CBProtector = function (cbFrontend) {
 	Components.utils.import("resource://gre/modules/FileUtils.jsm");
 	
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbprotector_prototype_called) == 'undefined') {
-		_cbprotector_prototype_called = true;
+	if (typeof (_crossbear_protector_prototype_called) == 'undefined') {
+		_crossbear_protector_prototype_called = true;
 
 		/**
 		 * This function check if the certificate that a connection uses should be trusted for that connection. If that is already known it cancels or accepts the connection.
@@ -423,7 +423,8 @@ Crossbear.CBProtector = function (cbFrontend) {
 			Crossbear.writeStringToFile(base64CertChain,tempFile);
 			
 			// Display the warning dialog to the user and ask him/her to send the certificate chain to the Crossbear-Team
-			cbFrontend.warnUserAboutBeingUnderAttack("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Don't visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style=\"text-decoration:underline\" href=\"mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&amp;body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+hostIPPort+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User\"> sending an email </html:a> to the Crossbear-Team.<html:br /><html:br />",5);
+			var emailLinkText = "mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+hostIPPort+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User";
+			cbFrontend.warnUserAboutBeingUnderAttack(<p xmlns:html="http://www.w3.org/1999/xhtml">The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Do not visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style="text-decoration:underline" href={emailLinkText}> sending an email </html:a> to the Crossbear-Team.<html:br /><html:br /></p>,5);
 			
 			// Cancel the connection attempt
 			channel.cancel(Components.results.NS_BINDING_SUCCEEDED);

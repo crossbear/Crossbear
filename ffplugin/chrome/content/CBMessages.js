@@ -93,8 +93,8 @@ Crossbear.CBMessagePublicIPNotif = function (rawData, ipVersion) {
 	this.publicIP = Crossbear.byteArrayIpToString(rawData.subarray(32));
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagepublicipnotif_prototype_called) == 'undefined') {
-		__cbmessagepublicipnotif_prototype_called = true;
+	if (typeof (_crossbear_messagepublicipnotif_prototype_called) == 'undefined') {
+		__crossbear_messagepublicipnotif_prototype_called = true;
 
 		/**
 		 * Getter-function for the message's IP-Version
@@ -139,8 +139,8 @@ Crossbear.CBMessageCurrentServerTime = function (rawData) {
 	this.currentServerTime = Crossbear.bytesToInt(rawData.subarray(0));
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagecurrentservertime_prototype_called) == 'undefined') {
-		_cbmessagecurrentservertime_prototype_called = true;
+	if (typeof (_crossbear_messagecurrentservertime_prototype_called) == 'undefined') {
+		_crossbear_messagecurrentservertime_prototype_called = true;
 
 		/**
 		 * Getter-function for the message's Current-Server-Time-field
@@ -195,8 +195,8 @@ Crossbear.CBMessageHuntingTask = function (rawData, ipVersion) {
 	this.AlreadyKnownHashes = null;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagehuntingtask_prototype_called) == 'undefined') {
-		_cbmessagehuntingtask_prototype_called = true;
+	if (typeof (_crossbear_messagehuntingtask_prototype_called) == 'undefined') {
+		_crossbear_messagehuntingtask_prototype_called = true;
 
 		/**
 		 * Getter-function for the message's TaskID-field
@@ -305,8 +305,8 @@ Crossbear.CBMessageCertVerifyResult = function (rawData) {
 	this.rating = null;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagecertverifyresult_prototype_called) == 'undefined') {
-		_cbmessagecertverifyresult_prototype_called = true;
+	if (typeof (_crossbear_messagecertverifyresult_prototype_called) == 'undefined') {
+		_crossbear_messagecertverifyresult_prototype_called = true;
 
 		/**
 		 * Getter-function for the message's Rating-field
@@ -364,8 +364,8 @@ Crossbear.CBMessageCertVerifyRequest = function (certChain, host, options) {
 	this.options = options;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagecertverifyrequest_prototype_called) == 'undefined') {
-		_cbmessagecertverifyrequest_prototype_called = true;
+	if (typeof (_crossbear_messagecertverifyrequest_prototype_called) == 'undefined') {
+		_crossbear_messagecertverifyrequest_prototype_called = true;
 
 		/**
 		 * Get the message's bytes 
@@ -410,8 +410,8 @@ Crossbear.CBMessagePublicIPNotifRequest = function (rsaEncAESKey) {
 	this.rsaEncAESKey = rsaEncAESKey;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagepublicipnotifrequest_prototype_called) == 'undefined') {
-		_cbmessagepublicipnotifrequest_prototype_called = true;
+	if (typeof (_crossbear_messagepublicipnotifrequest_prototype_called) == 'undefined') {
+		_crossbear_messagepublicipnotifrequest_prototype_called = true;
 
 		/**
 		 * Get the message's bytes 
@@ -463,8 +463,8 @@ Crossbear.CBMessageTaskReplyNewCertChain = function (taskID, serverTimeOfExecuti
 	this.trace = trace;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagetaskreplynewcertchain_prototype_called) == 'undefined') {
-		_cbmessagetaskreplynewcertchain_prototype_called = true;
+	if (typeof (_crossbear_messagetaskreplynewcertchain_prototype_called) == 'undefined') {
+		_crossbear_messagetaskreplynewcertchain_prototype_called = true;
 
 		/**
 		 * Get the message's bytes 
@@ -531,8 +531,8 @@ Crossbear.CBMessageTaskReplyKnownCertChain = function (taskID, serverTimeOfExecu
 	this.trace = trace;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbmessagetaskreplyknowncertchain_prototype_called) == 'undefined') {
-		_cbmessagetaskreplyknowncertchain_prototype_called = true;
+	if (typeof (_crossbear_messagetaskreplyknowncertchain_prototype_called) == 'undefined') {
+		_crossbear_messagetaskreplyknowncertchain_prototype_called = true;
 
 		/**
 		 * Get the message's bytes 

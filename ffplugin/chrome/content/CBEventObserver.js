@@ -61,8 +61,8 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 	observerService.addObserver(self, "private-browsing", false);
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbeventobserver_prototype_called) == 'undefined') {
-		_cbeventobserver_prototype_called = true;
+	if (typeof (_crossbear_eventobserver_prototype_called) == 'undefined') {
+		_crossbear_eventobserver_prototype_called = true;
 		
 		
 		
@@ -94,7 +94,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 				if (aData == "enter") { 
 					
 					// ... notify the user that he will no longer be protected by Crossbear
-					cbFrontend.warnUserAboutBeingUnderAttack("You entered the private-browsing mode. Crossbear will NOT protect you while you are using that mode!",0);
+					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You entered the private-browsing mode. Crossbear will NOT protect you while you are using that mode!</p>"),0);
 					
 					// ... deactivate the Protector, and
 					cbFrontend.deactivateProtector(false);
@@ -143,7 +143,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					
 					// Rise a warning! (except when the user disabled the protector or the warning)
 					if(!self.checkCBServerOnly && cbFrontend.getUserPref("protector.showRedirectWarning", "bool")){
-						cbFrontend.warnUserAboutBeingUnderAttack("You requested a SSL-secured resource but the server redirected you to an unsafe resource. You might be under attack!",0);
+						cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You requested a SSL-secured resource but the server redirected you to an unsafe resource. You might be under attack!</p>"),0);
 					}
 					return;
 				}
@@ -157,7 +157,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 						
 					// If not warn the user and cancel the connection
 					} else{
-						cbFrontend.warnUserAboutBeingUnderAttack("You tried to access a HTTPS-page using its IP-Address. This is strongly disencouraged and currently not supported by Crossbear.<html:br /><html:br /> If you want to go on you have to disable the Crossbear-Protector!",0);
+						cbFrontend.warnUserAboutBeingUnderAttack(new XML('<p xmlns:html="http://www.w3.org/1999/xhtml">You tried to access a HTTPS-page using its IP-Address. This is strongly disencouraged and currently not supported by Crossbear.<html:br /><html:br /> If you want to go on you have to disable the Crossbear-Protector!</p>'),0);
 						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
 						return;
 					}
@@ -170,7 +170,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					serverCert = aSubject.QueryInterface(Components.interfaces.nsIChannel).securityInfo.QueryInterface(Components.interfaces.nsISSLStatusProvider).SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus).serverCert;
 				} catch (e) {
 					// The server didn't send any certificate. Since this is very suspicious -> warn the user!
-					cbFrontend.warnUserAboutBeingUnderAttack("You requested a SSL-secured resource but the server didn't send any certificate! You might be under an attack!",5);
+					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You requested a SSL-secured resource but the server didn't send any certificate! You might be under an attack!</p>"),5);
 					cbFrontend.displayTechnicalFailure("CBEventObserver:observe: could not extract server certificate for "+host, false);
 					return;
 				}

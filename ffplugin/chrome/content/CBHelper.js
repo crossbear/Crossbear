@@ -596,12 +596,12 @@ if (typeof Crossbear == "undefined") {
 						libPaths.crossbearLib = uri.file.path;
 						crossbearLib.close();
 					} catch (e) {
-						cbFrontend.displayTechnicalFailure("getLibPaths: Failed to open crossbear-library", true);
+						cbFrontend.displayTechnicalFailure("getLibPaths: Failed to open crossbear-library - "+uri.file.path, true);
 					}
 					;
 
 				} else {
-					cbFrontend.displayTechnicalFailure("getLibPaths: Failed to open crossbear-library", true);
+					cbFrontend.displayTechnicalFailure("getLibPaths: Failed to open crossbear-library - no uri", true);
 				}
 
 			} else {
