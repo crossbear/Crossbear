@@ -65,9 +65,15 @@ Crossbear.CBFrontend = function (cbServerName) {
 	var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.crossbear.");
 	var defPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getDefaultBranch("extensions.crossbear.");
 	
+	// Load the AddonManager so it can be checked whether Convergence is installed and active
+	Components.utils.import("resource://gre/modules/AddonManager.jsm");
+	
+	// "this" does not always point to THIS object (especially in callback functions). Therefore I use the "self" variable to hold a handle on THIS object
+	var self = this;
+	
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbfrontend_prototype_called) == 'undefined') {
-		_cbfrontend_prototype_called = true;
+	if (typeof (_crossbear_frontend_prototype_called) == 'undefined') {
+		_crossbear_frontend_prototype_called = true;
 
 		/**
 		 * Display an exception caused by a technical failure
@@ -136,15 +142,15 @@ Crossbear.CBFrontend = function (cbServerName) {
 		/**
 		 * Warn the user that system might currently be under attack. This is currently done by displaying a WarnUserDlg
 		 * 
-		 * @param threat The message explaining the threat that the user is supposingly facing
+		 * @param warningXML The message explaining the threat that the user is supposingly facing (MUST be a XML object)
 		 * @param timeoutSec A Timeout parameter specifying how long the warning is minimally displayed
 		 */
-		Crossbear.CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(threat, timeoutSec) {
+		Crossbear.CBFrontend.prototype.warnUserAboutBeingUnderAttack = function warnUserAboutBeingUnderAttack(warningXML, timeoutSec) {
 
 			// Build an object containing the parameters for the WarnUserDlg
 			var params = {
 				inn : {
-					threat : threat,
+					warningXML : warningXML,
 					timeoutSec : timeoutSec
 				},
 				out : {}
@@ -225,6 +231,32 @@ Crossbear.CBFrontend = function (cbServerName) {
 				this.displayTechnicalFailure("CBFrontend:setUserPref: An error occured while setting "+name+"("+type+") to "+value+": " + e, true);
 			}
 		};
+		
+		/**
+		 * Startup Crossbear
+		 */
+		Crossbear.CBFrontend.prototype.startup = function startup() {
+			
+			// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBTrustDecisionCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
+			this.ServerRSAKeyPair = Crossbear.loadCBCertAndAddToCache(this.cbtrustdecisioncache);
+			
+			// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
+			this.cbhunter.init();
+			
+			
+			// Activate Hunter and Protector if specified by the user
+			if(this.getUserPref("activateHunter", "bool"))this.activateHunter();
+			if(this.getUserPref("activateProtector", "bool"))this.activateProtector();
+			
+			// Check if Convergence is installed. If it is: deactivate Crossbear!  
+		    AddonManager.getAddonByID("convergence@extension.thoughtcrime.org", function(addon) {  
+		      if(addon != null && addon.isActive){
+		    	  self.warnUserAboutBeingUnderAttack(new XML("<p>You are running Convergence. Since Crossbear can not operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two Add-ons.</p>"), 0);
+		    	  self.shutdown(true);
+		      } 
+		    });  
+			
+		};
 
 		/**
 		 * Shutdown Crossbear
@@ -242,8 +274,6 @@ Crossbear.CBFrontend = function (cbServerName) {
 				// Deactivate the Protector
 				this.deactivateProtector(systemCrashed);
 				
-				// Perform a clean shutdown of the Protector
-				this.cbeventobserver.shutdownProtector();
 				
 				// Deactivate the Hunter
 				this.deactivateHunter(systemCrashed);
@@ -382,18 +412,8 @@ Crossbear.CBFrontend = function (cbServerName) {
 			
 		};
 	}
-
-	// Add Crossbear's certificate to the local keystore (required in order to allow http connections to it) and tell it to the CBTrustDecisionCache. Then store it's public key in the ServerRSAKeyPair-variable for later use
-	this.ServerRSAKeyPair = Crossbear.loadCBCertAndAddToCache(this.cbtrustdecisioncache);
 	
-	// Initialize the hunter (should always be initialized in order to be able to process piggy-backed HuntingTasks of CertVerifyResponses)
-	this.cbhunter.init();
-	
-	// Initialize the protector (needs to be active to check at least the connections to the Crossbear server)
-	this.cbeventobserver.initProtector();
-	
-	// Activate Hunter and Protector if specified by the user
-	if(this.getUserPref("activateHunter", "bool"))this.activateHunter();
-	if(this.getUserPref("activateProtector", "bool"))this.activateProtector();
+	// Startup the Crossbear system
+	this.startup();
 	
 };

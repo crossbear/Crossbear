@@ -233,7 +233,7 @@ public class CertificateManager {
 
 		// The trusted-CAs' keystore is located inside the JAVA-Home directory - get it's path
 		/* 
-		 * TODO: swap Java Root Store for Mozilla Root Store that is up-to-date
+		 * TODO: swap Java Root Store for Mozilla Root Store that is up-to-date (as it is done in the current installation)
 		 */
 		String filename = System.getProperty("java.home") + "/lib/security/cacerts".replace('/', File.separatorChar);
 

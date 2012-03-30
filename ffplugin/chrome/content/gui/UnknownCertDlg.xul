@@ -45,8 +45,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   buttons="accept,cancel"
   buttonlabelcancel="Don't Trust"
   buttonlabelaccept="Trust"
-  ondialogaccept="return setTrust(1);"
-  ondialogcancel="return setTrust(0);"
+  ondialogaccept="return setTrust(true);"
+  ondialogcancel="return setTrust(false);"
   onload="onLoad();">
   
   <!-- Include scripts -->

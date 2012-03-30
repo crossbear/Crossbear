@@ -65,7 +65,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			<!-- Warning Text -->
 			<box orient="vertical" pack="start" align="start" flex="1" >
 				<label value="Crossbear detected a potential security threat for your system:" style="text-decoration: underline;font-weight:bold;color:#FFFFFF;margin-left:-2px;"/>
-				<html:div id="crossbear-warning-text-div" type="content" />
+					
+				<html:div style="color:#FFFFFF; width: 350px; word-wrap: break-word;" id="crossbear-warning-text-div" />
 			</box>
 			
 			<!-- Confirm button -->

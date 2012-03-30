@@ -51,8 +51,8 @@ Crossbear.CBHunter = function (cbFrontend) {
 	var self = this;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbhunter_prototype_called) == 'undefined') {
-		_cbhunter_prototype_called = true;
+	if (typeof (_crossbear_hunter_prototype_called) == 'undefined') {
+		_crossbear_hunter_prototype_called = true;
 
 		/**
 		 * Initialize the CBHunter and the CBHunterWorkerThread
@@ -242,7 +242,7 @@ Crossbear.CBHunter = function (cbFrontend) {
 					
 					// If somebody tampered with the data: Warn the user!
 					if (!Crossbear.arrayCompare(supposedHash, actualHash)) {
-						cbFrontend.warnUserAboutBeingUnderAttack("Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.",5);
+						cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.</p>"),5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: received invalid input: "+plaintext+supposedHash+":"+actualHash, true);
 						return;
 					}
@@ -344,7 +344,7 @@ Crossbear.CBHunter = function (cbFrontend) {
 						
 					// If it's neither then something went wrong
 					} else {
-						cbFrontend.warnUserAboutBeingUnderAttack("Your DNS server generates generates invalid DNS entries: "+currentAddr,5);
+						cbFrontend.warnUserAboutBeingUnderAttack(<p>Your DNS server generates generates invalid DNS entries: {currentAddr}</p>,5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receiveCBServerIPs: parsing DNS entry failed: "+currentAddr, true);
 					}
 				}

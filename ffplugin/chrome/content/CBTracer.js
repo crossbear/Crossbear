@@ -59,8 +59,8 @@ Crossbear.CBTracer = function (cbFrontend) {
 	var self = this;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbtracer_prototype_called) == 'undefined') {
-		_cbtracer_prototype_called = true;
+	if (typeof (_crossbear_tracer_prototype_called) == 'undefined') {
+		_crossbear_tracer_prototype_called = true;
 		
 		/**
 		 * Open the native libraries required to perform the Traceroute (lib-c on unix/linux and crossbear.dll on windows)

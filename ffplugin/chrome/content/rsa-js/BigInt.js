@@ -168,7 +168,7 @@ Crossbear.RSA.BigInt.charToHex = function (c)
 	var littleZ = littleA + 25;
 	var bigA = 65;
 	var bigZ = 65 + 25;
-	var result;
+	var result = 0;
 
 	if (c >= ZERO && c <= NINE) {
 		result = c - ZERO;
@@ -223,7 +223,7 @@ Crossbear.RSA.BigInt.biFromString = function (s, radix)
 
 Crossbear.RSA.BigInt.biAdd = function (x, y)
 {
-	var result;
+	var result = null;
 
 	if (x.isNeg != y.isNeg) {
 		y.isNeg = !y.isNeg;
@@ -246,7 +246,7 @@ Crossbear.RSA.BigInt.biAdd = function (x, y)
 
 Crossbear.RSA.BigInt.biSubtract = function (x, y)
 {
-	var result;
+	var result = null;
 	if (x.isNeg != y.isNeg) {
 		y.isNeg = !y.isNeg;
 		result = Crossbear.RSA.BigInt.biAdd(x, y);
@@ -329,7 +329,7 @@ Crossbear.RSA.BigInt.biMultiplyDigit = function (x, y)
 {
 	var n, c, uv;
 
-	result = new Crossbear.RSA.BigInt.BigInt();
+	var result = new Crossbear.RSA.BigInt.BigInt();
 	n = Crossbear.RSA.BigInt.biHighIndex(x);
 	c = 0;
 	for (var j = 0; j <= n; ++j) {

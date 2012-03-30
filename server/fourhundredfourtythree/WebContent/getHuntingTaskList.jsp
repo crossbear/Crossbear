@@ -87,8 +87,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		* 
 		* It is assembled here.
 		*/
-		MessageList reply = MessageList.getCurrentHuntingTaskList(cacheValidity, db);
-		reply.add(new PublicIPNotification(InetAddress.getByName(request.getRemoteAddr()), db));
+		InetAddress remoteIP = InetAddress.getByName(request.getRemoteAddr());
+		MessageList reply = MessageList.getCurrentHuntingTaskList(remoteIP, cacheValidity, db);
+		reply.add(new PublicIPNotification(remoteIP, db));
 		reply.add(new CurrentServerTime());
 
 		//Send the Hunting Task List to the client

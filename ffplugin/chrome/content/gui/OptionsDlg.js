@@ -47,7 +47,15 @@ function onLoad() {
 
 	// Load the protector.tdcValidity-setting and set its GUI equivalent
 	document.getElementById("crossbear-opt-tdc-validity").value = window.arguments[0].inn.cbFrontend.getUserPref("protector.tdcValidity", "int");
-
+	
+	// Load the protector.showRedirectWarning-setting and set its GUI equivalent
+	if(window.arguments[0].inn.cbFrontend.getUserPref("protector.showRedirectWarning", "bool")){
+		document.getElementById("crossbear-opt-redirect-warning").selectedIndex = 0;
+	}
+	else {
+		document.getElementById("crossbear-opt-redirect-warning").selectedIndex = 1;
+	}
+	
 	// Load the hunter.huntingInterval-setting and set its GUI equivalent
 	document.getElementById("crossbear-opt-hunting-interval").value = window.arguments[0].inn.cbFrontend.getUserPref("hunter.huntingInterval", "int");
 
@@ -86,6 +94,14 @@ function loadDefaults() {
 	// Load the default value of the protector.tdcValidity-setting and set its GUI equivalent
 	document.getElementById("crossbear-opt-tdc-validity").value =  window.arguments[0].inn.cbFrontend.getDefaultPref("protector.tdcValidity", "int");
 
+	// Load the default value of the protector.showRedirectWarning-setting and set its GUI equivalent
+	if(window.arguments[0].inn.cbFrontend.getDefaultPref("protector.showRedirectWarning", "bool")){
+		document.getElementById("crossbear-opt-redirect-warning").selectedIndex = 0;
+	}
+	else {
+		document.getElementById("crossbear-opt-redirect-warning").selectedIndex = 1;
+	}
+	
 	// Load the default value of the hunter.huntingInterval-setting and set its GUI equivalent
 	document.getElementById("crossbear-opt-hunting-interval").value = window.arguments[0].inn.cbFrontend.getDefaultPref("hunter.huntingInterval", "int");
 
@@ -121,6 +137,9 @@ function accept() {
 	// Read the protector.tdcValidity from its GUI equivalent and store it
 	window.arguments[0].inn.cbFrontend.setUserPref("protector.tdcValidity", "int", document.getElementById("crossbear-opt-tdc-validity").value);
 
+	// Read the protector.showRedirectWarning from its GUI equivalent and store it
+	window.arguments[0].inn.cbFrontend.setUserPref("protector.showRedirectWarning", "bool",document.getElementById("crossbear-opt-redirect-warning-yes").selected);
+	
 	// Read the hunter.huntingInterval from its GUI equivalent and store it
 	window.arguments[0].inn.cbFrontend.setUserPref("hunter.huntingInterval", "int", document.getElementById("crossbear-opt-hunting-interval").value);
 

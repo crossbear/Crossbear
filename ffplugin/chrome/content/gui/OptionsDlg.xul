@@ -78,6 +78,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <label value="Trust Decision Cache"/>
 	<button flex="1" label="Show" width="200" onclick="var params = {inn : {cbFrontend : window.arguments[0].inn.cbFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalTDCDlg.xul', 'Crossbear - Local Trust Decision Cache', 'chrome,centerscreen,dialog=YES', params);"/> 
 
+    <separator orient="horizontal" class="groove-thin"/>
+    
+    <!-- Radio Buttons for the redirect warning option -->
+    <label value="Show Redirect Warning"/>
+    <radiogroup orient="horizontal" id="crossbear-opt-redirect-warning">   
+     <radio label="YES" id="crossbear-opt-redirect-warning-yes"/>  
+     <radio label="NO" id="crossbear-opt-redirect-warning-no"/>  
+    </radiogroup> 
+
   </groupbox>
   
   <!-- Right Group: The Hunter's preferences -->

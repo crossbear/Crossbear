@@ -113,8 +113,8 @@ Crossbear.CBMiniFrontend = function () {
 	
 	
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbminifrontend_prototype_called) == 'undefined') {
-		_cbminifrontend_prototype_called = true;
+	if (typeof (_crossbear_minifrontend_prototype_called) == 'undefined') {
+		_crossbear_minifrontend_prototype_called = true;
 
 	/**
 	 * Send a CBHunterWorkerError-event to the CBHunter which will relay its content to the CBFronend.displayTechnicalFailure-function

@@ -28,6 +28,7 @@
 package crossbear.messaging;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -76,8 +77,9 @@ public class MessageList {
 	}
 
 	/**
-	 * Get the current HuntingTaskList and return it as MessageList. This function first attempts to load the HTL from the local cache and if that fails it generates a new one and stores it in the cache.
+	 * Get the current HuntingTaskList and return it as MessageList. This function first attempts to load the HTL from the local cache and if that fails it generates a new one and stores it in the cache. Additionally it stores the IP of the requester in the database for statistical analysis.
 	 * 
+	 * @param requesterIP IP address of the machine that requested the HuntingTaskList (will be stored for statistical analysis)
 	 * @param validity The validity that will be given to the HuntingTaskList if it is newly generated and added to the local cache
 	 * @param db The Database connection to use
 	 * @return The current HuntingTaskList as MessageList
@@ -88,8 +90,12 @@ public class MessageList {
 	 * @throws IOException
 	 * @throws CertificateEncodingException
 	 */
-	public static MessageList getCurrentHuntingTaskList( long validity, Database db) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, IOException, CertificateEncodingException {
+	public static MessageList getCurrentHuntingTaskList( InetAddress requesterIP, long validity, Database db) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, IOException, CertificateEncodingException {
 
+		// Remember the fact that somebody requested the Hunting Task list
+		Object[] params = { requesterIP.getHostAddress(), new Timestamp(System.currentTimeMillis()) };
+		db.executeInsert("INSERT INTO HuntingTaskRequests (RequestingIP,TimeOfRequest) VALUES (?,?)", params);
+		
 		// Create a new MessageList
 		MessageList ml = new MessageList();
 		

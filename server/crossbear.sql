@@ -45,3 +45,6 @@ INSERT INTO ConvergenceNotaries(HostPort, CertID) VALUES ('notary.thoughtcrime.o
 CREATE TABLE ConvergenceCertObservations(ServerHostPort VARCHAR(2048), SHA1Hash CHAR(40), FirstObservation TIMESTAMP, LastObservation TIMESTAMP, LastUpdate TIMESTAMP, PRIMARY KEY(ServerHostPort, SHA1Hash));
 CREATE INDEX CCOHostName ON ConvergenceCertObservations (ServerHostPort);
 CREATE INDEX CCOSHA1 ON ConvergenceCertObservations (SHA1Hash);
+
+
+CREATE TABLE HuntingTaskRequests(Id BIGSERIAL, RequestingIP VARCHAR(40), TimeOfRequest TIMESTAMP, PRIMARY KEY (Id));

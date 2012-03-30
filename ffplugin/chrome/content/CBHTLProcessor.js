@@ -53,8 +53,8 @@ Crossbear.CBHTLProcessor = function (cbFrontend) {
 	var self = this;
 
 	// Initialize the member function references for the class prototype (like this it's only done once and not every time a instance of this object is created)
-	if (typeof (_cbhtlprocessor_prototype_called) == 'undefined') {
-		_ccbhtlprocessor_prototype_called = true;
+	if (typeof (_crossbear_htlprocessor_prototype_called) == 'undefined') {
+		_crossbear_htlprocessor_prototype_called = true;
 		
 		/**
 		 * Request the current HuntingTaskList from the Crossbear server using parseHuntingTaskList as callback-function (i.e. parseHuntingTaskList will parse the HuntingTaskList after it is received)

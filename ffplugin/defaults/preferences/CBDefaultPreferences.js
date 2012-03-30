@@ -14,3 +14,4 @@ pref("extensions.crossbear.protector.tdcValidity", 604800);
 pref("extensions.crossbear.protector.trustAutomatically", true);
 pref("extensions.crossbear.protector.ratingToTrustAutomatically", 100);
 
+pref("extensions.crossbear.protector.showRedirectWarning", true);
