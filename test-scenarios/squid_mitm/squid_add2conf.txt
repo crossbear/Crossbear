@@ -1,0 +1,22 @@
+# See SQUID's official homepage which provides detailed documentation
+# Add the following lines to squid.conf to configure it for MitM-ing HTTPs connections
+# ("everything except connections to Crossbear server at TUM)
+
+# Use the IP addresses as indicated in attack-scenario.pdf
+
+# add to squid.conf:
+# Ignore all certificate warnings and errors
+sslproxy_cert_error allow all
+
+# Disable accelerator mode
+always_direct allow all
+
+# Do not intercept Crossbear
+acl crossbear dstdomain crossbear.net.in.tum.de
+ssl_bump deny crossbear
+
+# Incercept all others
+ssl_bump allow all
+
+# Activate a MitM-ing proxy that uses a signing certificate
+http_port 3129 ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=4MB cert=/home/YOURUSER/trusted.pem key=/home/YOURUSER/trusted.pem

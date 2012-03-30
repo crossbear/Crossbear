@@ -1,0 +1,57 @@
+This tarball contains the files and instructions to set up two 
+scenarios to test Crossbear's functionality. The second one
+is actually the easier one, but the first one is the more
+"interesting" one.
+
+Before you start: install the Crossbear XPI on all hosts that 
+you intend to use. We recommend taking the version 
+from https://github.com/crossbear/Crossbear.
+
+1) poisoned_access_point:
+Idea: Forging a rogue wireless access point.
+Goal: detect rogue certificate, get warning, create hunting task.
+section_6.1.pdf explains the idea of the setup. sslsniff is provided
+together with instructions (commands...) to set it up. You really
+need the following hosts:
+- victim server
+- victim client, attached to router via attacker
+- hunter, attached to router
+- router
+- attacker between victim client and router.
+
+On your attacker:
+Create a directory of your liking, put the my.hypovereinsbank.de.crt 
+there and replace the path /home/YOURUSER/certs with the directory's 
+name.
+On the attacker: Execute the commands in commands_to_execute to stage
+the attack. 
+
+On the client: In your /etc/hosts, put an entry for my.hypovereinsbank.de.
+
+Use Wireshark to watch network traffic.
+Access my.hypovereinsbank.de. with the client.
+
+
+
+
+2) squid_mitm:
+Idea: Using a Squid proxy that does a MitM against the Crossbear server.
+Goal: Let client detect MitMed connection to Crossbear server
+
+section_6.2.pdf explains the idea of the setup. You need:
+- victim
+- attacker
+- server
+
+On the attacker: install Squid and edit the squid.conf. You find what you
+need in squid_add2conf.txt Again, create a directory of your liking and 
+give it the path (YOURUSER/...). Put the trusted.pem there. You're good
+to go.
+
+
+
+
+
+PS:
+The folder ca contains more certificates that you may find helpful in 
+your testing.

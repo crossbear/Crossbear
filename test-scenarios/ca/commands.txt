@@ -1,0 +1,5 @@
+openssl req -config openssl.cnf -new -nodes -keyout lipari.net.in.tum.de.key -out lipari.net.in.tum.de.csr -days 365
+
+
+openssl ca -config openssl.cnf -policy policy_anything -out lipari.net.in.tum.de.crt -infiles lipari.net.in.tum.de.csr
+
