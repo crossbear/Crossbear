@@ -1,0 +1,1 @@
+UPDATE huntingtasks AS t SET active = FALSE WHERE ( (SELECT COUNT(trace) FROM huntingtaskresults r, huntingtasks h WHERE r.huntingtaskid = h.id AND r.huntingtaskid = t.id) > 30 ) OR (localtimestamp - t.timeofcreation > '3d');
