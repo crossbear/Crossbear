@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/eighty"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/fourhundredfourtythree"/>
+	<classpathentry kind="lib" path="D:/Eigene Dateien/Dokumente/porn/FS11/MA/crossbear/server/eighty/WebContent/WEB-INF/lib/bcprov-jdk16-146.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
