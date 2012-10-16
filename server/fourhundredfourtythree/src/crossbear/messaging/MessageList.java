@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Thomas Riedmaier, TU München
+ * Copyright (c) 2011, Thomas Riedmaier, TU MÃ¼nchen
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
