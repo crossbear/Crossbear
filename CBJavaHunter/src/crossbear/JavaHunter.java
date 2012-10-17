@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2011, Thomas Riedmaier, TU MÃ¼nchen
+* Copyright (c) 2011, Thomas Riedmaier, TU München
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -87,24 +87,24 @@ public class JavaHunter {
 	 */
 	public static void main(String[] args) throws Exception {
 
-		/*
-		* Adding the bouncy castle Security Provider is required for the use of 
-		* - "SHA256"-HMAC
-		* - "AES/CBC/PKCS7Padding"-Symmetric Encryption
-		* - "RSA/None/OAEPWithSHA1AndMGF1Padding"-Asymmetric Encryption
-		* all of these are used in Crossbear.
-		*/
-		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-
-		// Create a new JavaHunter that will contact the Crossbear-Server using a specific domain and execute the HuntingTasks using the given Traceroute-parameters
-		JavaHunter jh = new JavaHunter("crossbear.net.in.tum.de",20,5);
-		
-		// Fetch the HuntingTask-List from the Crossbear-Server and parse it
-		jh.getAndParseHTL();
-
-		// Execute the HuntingTask-List and send the generated results to the Crosbear-Server
-		jh.executeHTL();
-
+	    /*
+	     * Adding the bouncy castle Security Provider is
+	     * required for the use of - "SHA256"-HMAC -
+	     * "AES/CBC/PKCS7Padding"-Symmetric Encryption -
+	     * "RSA/None/OAEPWithSHA1AndMGF1Padding"-Asymmetric
+	     * Encryption all of these are used in Crossbear.
+	     */
+	    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+	    
+	    // Create a new JavaHunter that will contact the Crossbear-Server using a specific domain and execute the HuntingTasks using the given Traceroute-parameters
+	    JavaHunter jh = new JavaHunter("crossbear.net.in.tum.de",20,5);
+	    
+	    // Fetch the HuntingTask-List from the Crossbear-Server and parse it
+	    jh.getAndParseHTL();
+	    
+	    // Execute the HuntingTask-List and send the generated results to the Crosbear-Server
+	    jh.executeHTL();
+	    
 	}
 
 	/**
