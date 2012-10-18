@@ -1,5 +1,7 @@
 Crossbear - crossbear@pki.net.in.tum.de
 =======================================
+Also see https://pki.net.in.tum.de.
+
 
 Supported systems:
 * Windows: probably all versions from Windows XP onwards
@@ -14,14 +16,18 @@ Team:
 Thomas Riedmaier
 Ralph Holz
 
-Licensing: Crossbear code is GPLv3 - see notice contained in every source
-file. However, some components we redistribute (e.g. Java Cryptography 
-Extension (JCE) Unlimited Strength Jurisdiction Policy Files 7 - blame 
-Oracle for the length of the name) are protected by other licenses (in the
-given example, Oracle's "Oracle Binary Code License Agreement for the Java 
-SE Platform Products" (again, blame Oracle for the length of the name).
+Licensing: Crossbear code is GPLv3 - see notice contained in every
+source file. However, some components we redistribute (e.g. Java
+Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy
+Files 7 - blame Oracle for the length of the name) are protected by
+other licenses (in the given example, Oracle's "Oracle Binary Code
+License Agreement for the Java SE Platform Products" (again, blame
+Oracle for the length of the name). See the appropriate source code
+files - the corresponding license is stored in the respective
+directory.
 
-(also see pki.net.in.tum.de)
+
+
 
 Good day. Let us introduce ourselves: we are researchers at Technische
 Universität München, Germany.
