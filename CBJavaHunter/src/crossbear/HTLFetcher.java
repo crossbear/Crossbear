@@ -45,7 +45,7 @@ public class HTLFetcher {
 
 	
 	/**
-	 * Extracts one Crossbear of the following Crossbear-Messages from an InputStream:
+	 * Extracts one of the following Crossbear-Messages from an InputStream:
 	 * - MESSAGE_TYPE_PUBLIC_IP_NOTIFX
 	 * - MESSAGE_TYPE_CURRENT_SERVER_TIME
 	 * - MESSAGE_TYPE_IPVX_SHA256_TASK
