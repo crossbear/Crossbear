@@ -1,0 +1,35 @@
+Preparations
+============
+
+You will need JDK 7.
+
+Your JVM must be adjusted to run the Java Hunters properly: 
+UnlimitedJCEPolicy has to be installed - unzip the files contained therein
+and place in the correct locations for your OS (a quick Google check
+will give you those). E.g., on a Linux it might be
+
+/usr/java/jdk1.7.0_07/jre/lib/security/
+
+Finally, "jdk.certpath.disabledAlgorithms" in java.security has to be 
+set to "BLABLABLA" (same location).
+
+
+Compiling
+=========
+The key to compiling everything is to compile step by step:
+first server/fourhundredfortythree (including the code in com.google),
+server/eighty, finally CBJavaHunter.
+
+You will need to set up your CLASSPATH to include, assuming $BASE as 
+the directory where you store Crossbear:
+
+$BASE/server/fourhundredfourtythree/src/crossbear
+$BASE/server/fourhundredfourtythree/WebContent/WEB-INF/lib/bcprov-jdk16-146.jar
+$BASE/server/fourhundredfourtythree/WebContent/WEB-INF/lib/json_simple-1.1.jar
+$BASE/server/eighty/src
+
+
+Running
+=======
+
+Simply do "java JavaHunter".
