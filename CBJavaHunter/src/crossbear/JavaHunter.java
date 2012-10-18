@@ -49,7 +49,12 @@ import javax.naming.NamingException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
+
 import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.LogRecord;
 
 import crossbear.messaging.CurrentServerTime;
 import crossbear.messaging.HuntingTask;
@@ -72,9 +77,20 @@ public class JavaHunter {
     // The duration in seconds that a PublicIP will be considered as unchanged (after that duration the current PublicIP will be requested)
     private final static int pipCacheValidity = 60000;
     
-    private final static Logger logger = Logger.getLogger(JavaHunter.class.getName());
-    private static FileHandler fh = new FileHandler("JavaHunter.log");
-	
+    private static Logger logger = null;
+    private static FileHandler fh = null;	
+
+    /* 
+       This is the most stupid and yet necessary work-around just because SimpleFormatter won't let you choose to write each log entry to a
+       single line
+    */
+    static private class MyFormatter extends SimpleFormatter {
+	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+	public String format(LogRecord record) {
+	    return new java.util.Date() + " " + record.getLevel() + " " + record.getMessage() + LINE_SEPARATOR;
+        }
+    }
+
     /**
      * Download the current HuntingTask-List from the Crossbear-Server, execute it and send the results back to the server
      * 
@@ -91,6 +107,22 @@ public class JavaHunter {
 	 * Encryption all of these are used in Crossbear.
 	 */
 	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+	logger = Logger.getLogger(JavaHunter.class.getName());
+	logger.setLevel(Level.INFO);
+	
+	try {
+	    FileHandler fh = new FileHandler("JavaHunter.log", true);
+	    MyFormatter sf = new MyFormatter();
+	    // sf.format("%4$s: %5$s [%1$tc]%n");
+	    fh.setFormatter(sf);
+	    logger.addHandler(fh);
+	}
+	catch (Exception e) {
+	    System.err.println("Could not allocate file handler for logging. Exiting.");
+	    System.err.println(e);
+	    System.exit(-1);
+	}
 	
 	// Create a new JavaHunter that will contact the Crossbear-Server using a specific domain and execute the HuntingTasks using the given Traceroute-parameters
 	JavaHunter jh = new JavaHunter("crossbear.net.in.tum.de",20,5);
@@ -205,7 +237,15 @@ public class JavaHunter {
 		this.cbServerHostName = cbServerHostName;
 
 		// Load the certificate of the Crossbear-Server from the local file system
-		X509Certificate cbServerCert = CertificateManager.loadCertificateFromFile("cbserver.crt");
+		X509Certificate cbServerCert = null;
+		try {
+		    cbServerCert = CertificateManager.loadCertificateFromFile("../cbserver.crt");
+		}
+		catch (Exception e) {
+		    logger.severe("Could not find Crossbear server certificate. Exiting.");
+		    System.err.println("Could not find Crossbear server certificate. Exiting.");
+		    System.exit(-1);
+		}
 
 		// Calculate the SHA256-Hash of the Crossbear-certificate and store it
 		this.cbServerCertHash = CertificateManager.SHA256(cbServerCert.getEncoded());
