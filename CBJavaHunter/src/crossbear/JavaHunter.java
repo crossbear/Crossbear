@@ -53,8 +53,6 @@ import javax.net.ssl.TrustManager;
 import java.util.logging.Logger;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
-import java.util.logging.SimpleFormatter;
-import java.util.logging.LogRecord;
 
 import crossbear.messaging.CurrentServerTime;
 import crossbear.messaging.HuntingTask;
@@ -78,18 +76,7 @@ public class JavaHunter {
     private final static int pipCacheValidity = 60000;
     
     private static Logger logger = null;
-    private static FileHandler fh = null;	
-
-    /* 
-       This is the most stupid and yet necessary work-around just because SimpleFormatter won't let you choose to write each log entry to a
-       single line
-    */
-    static private class MyFormatter extends SimpleFormatter {
-	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-	public String format(LogRecord record) {
-	    return new java.util.Date() + " " + record.getLevel() + " " + record.getMessage() + LINE_SEPARATOR;
-        }
-    }
+    private static FileHandler fh = null;
 
     /**
      * Download the current HuntingTask-List from the Crossbear-Server, execute it and send the results back to the server
@@ -113,9 +100,8 @@ public class JavaHunter {
 	
 	try {
 	    FileHandler fh = new FileHandler("JavaHunter.log", true);
-	    MyFormatter sf = new MyFormatter();
-	    // sf.format("%4$s: %5$s [%1$tc]%n");
-	    fh.setFormatter(sf);
+	    LoglineFormatter llf = new LoglineFormatter();
+	    fh.setFormatter(llf);
 	    logger.addHandler(fh);
 	}
 	catch (Exception e) {
