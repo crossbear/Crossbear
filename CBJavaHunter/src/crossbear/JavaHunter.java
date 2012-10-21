@@ -95,7 +95,7 @@ public class JavaHunter {
 	 */
 	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
-	logger = Logger.getLogger(JavaHunter.class.getName());
+	logger = Logger.getLogger("JavaHunter");
 	logger.setLevel(Level.INFO);
 	
 	try {
@@ -112,9 +112,18 @@ public class JavaHunter {
 	
 	// Create a new JavaHunter that will contact the Crossbear-Server using a specific domain and execute the HuntingTasks using the given Traceroute-parameters
 	JavaHunter jh = new JavaHunter("crossbear.net.in.tum.de",20,5);
+	logger.info("Started up JavaHunter.");
 	
 	// Fetch the HuntingTask-List from the Crossbear-Server and parse it
-	jh.getAndParseHTL();
+	try {
+	    jh.getAndParseHTL();
+	}
+	catch (Exception e) {
+	    logger.log(Level.SEVERE, "Could not get HTL from Crossbear server. Exception trace follows. Quitting.", e);
+	    System.err.println("Could not get HTL from Crossbear server. Exception trace follows. Quitting.");
+	    System.err.println(e);
+	    System.exit(-1);
+	}
 	
 	// Execute the HuntingTask-List and send the generated results to the Crosbear-Server
 	jh.executeHTL();
@@ -368,53 +377,53 @@ public class JavaHunter {
 		
 	}
 
-	/**
-	 * Download the HuntingTask-List from the Crossbear-Server and parse it. Parsing in this context means:
-	 * - Store the contained CurrentServerTime-message in the global cst-variable
-	 * - Store the contained PublicIPNotification-message in the suitable global pipX-variable (and update its freshness-timestamp)
-	 * - Store the contained HuntingTasks in the global hts-list
-	 * 
-	 * @throws CertificateException
-	 * @throws NoSuchAlgorithmException
-	 * @throws KeyManagementException
-	 * @throws IOException
-	 */
-	private void getAndParseHTL() throws CertificateException, NoSuchAlgorithmException, KeyManagementException, IOException {
-
-		// Download the HuntingTask-List from the Crossbear-Server
-		LinkedList<Message> htl = htlfetcher.getHTLFromServer();
-
-		// Iterate over all Messages of the HTL
-		Iterator<Message> mIt = htl.iterator();
-		while (mIt.hasNext()) {
+    /**
+     * Download the HuntingTask-List from the Crossbear-Server and parse it. Parsing in this context means:
+     * - Store the contained CurrentServerTime-message in the global cst-variable
+     * - Store the contained PublicIPNotification-message in the suitable global pipX-variable (and update its freshness-timestamp)
+     * - Store the contained HuntingTasks in the global hts-list
+     * 
+     * @throws CertificateException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyManagementException
+     * @throws IOException
+     */
+    private void getAndParseHTL() throws CertificateException, NoSuchAlgorithmException, KeyManagementException, IOException {
+	
+	// Download the HuntingTask-List from the Crossbear-Server
+	LinkedList<Message> htl = htlfetcher.getHTLFromServer();
+		
+	// Iterate over all Messages of the HTL
+	Iterator<Message> mIt = htl.iterator();
+	while (mIt.hasNext()) {
+	    
+	    // Store the messages depending on their types
+	    Message m = mIt.next();
+	    switch (m.getType()) {
+		
+		//Store the CurrentServerTime-message in the global cst-variable
+	        case Message.MESSAGE_TYPE_CURRENT_SERVER_TIME:
+		    cst = (CurrentServerTime) m;
+		    break;
+		
+		// Store the PublicIPNotification-message in the suitable global pipX-variable (and update its freshness-timestamp)
+	        case Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF4:
+		    pip4 = (PublicIPNotification) m;
+		    pip4LU = new Timestamp(System.currentTimeMillis());
+		    break;
+		case Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF6:
+		    pip6 = (PublicIPNotification) m;
+		    pip6LU = new Timestamp(System.currentTimeMillis());
+		    break;
 			
-			// Store the messages depending on their types
-			Message m = mIt.next();
-			switch (m.getType()) {
-			
-			//Store the CurrentServerTime-message in the global cst-variable
-			case Message.MESSAGE_TYPE_CURRENT_SERVER_TIME:
-				cst = (CurrentServerTime) m;
-				break;
-				
-			// Store the PublicIPNotification-message in the suitable global pipX-variable (and update its freshness-timestamp)
-			case Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF4:
-				pip4 = (PublicIPNotification) m;
-				pip4LU = new Timestamp(System.currentTimeMillis());
-				break;
-			case Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF6:
-				pip6 = (PublicIPNotification) m;
-				pip6LU = new Timestamp(System.currentTimeMillis());
-				break;
-			
-			// Store all HuntingTasks in the global hts-list
-			case Message.MESSAGE_TYPE_IPV4_SHA256_TASK:
-			case Message.MESSAGE_TYPE_IPV6_SHA256_TASK:
-				hts.add((HuntingTask) m);
-				break;
-			}
-		}
+		// Store all HuntingTasks in the global hts-list
+	        case Message.MESSAGE_TYPE_IPV4_SHA256_TASK:
+	        case Message.MESSAGE_TYPE_IPV6_SHA256_TASK:
+		    hts.add((HuntingTask) m);
+		    break;
+	    }
 	}
+    }
 
 	/**
 	 * Check if the currently known PublicIP is still considered fresh. If it is: return true. If not try to obtain a fresh PublicIP from the Crossbear-Server. If that succeeded return true, else false.
