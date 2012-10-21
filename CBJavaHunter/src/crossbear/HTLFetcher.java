@@ -156,7 +156,7 @@ public class HTLFetcher {
 	is.close();
 	
 	// Return the HuntingTask-List
-	logger.info("Retrieved hunting task list.");
+	logger.info("Retrieved hunting task list. There are " + re.size() + " tasks in the list.");
 	return re;
     }
 }
