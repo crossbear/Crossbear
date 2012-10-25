@@ -120,6 +120,7 @@ public class PIPFetcher {
 	byte[] serverReply = sendPubIPRequestToCBServer(ipVersion, pipReq);
 		
 	// In case the server could not be contacted using the specified IP-version: return null
+	// TODO: this should probably be logged and dealt with in a different way? Throw an exception?
 	if (serverReply == null)
 	    return null;
 
