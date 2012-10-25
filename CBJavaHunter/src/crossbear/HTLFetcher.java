@@ -151,6 +151,10 @@ public class HTLFetcher {
 	while ((m = extractNextMessageFromHTL(is)) != null) {
 	    re.add(m);
 	}
+
+	if (re.size() == 0) {
+	    logger.warning("Received empty list of Crossbear messages.");
+	}
 	
 	// Close all opened Streams
 	is.close();
