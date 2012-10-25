@@ -79,6 +79,7 @@ public class HTLFetcher {
      * 
      * @param is The InputStream to extract the Messages from
      * @return A Crossbear-Message-Object representing the next message of the Stream or null if there are no more
+     * @throws MalformedMessageException
      * @throws IOException
      */
     private static Message extractNextMessageFromHTL(InputStream is) throws MalformedMessageException, IOException {
@@ -122,8 +123,10 @@ public class HTLFetcher {
      * 
      * @return The server's HuntingTask-List as a LinkedList of Crossbear Messages
      * @throws KeyManagementException
+     * @throws MalformedURLException
      * @throws IOException
      * @throws NoSuchAlgorithmException
+     * @throws MalformedMessageException
      */
     public LinkedList<Message> getHTLFromServer() throws KeyManagementException, MalformedURLException, IOException, NoSuchAlgorithmException, MalformedMessageException {
 	

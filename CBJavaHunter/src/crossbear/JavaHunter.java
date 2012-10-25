@@ -155,7 +155,7 @@ public class JavaHunter {
 	    jh.getAndParseHTL();
 	}
 	catch (Exception e) {
-	    logger.log(Level.SEVERE, "Could not get HTL from Crossbear server. Exception trace follows. Quitting.", e);
+	    logger.log(Level.SEVERE, "Could not get correct HTL from Crossbear server. Exception trace follows. Quitting.", e);
 	    System.exit(-1);
 	}
 	
@@ -214,6 +214,7 @@ public class JavaHunter {
      * @throws NoSuchAlgorithmException
      * @throws KeyManagementException
      * @throws IOException
+     * @throws MalformedMessageException
      */
     private void getAndParseHTL() throws CertificateException, NoSuchAlgorithmException, KeyManagementException, IOException, MalformedMessageException {
 	
