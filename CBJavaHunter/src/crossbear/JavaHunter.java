@@ -136,16 +136,11 @@ public class JavaHunter {
 	logger.setLevel(Level.INFO);
 	
 	LoglineFormatter llf = new LoglineFormatter();
-	try {
-	    FileHandler fh = new FileHandler("JavaHunter.log", true);
-	    fh.setFormatter(llf);
-	    logger.addHandler(fh);
-	}
-	catch (Exception e) {
-	    System.err.println("Could not allocate file handler for logging. Exiting.");
-	    System.err.println(e);
-	    System.exit(-1);
-	}
+
+	FileHandler fh = new FileHandler("JavaHunter.log", true);
+	fh.setFormatter(llf);
+	logger.addHandler(fh);
+
 	ConsoleHandler ch = new ConsoleHandler();
 	ch.setFormatter(llf);
 	logger.addHandler(ch);
