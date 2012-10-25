@@ -70,6 +70,85 @@ import crossbear.messaging.PublicIPNotification;
 public class PIPFetcher {
 
     /**
+     * Create a new Public-IP-Fetcher.
+     * 
+     * @param cbServerHost The Hostname of the Crossbear server (e.g. crossbear.net.in.tum.de)
+     * @param cbServerCert The certificate of the Crossbear-Server
+     * @throws UnknownHostException
+     * @throws NamingException
+     */
+    public PIPFetcher(String cbServerHost, X509Certificate cbServerCert) throws UnknownHostException, NamingException {
+
+	this.cbServerCert = cbServerCert;
+		
+	// Obtain the IP-addresses of the Crossbear-Server
+	getServerIPs(cbServerHost);
+		
+    }
+
+    /**
+     * Contact the Crossbear server and get a fresh PublicIPNotification of a specific IP-version
+     * 
+     * @param ipVersion The IP-version of the PublicIPNotification that is to obtain from the Crossbear-Server (4 or 6)
+     * @return A fresh PublicIPNotification of a specific IP-version, or null if the server could not be contacted using that IP-version 
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchProviderException
+     * @throws IllegalBlockSizeException
+     * @throws BadPaddingException
+     * @throws InvalidKeyException
+     * @throws NoSuchPaddingException
+     * @throws KeyManagementException
+     * @throws CertificateEncodingException
+     * @throws SQLException
+     * @throws InvalidAlgorithmParameterException
+     * @throws PIPException
+     * @throws UnknownHostException
+     */
+    public PublicIPNotification getFreshPublicIPNot(int ipVersion) throws NoSuchAlgorithmException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, KeyManagementException, CertificateEncodingException, SQLException, InvalidAlgorithmParameterException, PIPException, UnknownHostException {
+		
+	// Generate a random AES-256 key
+	SecretKey aesKey = generateRandomAES256Key();
+
+	// Encrypt the key using the Crossbear-Server's public key
+	byte[] rsaEncryptedKey = RSAEncrypt(cbServerCert.getPublicKey(), aesKey.getEncoded());
+
+	// Put the RSA-encrypted AES-key in a PublicIPNotifRequest ...
+	PublicIPNotifRequest pipReq = new PublicIPNotifRequest();
+	pipReq.setRsaEncryptedKey(rsaEncryptedKey);
+
+	// And send this request to the server
+	byte[] serverReply = sendPubIPRequestToCBServer(ipVersion, pipReq);
+		
+	// In case the server could not be contacted using the specified IP-version: return null
+	if (serverReply == null)
+	    return null;
+
+	// Decrypt the server's reply ...
+	byte[] decryptedServerReply = AESDecrypt(aesKey.getEncoded(), serverReply);
+
+	// ... and validate it. The reply has the format PLAINTEXT|SUPPOSED_HASH(32bytes). First: Split the server's reply:
+	byte[] supposedHash = Arrays.copyOfRange(decryptedServerReply, decryptedServerReply.length - 32, decryptedServerReply.length);
+	byte[] plaintext = Arrays.copyOfRange(decryptedServerReply, 0, decryptedServerReply.length - 32);
+		
+	// Calculate the plaintext's REAL hash
+	byte[] actualHash = CertificateManager.SHA256(plaintext);
+
+	// Compare the actual hash with the supposed hash. If they don't match then somebody tampered with the data
+	if (!Arrays.equals(supposedHash, actualHash)) {
+	    throw new PIPException("Decoding a PublicIPNotification failed because of an invalid Checksum!");
+	}
+		
+	// Assert that the decrypted plaintext is a MESSAGE_TYPE_PUBLIC_IP_NOTIFX-message
+	if (plaintext[0] != Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF4 && plaintext[0] != Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF6) {
+	    throw new PIPException("Decoding a PublicIPNotification failed because of an unexpected message Type!");
+	}
+
+	// Convert the plaintext into a PublicIPNotification-object and return it
+	return new PublicIPNotification(Arrays.copyOfRange(plaintext, 3, plaintext.length), ipVersion);
+
+    }
+
+    /**
      * Adjust the size of a buffer so it can hold at least 1024 more bytes.
      * 
      * This function was created by the use of http://jajatips.blogspot.com/2008/11/reading-from-inputstream.html
@@ -219,85 +298,6 @@ public class PIPFetcher {
 
     // The IPv4-address of the Crossbear-Server
     private Inet4Address sip4;
-
-    /**
-     * Create a new Public-IP-Fetcher.
-     * 
-     * @param cbServerHost The Hostname of the Crossbear server (e.g. crossbear.net.in.tum.de)
-     * @param cbServerCert The certificate of the Crossbear-Server
-     * @throws UnknownHostException
-     * @throws NamingException
-     */
-    public PIPFetcher(String cbServerHost, X509Certificate cbServerCert) throws UnknownHostException, NamingException {
-
-	this.cbServerCert = cbServerCert;
-		
-	// Obtain the IP-addresses of the Crossbear-Server
-	getServerIPs(cbServerHost);
-		
-    }
-
-    /**
-     * Contact the Crossbear server and get a fresh PublicIPNotification of a specific IP-version
-     * 
-     * @param ipVersion The IP-version of the PublicIPNotification that is to obtain from the Crossbear-Server (4 or 6)
-     * @return A fresh PublicIPNotification of a specific IP-version, or null if the server could not be contacted using that IP-version 
-     * @throws NoSuchAlgorithmException
-     * @throws NoSuchProviderException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
-     * @throws InvalidKeyException
-     * @throws NoSuchPaddingException
-     * @throws KeyManagementException
-     * @throws CertificateEncodingException
-     * @throws SQLException
-     * @throws InvalidAlgorithmParameterException
-     * @throws PIPException
-     * @throws UnknownHostException
-     */
-    public PublicIPNotification getFreshPublicIPNot(int ipVersion) throws NoSuchAlgorithmException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, KeyManagementException, CertificateEncodingException, SQLException, InvalidAlgorithmParameterException, PIPException, UnknownHostException {
-		
-	// Generate a random AES-256 key
-	SecretKey aesKey = generateRandomAES256Key();
-
-	// Encrypt the key using the Crossbear-Server's public key
-	byte[] rsaEncryptedKey = RSAEncrypt(cbServerCert.getPublicKey(), aesKey.getEncoded());
-
-	// Put the RSA-encrypted AES-key in a PublicIPNotifRequest ...
-	PublicIPNotifRequest pipReq = new PublicIPNotifRequest();
-	pipReq.setRsaEncryptedKey(rsaEncryptedKey);
-
-	// And send this request to the server
-	byte[] serverReply = sendPubIPRequestToCBServer(ipVersion, pipReq);
-		
-	// In case the server could not be contacted using the specified IP-version: return null
-	if (serverReply == null)
-	    return null;
-
-	// Decrypt the server's reply ...
-	byte[] decryptedServerReply = AESDecrypt(aesKey.getEncoded(), serverReply);
-
-	// ... and validate it. The reply has the format PLAINTEXT|SUPPOSED_HASH(32bytes). First: Split the server's reply:
-	byte[] supposedHash = Arrays.copyOfRange(decryptedServerReply, decryptedServerReply.length - 32, decryptedServerReply.length);
-	byte[] plaintext = Arrays.copyOfRange(decryptedServerReply, 0, decryptedServerReply.length - 32);
-		
-	// Calculate the plaintext's REAL hash
-	byte[] actualHash = CertificateManager.SHA256(plaintext);
-
-	// Compare the actual hash with the supposed hash. If they don't match then somebody tampered with the data
-	if (!Arrays.equals(supposedHash, actualHash)) {
-	    throw new PIPException("Decoding a PublicIPNotification failed because of an invalid Checksum!");
-	}
-		
-	// Assert that the decrypted plaintext is a MESSAGE_TYPE_PUBLIC_IP_NOTIFX-message
-	if (plaintext[0] != Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF4 && plaintext[0] != Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF6) {
-	    throw new PIPException("Decoding a PublicIPNotification failed because of an unexpected message Type!");
-	}
-
-	// Convert the plaintext into a PublicIPNotification-object and return it
-	return new PublicIPNotification(Arrays.copyOfRange(plaintext, 3, plaintext.length), ipVersion);
-
-    }
 
     /**
      * Perform a DNS-request on a server's Hostname. If a IPv4-address is found for that server, it is stored in "sip4"; if a IPv6-address is found, it is stored in "sip6".
