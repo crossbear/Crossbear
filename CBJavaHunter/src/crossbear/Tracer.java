@@ -236,45 +236,46 @@ public class Tracer {
 	 * @param ipVersion
 	 *            The version of the IP-Address (4 or 6)
 	 * @returns The Traceroute in the format described above
-	 * @throws Exception
+	 * @throws TraceException
+	 * @throws IOException
 	 */
-	public String traceroute(InetAddress ip, int ipVersion) throws TraceException {
-	    LinkedList<String> re = new LinkedList<String>();
+    public String traceroute(InetAddress ip, int ipVersion) throws TraceException, IOException {
+	LinkedList<String> re = new LinkedList<String>();
 
-	    // Perform pings with an increasing TTL (starting at 1 and ending with self.MaxHops)
-	    hopLoop: for (int hopNum = 1; hopNum <= maxHops; hopNum++) {
+	// Perform pings with an increasing TTL (starting at 1 and ending with self.MaxHops)
+	hopLoop: for (int hopNum = 1; hopNum <= maxHops; hopNum++) {
 
-		LinkedList<String> samplesOfHop = new LinkedList<String>();
-		// For each TTL perform samplesOfHop-many Pings and see if more than one host replies
-		for (int sampleNum = 0; sampleNum < samplesPerHop; sampleNum++) {
+	    LinkedList<String> samplesOfHop = new LinkedList<String>();
+	    // For each TTL perform samplesOfHop-many Pings and see if more than one host replies
+	    for (int sampleNum = 0; sampleNum < samplesPerHop; sampleNum++) {
 
-		    // Perform a ping with a given TTL and see whether it reached the Target, a Hop or no host at all
-		    String[] pingResult = ping(ip, ipVersion, hopNum).split(" ");
-		    switch (pingResult[0]) {
-		    case "HOP":
-			// If it reached a HOP add it to the current Hop's host-list (but don't add duplicates)
-			if (samplesOfHop.indexOf(pingResult[1]) < 0) {
-			    samplesOfHop.add(pingResult[1]);
-			}
-			break;
-		    case "TARGET":
-			// If it reached the Target we are done
-			break hopLoop;
-		    case "NO_REPLY":
-			break;
-		    default:
-			throw new TraceException("Received unexpected ping response: " + Arrays.deepToString(pingResult), pingResult);
+		// Perform a ping with a given TTL and see whether it reached the Target, a Hop or no host at all
+		String[] pingResult = ping(ip, ipVersion, hopNum).split(" ");
+		switch (pingResult[0]) {
+		case "HOP":
+		    // If it reached a HOP add it to the current Hop's host-list (but don't add duplicates)
+		    if (samplesOfHop.indexOf(pingResult[1]) < 0) {
+			samplesOfHop.add(pingResult[1]);
 		    }
-		}
-
-		// For each HOP: Generate a "|"-seperated list of IPs that replied
-		if (samplesOfHop.size() > 0) {
-		    re.add(join(samplesOfHop, '|'));
+		    break;
+		case "TARGET":
+		    // If it reached the Target we are done
+		    break hopLoop;
+		case "NO_REPLY":
+		    break;
+		default:
+		    throw new TraceException("Received unexpected ping response: " + Arrays.deepToString(pingResult), pingResult);
 		}
 	    }
 
-	    // Finally add the Target's IP to the list of Hops (which will be transformed in a "\n"-seperated list) and return the trace
-	    return (join(re, '\n') + '\n' + ip.getHostAddress()).trim();
-	};
+	    // For each HOP: Generate a "|"-seperated list of IPs that replied
+	    if (samplesOfHop.size() > 0) {
+		re.add(join(samplesOfHop, '|'));
+	    }
+	}
+
+	// Finally add the Target's IP to the list of Hops (which will be transformed in a "\n"-seperated list) and return the trace
+	return (join(re, '\n') + '\n' + ip.getHostAddress()).trim();
+    };
 
 }
