@@ -153,6 +153,8 @@ public class JavaHunter {
 	try {
 	    jh.getAndParseHTL();
 	}
+	// catch all exceptions that the above call might have produced - we cannot go on without a 100% correct HTL, and thus
+	// we log usefully
 	catch (Exception e) {
 	    logger.log(Level.SEVERE, "Could not get correct HTL from Crossbear server. Exception trace follows. Quitting.", e);
 	    System.exit(-1);
