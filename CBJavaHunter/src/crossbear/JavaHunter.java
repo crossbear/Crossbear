@@ -36,6 +36,7 @@ import java.security.Security;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.InvalidAlgorithmParameterException;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -49,6 +50,9 @@ import javax.naming.NamingException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.NoSuchPaddingException;
 
 import java.util.logging.Logger;
 import java.util.logging.FileHandler;
@@ -301,9 +305,27 @@ public class JavaHunter {
      * 
      * @param task The HuntingTask to execute
      * @return A HuntingTaskReply if the execution of the HuntingTask was successful, and null if not
-     * @throws Exception
+     * @throws NoSuchFieldException
+     * @throws UnknownHostException
+     * @throws IllegalAccessException
+     * @throws KeyManagementException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws CertificateEncodingException
+     * @throws InvalidAlgorithmParameterException
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws NoSuchProviderException
+     * @throws TraceException
+     * @throws IllegalBlockSizeException
+     * @throws BadPaddingException
+     * @throws InvalidKeyException
+     * @throws NoSuchPaddingException
+     * @throws SQLException
+     * @throws PIPException
+     * @todo CHECK need for SQLException, PIPException
      */
-    private HuntingTaskReply executeHuntingTask(HuntingTask task) throws Exception {
+    private HuntingTaskReply executeHuntingTask(HuntingTask task) throws NoSuchFieldException, UnknownHostException, IllegalAccessException, KeyManagementException, IOException, NoSuchAlgorithmException, CertificateEncodingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, NoSuchProviderException, TraceException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, SQLException, PIPException {
 	
 	// Extract the IP-version of the HuntingTask
 	boolean taskIsv4 = (task.getType() == Message.MESSAGE_TYPE_IPV4_SHA256_TASK);
@@ -362,9 +384,21 @@ public class JavaHunter {
      * 
      * @param ipVersion The IP-version of the PublicIP
      * @return True if the current PublicIP either was fresh or could be refreshed; else false.
-     * @throws Exception
+     * @throws NoSuchAlgorithmException
+     * @throws NoSuchProviderException
+     * @throws IllegalBlockSizeException
+     * @throws BadPaddingException
+     * @throws InvalidKeyException
+     * @throws NoSuchPaddingException
+     * @throws KeyManagementException
+     * @throws CertificateEncodingException
+     * @throws SQLException
+     * @throws InvalidAlgorithmParameterException
+     * @throws PIPException
+     * @throws UnknownHostException
+     * @todo Check if PIPException is needed
      */
-    private boolean isFreshPublicIPAvailable(int ipVersion) throws Exception {
+    private boolean isFreshPublicIPAvailable(int ipVersion) throws NoSuchAlgorithmException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, KeyManagementException, CertificateEncodingException, SQLException, InvalidAlgorithmParameterException, PIPException, UnknownHostException {
 		
 	// Flag indicating if the current PublicIP is considered to be fresh
 	boolean freshPubIPAvailable = false;
@@ -398,6 +432,7 @@ public class JavaHunter {
 	    if (new Timestamp(System.currentTimeMillis() - pipCacheValidity).after(pip6LU)) {
 
 		// If it is not fresh anymore: Try to refresh it
+		// TODO Log
 		System.out.println("Requesting a new IPv6 PublicIP");
 		pip6 = pipfetcher.getFreshPublicIPNot(6);
 		if (pip6 != null) {
