@@ -63,6 +63,7 @@ import crossbear.messaging.HuntingTaskReplyNewCertChain;
 import crossbear.messaging.Message;
 import crossbear.messaging.MessageList;
 import crossbear.messaging.PublicIPNotification;
+import crossbear.messaging.MalformedMessageException;
 
 /**
  * A JavaHunter is a Java-based command-line application that implements the Crossbear-Hunting-functionality. When executed a JavaHunter will connect to the Crossbear-Server to download the current
@@ -214,7 +215,7 @@ public class JavaHunter {
      * @throws KeyManagementException
      * @throws IOException
      */
-    private void getAndParseHTL() throws CertificateException, NoSuchAlgorithmException, KeyManagementException, IOException {
+    private void getAndParseHTL() throws CertificateException, NoSuchAlgorithmException, KeyManagementException, IOException, MalformedMessageException {
 	
 	// Download the HuntingTask-List from the Crossbear-Server
 	LinkedList<Message> htl = htlfetcher.getHTLFromServer();
