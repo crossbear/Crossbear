@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.net.MalformedURLException;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 
@@ -35,6 +36,7 @@ import crossbear.messaging.CurrentServerTime;
 import crossbear.messaging.HuntingTask;
 import crossbear.messaging.Message;
 import crossbear.messaging.PublicIPNotification;
+import crossbear.messaging.MalformedMessageException;
 
 /**
  * This class provides the functionality to download the HuntingTask-List from the Crossbear server and to transform it into a List of Crossbear Message-Objects.
@@ -79,7 +81,7 @@ public class HTLFetcher {
      * @return A Crossbear-Message-Object representing the next message of the Stream or null if there are no more
      * @throws IOException
      */
-    private static Message extractNextMessageFromHTL(InputStream is) throws IOException {
+    private static Message extractNextMessageFromHTL(InputStream is) throws MalformedMessageException, IOException {
 	// The first byte of each crossbear.Message is its type
 	int messageType = is.read();
 	
@@ -88,11 +90,10 @@ public class HTLFetcher {
 	    return null;
 	}
 	
-	// Verify message type: It has to be either MESSAGE_TYPE_PUBLIC_IP_NOTIFX, MESSAGE_TYPE_CURRENT_SERVER_TIME or MESSAGE_TYPE_IPVX_SHA256_TASK
+	// Verify message type: It has to be either MESSAGE_TYPE_PUBLIC_IP_NOTIF4, MESSAGE_TYPE_PUBLIC_IP_NOTIF6, MESSAGE_TYPE_CURRENT_SERVER_TIME, MESSAGE_TYPE_IPV4_SHA256_TASK, or MESSAGE_TYPE_IPV6_SHA256_TASK
 	if (messageType != Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF4 && messageType != Message.MESSAGE_TYPE_PUBLIC_IP_NOTIF6 && messageType != Message.MESSAGE_TYPE_CURRENT_SERVER_TIME
 	    && messageType != Message.MESSAGE_TYPE_IPV4_SHA256_TASK && messageType != Message.MESSAGE_TYPE_IPV6_SHA256_TASK) {
-	    
-	    throw new IllegalArgumentException("The provided messageType " + messageType + " was not expected");
+	    throw new MalformedMessageException("The provided message type " + messageType + " is not a valid message type.");
 	}
 	
 	// Read the message's length field (which are bytes 2 & 3 of each crossbear.Message)
@@ -111,11 +112,7 @@ public class HTLFetcher {
 	    return new CurrentServerTime(raw);
 	} else if (messageType == Message.MESSAGE_TYPE_IPV4_SHA256_TASK) {
 	    return new HuntingTask(raw, 4);
-	} else if (messageType == Message.MESSAGE_TYPE_IPV6_SHA256_TASK) {
-	    return new HuntingTask(raw, 6);
-	} else {
-	    throw new IllegalArgumentException("The provided messageType " + messageType + " was not expected");
-	}
+	} else return new HuntingTask(raw, 6);
     }
     
 
@@ -128,7 +125,7 @@ public class HTLFetcher {
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
-    public LinkedList<Message> getHTLFromServer() throws KeyManagementException, IOException, NoSuchAlgorithmException {
+    public LinkedList<Message> getHTLFromServer() throws KeyManagementException, MalformedURLException, IOException, NoSuchAlgorithmException, MalformedMessageException {
 	
 	// Construct the URL that holds the HuntingTask-List
 	URL url = new URL("https://" + cbServerHostPort + "/getHuntingTaskList.jsp");
@@ -146,6 +143,10 @@ public class HTLFetcher {
 	InputStream is = conn.getInputStream();
 	
 	// ... and transform it into a list of Crossbear Messages
+	//
+	// Note that a MalformedMessageException is intentionally
+	// thrown on - the JavaHunter is not supposed to continue
+	// processing messages in such a case but stop.
 	LinkedList<Message> re = new LinkedList<Message>();
 	Message m;
 	while ((m = extractNextMessageFromHTL(is)) != null) {
@@ -160,7 +161,7 @@ public class HTLFetcher {
 	is.close();
 	
 	// Return the HuntingTask-List
-	logger.info("Retrieved hunting task list. There are " + re.size() + " tasks in the list.");
+	logger.info("Retrieved hunting task list.");
 	return re;
     }
 }
