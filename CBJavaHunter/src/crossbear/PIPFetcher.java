@@ -116,6 +116,7 @@ public class PIPFetcher {
 										   IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 
 	// CBC-mode requires an IV. It is assumed that the first 16 bytes of the cipherText constitute the IV.
+	// TODO: check this
 	IvParameterSpec ivSpec = new IvParameterSpec(Arrays.copyOfRange(cipherText, 0, 16));
 
 	// Specify an AES/CBC/PKCS7Padding cipher (requires BouncyCastle Crypto provider)
