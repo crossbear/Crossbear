@@ -37,7 +37,6 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.InvalidAlgorithmParameterException;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
@@ -68,6 +67,7 @@ import crossbear.messaging.Message;
 import crossbear.messaging.MessageList;
 import crossbear.messaging.PublicIPNotification;
 import crossbear.messaging.MalformedMessageException;
+import crossbear.messaging.MessageSerializationException;
 
 /**
  * A JavaHunter is a Java-based command-line application that implements the Crossbear-Hunting-functionality. When executed a JavaHunter will connect to the Crossbear-Server to download the current
@@ -178,10 +178,9 @@ public class JavaHunter {
      * @throws NoSuchAlgorithmException
      * @throws NamingException
      * @throws IOException 
-     * @throws SQLException 
      * @throws KeyStoreException 
      */
-    public JavaHunter(String cbServerHostName, int tracerMaxHops, int tracerSamplesPerHop) throws CertificateException, NoSuchAlgorithmException, NamingException, KeyStoreException, SQLException, IOException {
+    public JavaHunter(String cbServerHostName, int tracerMaxHops, int tracerSamplesPerHop) throws CertificateException, NoSuchAlgorithmException, NamingException, KeyStoreException, IOException {
 	this.cbServerHostName = cbServerHostName;
 	
 	// Load the certificate of the Crossbear-Server from the local file system
@@ -201,7 +200,7 @@ public class JavaHunter {
 	this.pipfetcher = new PIPFetcher(cbServerHostName, cbServerCert);
 	this.htlfetcher = new HTLFetcher(cbServerHostName+":443",cbServerCertHash);
 	this.tracer = new Tracer(tracerMaxHops,tracerSamplesPerHop);
-	this.cm = new CertificateManager(null,0, "changeit");
+	this.cm = new CertificateManager(0, "changeit");
     }
     
 
@@ -308,21 +307,19 @@ public class JavaHunter {
      * @throws KeyManagementException
      * @throws IOException
      * @throws NoSuchAlgorithmException
-     * @throws CertificateEncodingException
      * @throws InvalidAlgorithmParameterException
      * @throws KeyStoreException
      * @throws CertificateException
      * @throws NoSuchProviderException
      * @throws TraceException
+     * @throws MessageSerializationException
      * @throws IllegalBlockSizeException
      * @throws BadPaddingException
      * @throws InvalidKeyException
      * @throws NoSuchPaddingException
-     * @throws SQLException
      * @throws PIPException
-     * @todo CHECK need for SQLException, PIPException
      */
-    private HuntingTaskReply executeHuntingTask(HuntingTask task) throws NoSuchFieldException, UnknownHostException, IllegalAccessException, KeyManagementException, IOException, NoSuchAlgorithmException, CertificateEncodingException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, NoSuchProviderException, TraceException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, SQLException, PIPException {
+    private HuntingTaskReply executeHuntingTask(HuntingTask task) throws NoSuchFieldException, UnknownHostException, IllegalAccessException, KeyManagementException, IOException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, NoSuchProviderException, TraceException, MessageSerializationException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, PIPException {
 	
 	// Extract the IP-version of the HuntingTask
 	boolean taskIsv4 = (task.getType() == Message.MESSAGE_TYPE_IPV4_SHA256_TASK);
@@ -387,15 +384,13 @@ public class JavaHunter {
      * @throws BadPaddingException
      * @throws InvalidKeyException
      * @throws NoSuchPaddingException
-     * @throws KeyManagementException
-     * @throws CertificateEncodingException
-     * @throws SQLException
      * @throws InvalidAlgorithmParameterException
      * @throws PIPException
      * @throws UnknownHostException
+     * @throws MessageSerializationException
      * @todo Check if PIPException is needed
      */
-    private boolean isFreshPublicIPAvailable(int ipVersion) throws NoSuchAlgorithmException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, KeyManagementException, CertificateEncodingException, SQLException, InvalidAlgorithmParameterException, PIPException, UnknownHostException {
+    private boolean isFreshPublicIPAvailable(int ipVersion) throws NoSuchAlgorithmException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, PIPException, UnknownHostException, MessageSerializationException {
 		
 	// Flag indicating if the current PublicIP is considered to be fresh
 	boolean freshPubIPAvailable = false;
@@ -460,10 +455,10 @@ public class JavaHunter {
      * @throws NoSuchAlgorithmException
      * @throws NoSuchProviderException
      * @throws IOException
-     * @throws SQLException
      * @throws KeyManagementException
+     * @throws MessageSerializationException
      */
-    private void sendHuntingTaskResultsToServer(MessageList huntingTaskResults) throws InvalidKeyException, CertificateEncodingException, NoSuchAlgorithmException, NoSuchProviderException, IOException, SQLException, KeyManagementException {
+    private void sendHuntingTaskResultsToServer(MessageList huntingTaskResults) throws InvalidKeyException, CertificateEncodingException, NoSuchAlgorithmException, NoSuchProviderException, IOException, KeyManagementException, MessageSerializationException {
 
 	// Construct the URL that will receive the HuntingTaskReplies
 	URL url = new URL("https://" + cbServerHostName + ":443/reportHTResults.jsp");

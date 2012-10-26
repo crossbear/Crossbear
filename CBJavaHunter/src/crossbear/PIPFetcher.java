@@ -39,7 +39,6 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.sql.SQLException;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -60,6 +59,7 @@ import javax.naming.directory.InitialDirContext;
 import crossbear.messaging.Message;
 import crossbear.messaging.PublicIPNotifRequest;
 import crossbear.messaging.PublicIPNotification;
+import crossbear.messaging.MessageSerializationException;
 
 /**
  * This class provides the functionality to obtain a
@@ -101,12 +101,11 @@ public class PIPFetcher {
      * @throws NoSuchPaddingException
      * @throws KeyManagementException
      * @throws CertificateEncodingException
-     * @throws SQLException
      * @throws InvalidAlgorithmParameterException
      * @throws PIPException
      * @throws UnknownHostException
      */
-    public PublicIPNotification getFreshPublicIPNot(int ipVersion) throws NoSuchAlgorithmException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, KeyManagementException, CertificateEncodingException, SQLException, InvalidAlgorithmParameterException, PIPException, UnknownHostException {
+    public PublicIPNotification getFreshPublicIPNot(int ipVersion) throws NoSuchAlgorithmException, NoSuchProviderException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, MessageSerializationException, PIPException, UnknownHostException {
 		
 	// Generate a random AES-256 key
 	SecretKey aesKey = generateRandomAES256Key();
@@ -344,15 +343,9 @@ public class PIPFetcher {
      * @param ipVersion The IP-version to use (4 or 6)
      * @param pipReq The PublicIPNotifRequest to send
      * @return The server's reply if it was possible to contact it, else null.
-     * @throws NoSuchAlgorithmException
-     * @throws KeyManagementException
-     * @throws InvalidKeyException
-     * @throws CertificateEncodingException
-     * @throws NoSuchProviderException
-     * @throws SQLException
+     * @throws MessageSerializationException
      */
-    private byte[] sendPubIPRequestToCBServer(int ipVersion, PublicIPNotifRequest pipReq) throws NoSuchAlgorithmException, KeyManagementException, InvalidKeyException, CertificateEncodingException,
-												 NoSuchProviderException, SQLException {
+    private byte[] sendPubIPRequestToCBServer(int ipVersion, PublicIPNotifRequest pipReq) throws MessageSerializationException {
 
 	try {
 			
