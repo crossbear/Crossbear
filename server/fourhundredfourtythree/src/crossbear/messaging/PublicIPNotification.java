@@ -209,13 +209,23 @@ public class PublicIPNotification extends Message {
 	 * @see crossbear.Message#writeContent(java.io.OutputStream)
 	 */
 	@Override
-	protected void writeContent(OutputStream out) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException {
+	protected void writeContent(OutputStream out) throws MessageSerializationException {
 		
-		// Write the IP's HMAC
+	    // Write the IP's HMAC
+	    try {
 		out.write(hMac);
+	    }
+	    catch (IOException e) {
+		throw new MessageSerializationException("Error serializing IP's HMAC.", e);
+	    }
 		
-		// Write the IP-Address itself
+	    // Write the IP-Address itself
+	    try {
 		out.write(publicIP.getAddress());
+	    }
+	    catch (IOException e) {
+		throw new MessageSerializationException("Error serializing IP address.", e);
+	    }
 		
 
 	}

@@ -81,8 +81,9 @@ public class MessageList {
 	 * @throws SQLException
 	 * @throws IOException
 	 * @throws CertificateEncodingException
+	 * @throws MessageSerializationException
 	 */
-	public static MessageList getCurrentHuntingTaskList( InetAddress requesterIP, long validity, Database db) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, IOException, CertificateEncodingException {
+    public static MessageList getCurrentHuntingTaskList( InetAddress requesterIP, long validity, Database db) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, IOException, CertificateEncodingException, MessageSerializationException {
 
 		// Remember the fact that somebody requested the Hunting Task list
 		Object[] params = { requesterIP.getHostAddress(), new Timestamp(System.currentTimeMillis()) };
@@ -208,8 +209,9 @@ public class MessageList {
 	 * @throws IOException
 	 * @throws SQLException
 	 * @throws CertificateEncodingException
+	 * @throws MessageSerializationException
 	 */
-	public byte[] getBytes() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException, SQLException, CertificateEncodingException {
+    public byte[] getBytes() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException, CertificateEncodingException, MessageSerializationException {
 
 		// Firstly get the Messages' bytes (of the Messages that are not yet encoded) and calculate the length of all concatenated messages
 		byte[][] messagesBytes = new byte[messages.size()][];

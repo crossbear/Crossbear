@@ -255,14 +255,9 @@ public abstract class Message {
 	 * - Concatenate them and return that as byte[]
 	 * 
 	 * @return The byte[]-representation of the Message-Object
-	 * @throws IOException
-	 * @throws InvalidKeyException
-	 * @throws NoSuchAlgorithmException
-	 * @throws NoSuchProviderException
-	 * @throws SQLException
-	 * @throws CertificateEncodingException
+	 * @throws MessageSerializationException
 	 */
-	public byte[] getBytes() throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, CertificateEncodingException {
+	public byte[] getBytes() throws MessageSerializationException {
 		
 		// Generate a new OutputStream into which the Message's bytes will be written
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -271,13 +266,18 @@ public abstract class Message {
 		buffer.write(type);
 		
 		// Write the Message's length (not yet known so a dummy-value is written)
-		buffer.write(new byte[]{0,0});
+		try {
+		    buffer.write(new byte[]{0,0});
+		}
+		catch (IOException e) {
+		    throw new MessageSerializationException("Error in writing to buffer.", e);
+		}
 		
 		// Write the Message's content
 		writeContent(buffer);
 		
 		// Transform the OutputStream into an array
-		byte[] messageBytes= buffer.toByteArray();;
+		byte[] messageBytes= buffer.toByteArray();
 		
 		// Assert that the Message length is not more than 16 byte (This is not allowed since the Message's length-field is only two bytes long)
 		if(messageBytes.length >= (1<<16)){
