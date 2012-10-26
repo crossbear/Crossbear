@@ -262,7 +262,7 @@ public abstract class Message {
 	 * @throws SQLException
 	 * @throws CertificateEncodingException
 	 */
-	public byte[] getBytes() throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, CertificateEncodingException {
+	public byte[] getBytes() throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, CertificateEncodingException {
 		
 		// Generate a new OutputStream into which the Message's bytes will be written
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -304,13 +304,8 @@ public abstract class Message {
 	 * Create a byte[] representation of the messages's content.
 	 * 
 	 * @param out The OutputStream into which the content will be writen in a serialized form.
-	 * @throws IOException
-	 * @throws InvalidKeyException
-	 * @throws NoSuchAlgorithmException
-	 * @throws NoSuchProviderException
-	 * @throws CertificateEncodingException
-	 * @throws SQLException
+	 * @throws MessageSerializationException
 	 */
-	protected abstract void writeContent(OutputStream out) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,CertificateEncodingException, SQLException;
+	protected abstract void writeContent(OutputStream out) throws MessageSerializationException;
 	
 }
