@@ -154,7 +154,8 @@ public class CertificateManager {
 				lastCaughtException = e;
 			}
 		}
-
+		// TODO uh, wait a second -- this looks a lot as if we throw an IOException if we cannot connect at all
+		// - and that IOException would wander up the whole stack and crash the main
 		throw lastCaughtException;
 
 	}
@@ -789,9 +790,17 @@ public class CertificateManager {
 	
 
 	/**
-	 * Take a certificate chain and see if there is a way in which it can be ordered that makes it valid. This is necessary since there is no guarantee, that certificate chains are transmitted in correct order.
+	 * Take a certificate chain and see if there is a way in which
+	 * it can be ordered that makes it valid. This is necessary
+	 * since there is no guarantee, that certificate chains are
+	 * transmitted in correct order.
 	 * 
-	 * If the chain's end is required to be self-signed and the root-of-trust is not within the chain, there will be an attempt to find it in the system's root-CA KeyStore.
+	 * If the chain's end is required to be self-signed and the
+	 * root-of-trust is not within the chain, there will be an
+	 * attempt to find it in the system's root-CA KeyStore.
+	 * 
+	 * @todo: the system's root CA store might be different depending on the JVM - we should replace it with a list of our own
+	 * @todo: remove the limit of maxPermutations - it is not necessary
 	 * 
 	 * @param in The certificate chain to check
 	 * @param maxPermutations The maximal number of reordering-attempts to make (first attempt will always be the original order)
@@ -803,15 +812,15 @@ public class CertificateManager {
 	 * @throws CertificateException
 	 * @throws NoSuchProviderException
 	 */
-	public LinkedList<X509Certificate> makeCertChainValid(X509Certificate[] in, int maxPermutations, boolean endMustBeSelfSigned) throws InvalidAlgorithmParameterException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException{
+	public LinkedList<X509Certificate> makeCertChainValid(X509Certificate[] in, int maxPermutations, boolean endMustBeSelfSigned) throws InvalidAlgorithmParameterException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException {
 		
 		// Create a Permutation generator of suitable length
 		PermutationGenerator permGen = new PermutationGenerator(in.length - 1);
 		
 		// Set a limit of how many permutations are tried maximally and start trying them (first attempt will be the original order)
-		while (permGen.hasMore() && maxPermutations-->0) {
+		while (permGen.hasMore() && maxPermutations-- > 0) {
 
-			// Create a new cerificate permutation and set it's first element to the host's certificate
+			// Create a new cerificate permutation and set its first element to the host's certificate
 			LinkedList<X509Certificate> certPerm = new LinkedList<X509Certificate>();
 			certPerm.add(in[0]);
 
