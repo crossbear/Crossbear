@@ -45,7 +45,7 @@ import crossbear.Database;
 
 
 /**
- * A PublicIPNotification is sent to the client every time it want's to know its PublicIP. The client needs this IP since it will add it as first element to the traces made during Hunting. The trace
+ * A PublicIPNotification is sent to the client every time it wants to know its PublicIP. The client needs this IP since it will add it as first element to the traces made during Hunting. The trace
  * must contain this IP since this is the IP of the Mitm in the scenario of an poisoned public access point (and others). The server doesn't necessarily observe this IP when the client sends the
  * HuntingTaskReply since it might send it over IPv6 while it hunted using IPv4. Therefore the PublicIP needs to be sent to the client. Moreover it needs to be sent in a way that can't be forged by a
  * malicious client. That's way each PublicIPNotification-message contains a HMAC guaranteeing the authenticity of the PublicIP. Since only the server knows the Key of the HMAC only the server is able
