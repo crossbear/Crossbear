@@ -1,0 +1,8 @@
+CBJavaHunter: 
+There are so many exceptions thrown. It is correct to let them wander up the stack, as JavaHunter must not continue if they occur. Still, it might be sensible to wrap them in more dedicated exceptions to make the code more readable (it's not clear which exception is thrown by which line). 
+
+CBJavaHunter:
+There are a number of exceptions that are thrown by the classes in crossbear.messaging but really can only occur if instances of these classes are used in a server context. I.e. they cannot occur in a JavaHunter context. It is sensible to refactor the messaging to abolish this binding. It would also reduce the number of exceptions that need to be taken into regard in CBJavaHunter.
+
+CBJavaHunter:
+the PIPException is a kludge. Can we do without it, or turn it into a kind of wrapper?
