@@ -162,7 +162,7 @@ public class JavaHunter {
 	
 	// Execute the HuntingTask-List and send the generated results to the Crosbear-Server
 	jh.executeHTL();
-	
+	logger.info("Finished JavaHunter session.");
     }
 
 
@@ -260,15 +260,31 @@ public class JavaHunter {
     /**
      * Execute the HuntingTask-List and send the execution results to the Crossbear-Server
      * 
-     * @throws Exception
+     * @throws NoSuchFieldException
+     * @throws UnknownHostException
+     * @throws IllegalAccessException
+     * @throws KeyManagementException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidAlgorithmParameterException
+     * @throws KeyStoreException
+     * @throws CertificateException
+     * @throws NoSuchProviderException
+     * @throws TraceException
+     * @throws MessageSerializationException
+     * @throws IllegalBlockSizeException
+     * @throws BadPaddingException
+     * @throws InvalidKeyException
+     * @throws NoSuchPaddingException
+     * @throws PIPException
      */
-    private void executeHTL() throws Exception {
+    private void executeHTL() throws NoSuchFieldException, UnknownHostException, IllegalAccessException, KeyManagementException, IOException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, NoSuchProviderException, TraceException, MessageSerializationException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, NoSuchPaddingException, PIPException {
 
 	// Create an empty list of HuntingTaskReplies
 	int numOfResults = 0;
 	MessageList htr = new MessageList();
 	
-	// Randomize the order of the HuntingTasks
+	// Randomize the order of the HuntingTasks so we don't accidentally overload some server
 	Collections.shuffle(hts, new Random());
 	
 	// Iterate over all HuntingTasks ...
@@ -328,23 +344,31 @@ public class JavaHunter {
 	if (!isFreshPublicIPAvailable(taskIsv4 ? 4 : 6)) {
 	    
 	    // If not: Return null since it is not possible to execute the HuntingTask
-	    System.out.println("Skipping execution of Task "+task.getTaskID()+ " since there is no fresh PublicIP for it");
+	    logger.warning("Skipping execution of Task " + task.getTaskID() + " since there is no fresh PublicIP for it");
 	    return null;
 	}
 	
-	System.out.println("Executing Task "+task.getTaskID());
+	logger.info("Executing Task " + task.getTaskID());
 	
 	// Get the CertificateChain for the HuntingTask's target. To do so put the Target's Hostname/IP-combination in the JVM's DNS-cache. A normal connect to that Hostname will then connect to the correct IP while still using SNI. 
 	setDNSCacheEntry(task.getTargetHostName(),new InetAddress[] {task.getTargetIP()});
+	// this line will get us the certificate chain from the server
+	// TODO: watch it - if no connect is possible in two tries, it will throw an IOException that we don't catch
 	CertificateChainContainer CCC = CertificateManager.getCertChainFromServer(task.getTargetHostName() , task.getTargetPort());
 	X509Certificate[] targetCertChain = CCC.getChain();
+	logger.info("Received a certificate chain from target.");
 	
 	// Try to complete the chain
+	// TODO: when the maxPermutations is removed in makeCertChainValid(), remove it here, too
+	logger.info("Trying to complete chain.");
 	LinkedList<X509Certificate> completedChain = cm.makeCertChainValid(targetCertChain, 50, true);
-	if(completedChain != null){
+	if(completedChain != null) {
+	    logger.info("Chain could not be completed.");
 	    targetCertChain = completedChain.toArray(new X509Certificate[]{});
 	}
-	
+	logger.info("Chain has been completed.");
+
+
 	// Calculate the Hash of the Target's certificate chain
 	byte[] targetCertChainHash = calculateCertChainHash(targetCertChain);
 	
@@ -357,6 +381,7 @@ public class JavaHunter {
 		break;
 	    }
 	}
+	logger.info(certIsKnown ? "This certificate chain is already known (hash matches)." : "This certificate chain is so far unknown (no hash matches).");
 	
 	// Perform a traceroute for the Target's IP
 	String trace = tracer.traceroute(task.getTargetIP(), taskIsv4 ? 4 : 6);
@@ -402,18 +427,18 @@ public class JavaHunter {
 	    if (new Timestamp(System.currentTimeMillis() - pipCacheValidity).after(pip4LU)) {
 
 		// If it is not fresh anymore: Try to refresh it
-		String infoMsg = "Requesting a new IPv4 PublicIP";
-		System.out.println(infoMsg);
-		logger.info(infoMsg);
+		logger.info("Requesting a new IPv4 PublicIP");
 		pip4 = pipfetcher.getFreshPublicIPNot(4);
 		if (pip4 != null) {
 		    // If refreshing succeeded: Store the new PublicIP and the time of its observation
 		    pip4LU = new Timestamp(System.currentTimeMillis());
 		    freshPubIPAvailable = true;
 		}
+		logger.warning("Could not get fresh PublicIP (IPv4) from Crossbear server.");
 
 		// If it is still fresh: Everything is fine :)
 	    } else {
+		logger.info("PublicIP is still fresh.");
 		freshPubIPAvailable = true;
 	    }
 
@@ -424,18 +449,18 @@ public class JavaHunter {
 	    if (new Timestamp(System.currentTimeMillis() - pipCacheValidity).after(pip6LU)) {
 
 		// If it is not fresh anymore: Try to refresh it
-		// TODO Log
-		System.out.println("Requesting a new IPv6 PublicIP");
+		logger.info("Requesting a new IPv6 PublicIP");
 		pip6 = pipfetcher.getFreshPublicIPNot(6);
 		if (pip6 != null) {
-					
 		    // If refreshing succeeded: Store the new PublicIP and the time of its observation
 		    pip6LU = new Timestamp(System.currentTimeMillis());
 		    freshPubIPAvailable = true;
 		}
+		logger.warning("Could not get fresh PublicIP (for IPv6) from Crossbear server.");
 				
 		// If it is still fresh: Everything is fine :)
 	    } else {
+		logger.info("PublicIP is still fresh.");
 		freshPubIPAvailable = true;
 	    }
 
