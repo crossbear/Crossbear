@@ -608,14 +608,14 @@ public class CertificateManager {
 	private int cacheValidity;
 
 	/**
-	 * Create a new CertificateManager.
+	 * Create a new CertificateManager with a database backend.
 	 * 
 	 * During the creation the local system's trusted root-CA KeyStore will be read and stored in the ChainCerts-table and the localCAKeystore variable. The localCAKeystore is needed because some
 	 * websites don't send complete certificate chains since they assume that the clients know their root certificate. Crossbear tries to store the certificate chain for each certificate it observes.
 	 * However, this is only done when the chain could be validated and that might require the local system's root-CA KeyStore.
 	 * 
 	 * @param db
-	 *            The database connection that will be used to insert the local system's root-CAs into the ChainCerts-table (set this to null if the current system has no database; e.g. if the CertificateManager is instantiated by a Hunter)
+	 *            The database connection that will be used to insert the local system's root-CAs into the ChainCerts-table.
 	 * @param cacheValidity
 	 *            The duration in seconds a entry will be valid in a cache. This value is used when writing into a cache not when reading from it.
 	 * @param password The password for accessing the local CA Keystore
@@ -625,15 +625,39 @@ public class CertificateManager {
 	 * @throws CertificateException
 	 * @throws IOException
 	 */
-	public CertificateManager(Database db, int cacheValidity, String password) throws NoSuchAlgorithmException, KeyStoreException, SQLException, CertificateException, IOException {
+    public CertificateManager(Database db, int cacheValidity, String password) throws NoSuchAlgorithmException, KeyStoreException, SQLException, CertificateException, IOException {
 
 		// Remember the cacheValidity
 		this.cacheValidity = cacheValidity;
 
 		// Load the local system's root-CA KeyStore and store it in the ChainCerts-table
 		this.localCAKeystore = getLocalCAKeystore(password);
-		if(db != null)addCAsFromLocalCAKeyStoreToDB(db);
+		addCAsFromLocalCAKeyStoreToDB(db);
+	}
 
+	/**
+	 * Create a new CertificateManager without a database backend.
+	 * 
+	 * During the creation the local system's trusted root-CA KeyStore will be read and stored in the ChainCerts-table and the localCAKeystore variable. The localCAKeystore is needed because some
+	 * websites don't send complete certificate chains since they assume that the clients know their root certificate. Crossbear tries to store the certificate chain for each certificate it observes.
+	 * However, this is only done when the chain could be validated and that might require the local system's root-CA KeyStore.
+	 * 
+	 * @param cacheValidity
+	 *            The duration in seconds a entry will be valid in a cache. This value is used when writing into a cache not when reading from it.
+	 * @param password The password for accessing the local CA Keystore
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyStoreException
+	 * @throws SQLException
+	 * @throws CertificateException
+	 * @throws IOException
+	 */
+	public CertificateManager(int cacheValidity, String password) throws NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
+
+		// Remember the cacheValidity
+		this.cacheValidity = cacheValidity;
+
+		// Load the local system's root-CA KeyStore and store it in the ChainCerts-table
+		this.localCAKeystore = getLocalCAKeystore(password);
 	}
 
 	/**
