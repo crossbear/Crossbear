@@ -62,7 +62,9 @@ import crossbear.messaging.PublicIPNotifRequest;
 import crossbear.messaging.PublicIPNotification;
 
 /**
- * This class provides the functionality to obtain a PublicIPNotification of a specific version from the Crossbear server.
+ * This class provides the functionality to obtain a
+ * PublicIPNotification of a specific version from the Crossbear
+ * server.
  * 
  * @author Thomas Riedmaier
  *
@@ -301,7 +303,9 @@ public class PIPFetcher {
     private Inet4Address sip4;
 
     /**
-     * Perform a DNS-request on a server's Hostname. If a IPv4-address is found for that server, it is stored in "sip4"; if a IPv6-address is found, it is stored in "sip6".
+     * Perform a DNS-request on a server's Hostname. If a IPv4-address
+     * is found for that server, it is stored in "sip4"; if a
+     * IPv6-address is found, it is stored in "sip6".
      * 
      * @param serverHostname The Hostname to lookup (e.g. www.somedomain.org)
      * @throws UnknownHostException
