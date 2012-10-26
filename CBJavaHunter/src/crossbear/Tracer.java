@@ -42,9 +42,12 @@ import crossbear.messaging.Message;
 public class Tracer {
 
 	/**
-	 * For the task of locating a Mitm the information of what PublicIP a client is on is very valuable while the information which private IP it uses is of no use at all.
+	 * For the task of locating a Mitm the information of what
+	 * PublicIP a client is on is very valuable while the
+	 * information which private IP it uses is of no use at all.
 	 * 
-	 * This function removes all private IPs from the Traceroute's output and replaces them with the client's publicIP
+	 * This function removes all private IPs from the Traceroute's
+	 * output and replaces them with the client's publicIP
 	 * 
 	 * @param ownPublicIP
 	 *            The client's publicIP
