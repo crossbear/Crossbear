@@ -70,10 +70,15 @@ import crossbear.messaging.MalformedMessageException;
 import crossbear.messaging.MessageSerializationException;
 
 /**
- * A JavaHunter is a Java-based command-line application that implements the Crossbear-Hunting-functionality. When executed a JavaHunter will connect to the Crossbear-Server to download the current
- * HuntingTask-List. Afterwards it will execute the latter's HuntingTasks in the same way the CBHunter of the Firefox-Add-on would. Finally, the generated HuntingTaskResults will be send to the Crossbear-Server.
+ * A JavaHunter is a Java-based command-line application that
+ * implements the Crossbear-Hunting-functionality. When executed a
+ * JavaHunter will connect to the Crossbear-Server to download the
+ * current HuntingTask-List. Afterwards it will execute the latter's
+ * HuntingTasks in the same way the CBHunter of the Firefox-Add-on
+ * would. Finally, the generated HuntingTaskResults will be send to
+ * the Crossbear-Server.
  * 
- * @author Thomas Riedmaier
+ * @author Thomas Riedmaier, Ralph Holz
  * 
  */
 public class JavaHunter {
@@ -116,7 +121,8 @@ public class JavaHunter {
 
 
     /**
-     * Download the current HuntingTask-List from the Crossbear-Server, execute it and send the results back to the server
+     * Download the current HuntingTask-List from the Crossbear
+     * server, execute it and send the results back to the server
      * 
      * @param args Currently not used
      * @throws Exception
@@ -260,6 +266,10 @@ public class JavaHunter {
     /**
      * Execute the HuntingTask-List and send the execution results to the Crossbear-Server
      * 
+     * @todo Eliminate the many exceptions - wrap them?
+     * @todo As soon as we switch to hunter daemons: if a hunting task
+     * has failed, we shouldn't just crash to the prompt anymore with
+     * an Exception trace.
      * @throws NoSuchFieldException
      * @throws UnknownHostException
      * @throws IllegalAccessException
@@ -292,7 +302,10 @@ public class JavaHunter {
 	while (hti.hasNext()) {
 	    
 	    // ... and execute them.
-	    HuntingTaskReply htrep = executeHuntingTask(hti.next());
+	    HuntingTask nextHT = hti.next();
+	    logger.info("Executing hunting task with ID " + nextHT.getTaskID() + " for host " + nextHT.getTargetHostName() + ", " + nextHT.getTargetIP() + ":" + nextHT.getTargetPort() );
+	    HuntingTaskReply htrep = executeHuntingTask(nextHT);
+	    logger.info("Executed hunting task with ID  " + nextHT.getTaskID());
 	    
 	    // In case the execution was successful store the Result in the list of HuntingTaskReplies
 	    if(htrep != null) {
@@ -302,14 +315,15 @@ public class JavaHunter {
 	    
 	    // If 5 or more HuntingTaskReplies are available or if there are no more HuntingTasks: Send the Replies to the Crossbear-Server
 	    if (numOfResults >= 5 || (!hti.hasNext() && numOfResults>0) ) {
-		System.out.println("Sending "+numOfResults+" HuntingTaskReplies to the Crossbear-Server");
+		logger.info("Sending " + numOfResults + " HuntingTaskReplies to the Crossbear server");
 		sendHuntingTaskResultsToServer(htr);
 		htr = new MessageList();
 		numOfResults = 0;
+		logger.info("Sent " + numOfResults + " HuntingTaskReplies to the Crossbear server");
 	    }
 	    
 	}
-
+	logger.info("Executed current Hunting Task List.");
     }
 
     /**
@@ -387,7 +401,9 @@ public class JavaHunter {
 	String trace = tracer.traceroute(task.getTargetIP(), taskIsv4 ? 4 : 6);
 	trace = Tracer.addOwnPublicIPAndRemovePrivateIPs(taskIsv4 ? pip4.getPublicIP() : pip6.getPublicIP(), trace);
 	
-	// Build and return either a HuntingTaskReplyKnownCertChain or a HuntingTaskReplyNewCertChain depending on whether the Target's certificate is already well known.
+	// Build and return either a HuntingTaskReplyKnownCertChain or
+	// a HuntingTaskReplyNewCertChain depending on whether the
+	// Target's certificate is already well known.
 	if (certIsKnown) {
 	    return new HuntingTaskReplyKnownCertChain(task.getTaskID(), this.cst.getCurrentServerTime(), taskIsv4 ? pip4.gethMac() : pip6.gethMac(), targetCertChainHash, trace);
 	} else {
@@ -491,7 +507,7 @@ public class JavaHunter {
 	// Open a HttpsURLConnection for that url
 	HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
 
-	// Make sure that the Crossbear server uses the certificate it is supposed to use (prevent Mitm-attacks against Crossbear)
+	// Make sure that the Crossbear server uses the certificate it is supposed to use (prevent MitM attacks against Crossbear)
 	SSLContext sc = SSLContext.getInstance("SSL");
 	sc.init(null, new TrustManager[] { new TrustSingleCertificateTM(cbServerCertHash) }, new java.security.SecureRandom());
 	conn.setSSLSocketFactory(sc.getSocketFactory());
@@ -508,7 +524,6 @@ public class JavaHunter {
 	// Close all opened Streams
 	is.close();
 	out.close();
-		
     }
 
 
