@@ -167,10 +167,13 @@ public class Tracer {
     }
 
     /**
-     * Perform a ping on a Unix/Linux system. This is currently done by executing "ping"/"ping6" and reading its output. Depending on that output it is then decided if the ping reached the host, a
-     * intermediate hop or if an error occurred.
+     * Perform a ping on a Unix/Linux system. This is currently done
+     * by executing "ping"/"ping6" and reading its output. Depending
+     * on that output it is then decided if the ping reached the host,
+     * an intermediate hop or if an error occurred.
      * 
-     * The command that will be executed is /bin/ping(6) -c 1 -n -W 1 -t "ttl" "ip"
+     * The command that will be executed is /bin/ping(6) -c 1 -n -W 1
+     * -t "ttl" "ip"
      * 
      * @param ip
      *            The IP-Address to ping
@@ -178,7 +181,9 @@ public class Tracer {
      *            The version of the IP-Address (4 or 6)
      * @param ttl
      *            The Time-To-Live of the ping that should be sent
-     * @returns "TARGET "+TargetIP if the target was reached, "HOP "+HopIP if an intermediate Host was reached or "NO_REPLY" if an error occurred during the execution of "ping"
+     * @returns "TARGET "+TargetIP if the target was reached, "HOP
+     * "+HopIP if an intermediate Host was reached or "NO_REPLY" if an
+     * error occurred during the execution of "ping"
      * @throws IOException
      */
     private static String ping(InetAddress ip, int ipVersion, int ttl) throws IOException {
@@ -233,9 +238,15 @@ public class Tracer {
     }
 
     /**
-     * Perform a Traceroute on an IP. This function will call the Tracer.ping-function with increasing TTL-values. The Trace returned by this function will consist of one line per measured hop. If
-     * more than one IP replied for the same TTL then the line will look like "IP1|IP2|...". If there was no reply from a HOP it won't be listed (and there will be no empty line either). This is
-     * because of the fact that between two HOPs that reply there could possibly be a lot of HOPs that didn't reply and didn't decrease the TTL-value anyway.
+     * Perform a Traceroute on an IP. This function will call the
+     * Tracer.ping-function with increasing TTL-values. The Trace
+     * returned by this function will consist of one line per measured
+     * hop. If more than one IP replied for the same TTL then the line
+     * will look like "IP1|IP2|...". If there was no reply from a HOP
+     * it won't be listed (and there will be no empty line
+     * either). This is because of the fact that between two HOPs that
+     * reply there could possibly be a lot of HOPs that didn't reply
+     * and didn't decrease the TTL-value anyway.
      * 
      * @param ip
      *            The IP-Address to trace
