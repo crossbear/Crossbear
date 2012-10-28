@@ -163,9 +163,12 @@ public class HuntingTask extends Message {
     }
 
     /**
-     * Create a HuntingTask-Object representation of an entry in the HuntingTasks-table.
+     * Create a HuntingTask-Object representation of an entry in the
+     * HuntingTasks-table.
      * 
-     * Please Note: This constructor is only meant to be used by functions that are accessing the HuntingTasks-table in a read-only way.
+     * Please Note: This constructor is only meant to be used by
+     * functions that are accessing the HuntingTasks-table in a
+     * read-only way.
      * 
      * @param taskID The value of the "Id"-field
      * @param targetHostName The value of the "TargetHostName"-field
@@ -188,9 +191,13 @@ public class HuntingTask extends Message {
     }
 
     /**
-     * Get the scan-target's HuntingTask from the HuntingTask-table. If there is no active HuntingTask for it: create it first.
+     * Get the scan-target's HuntingTask from the
+     * HuntingTask-table. If there is no active HuntingTask for it:
+     * create it first.
      * 
-     * Please note: This function assumes that the input has already been checked for validity (e.g. hostname not too long, IP not null, etc ...)
+     * Please note: This function assumes that the input has already
+     * been checked for validity (e.g. hostname not too long, IP not
+     * null, etc ...)
      * 
      * @param targetHostName The Hostname of the scan-target
      * @param targetIP The IP of the scan-target
@@ -221,7 +228,10 @@ public class HuntingTask extends Message {
     }
 
     /**
-     * Get the SHA256Hashes of all well known certificates chains for this HuntingTask. A certificate chain is well known for a hunting task if it has been observed for the HuntingTask's scan-target.
+     * Get the SHA256Hashes of all well known certificates chains for
+     * this HuntingTask. A certificate chain is well known for a
+     * hunting task if it has been observed for the HuntingTask's
+     * scan-target.
      * 
      * @param max The maximum number of hashes to be returned.
      * @param db The Database connection to use
@@ -272,8 +282,10 @@ public class HuntingTask extends Message {
     }
 
     /**
-     * Assume that a HuntingTask exists that has the same properties like the ones that are stored within the current object. If this assumption is true this function will return the ID of that
-     * HuntingTask and -1 if the assumption is wrong.
+     * Assume that a HuntingTask exists that has the same properties
+     * like the ones that are stored within the current object. If
+     * this assumption is true this function will return the ID of
+     * that HuntingTask and -1 if the assumption is wrong.
      * 
      * @param db The Database connection to use
      * @return The ID of the HuntingTask having the same properties of the current object or -1 if there is none.
