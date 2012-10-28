@@ -6,3 +6,6 @@ There are a number of exceptions that are thrown by the classes in crossbear.mes
 
 CBJavaHunter:
 the PIPException is a kludge. Can we do without it, or turn it into a kind of wrapper?
+
+CBJavaHunter:
+Daemonize.
