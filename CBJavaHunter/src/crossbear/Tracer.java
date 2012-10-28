@@ -70,13 +70,13 @@ public class Tracer {
 			LinkedList<String> elementsOfCurrentHop = new LinkedList<String>(Arrays.asList(arrayOfHops.get(i).split("\\|")));
 			LinkedList<String> cleanedElementsOfCurrentHop = new LinkedList<String>();
 
-			// Then go through all of that IPs
+			// Then go through all of those IPs
 			for (int j = 0; j < elementsOfCurrentHop.size(); j++) {
 
 				// And check if they are private
 				if (!privateIPRegex.matcher(elementsOfCurrentHop.get(j)).matches()) {
 
-					// If not: keep them
+					// If not private: keep them
 					cleanedElementsOfCurrentHop.add(elementsOfCurrentHop.get(j));
 				}
 
@@ -88,7 +88,10 @@ public class Tracer {
 			}
 		}
 
-		// Take the cleaned output and append the client's public IP to it (cleanedArrayOfHops will always include the target's IP and therefore it will never be empty)
+		// Take the cleaned output and append the client's
+		// public IP to it (cleanedArrayOfHops will always
+		// include the target's IP and therefore it will never
+		// be empty)
 		return ownPublicIP.getHostAddress() + "\n" + join(cleanedArrayOfHops, '\n');
 	}
 
