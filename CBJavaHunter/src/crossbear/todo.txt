@@ -1,3 +1,8 @@
+CBJavaHunter:
+Log indicates that a loop might be executed twice although it is not necessary? Check log.
+Log to Console is still ugly.
+Check if all necessary replies are really sent!
+
 CBJavaHunter: 
 There are so many exceptions thrown. It is correct to let them wander up the stack, as JavaHunter must not continue if they occur. Still, it might be sensible to wrap them in more dedicated exceptions to make the code more readable (it's not clear which exception is thrown by which line). 
 
