@@ -49,6 +49,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import crossbear.messaging.PublicIPNotifRequest;
 import crossbear.messaging.PublicIPNotification;
+import crossbear.messaging.MessageSerializationException;
 
 /**
  * PublicIPNotifProcessor is the class used by getPublicIP.jsp to generate a encrypted and integrity protected PublicIPNotification out of a PublicIPNotifRequest
@@ -287,7 +288,6 @@ public class PublicIPNotifProcessor {
 	 * @param db The database connection to use (required to add a HMAC to the PublicIPNotification-message)
 	 * @return The AES encrypted concatenation of the PublicIPNotification-message and its hash
 	 * @throws InvalidKeyException
-	 * @throws CertificateEncodingException
 	 * @throws NoSuchAlgorithmException
 	 * @throws NoSuchProviderException
 	 * @throws IOException
@@ -297,28 +297,28 @@ public class PublicIPNotifProcessor {
 	 * @throws NoSuchPaddingException
 	 * @throws InvalidAlgorithmParameterException
 	 */
-	public byte[] generateEncryptedPublicIPNotif(PublicIPNotifRequest pipnr, Database db) throws InvalidKeyException, CertificateEncodingException, NoSuchAlgorithmException, NoSuchProviderException,
-			IOException, SQLException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+    public byte[] generateEncryptedPublicIPNotif(PublicIPNotifRequest pipnr, Database db) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,
+												     SQLException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException, InvalidAlgorithmParameterException, MessageSerializationException {
 
-		// Decrypt the AES-key
-		byte[] decryptedRSAKey = RSADecrypt(crossbearRSAKeyPair.getPrivate(), pipnr.getRsaEncryptedKey());
+	// Decrypt the AES-key
+	byte[] decryptedRSAKey = RSADecrypt(crossbearRSAKeyPair.getPrivate(), pipnr.getRsaEncryptedKey());
 
-		// Make sure it is valid
-		if (!isValidAESKey(decryptedRSAKey)) {
-			throw new IllegalArgumentException("Decrypting the content of the PublicIPNotifRequest did not result in a valid AES key (length was: "+decryptedRSAKey.length+").");
-		}
-
-		// Generate the PublicIPNotification containing the public IP of the client
-		byte[] messageBytes = new PublicIPNotification(pipnr.getRemoteAddr(), db).getBytes();
-
-		// Concatenate it with its hash
-		byte[] replyPayload = concatByteArrays(messageBytes, SHA256(messageBytes));
-
-		// Encrypt the concatenation using the AES-key supplied by the client
-		byte[] encryptedReply = AESEncrypt(decryptedRSAKey, replyPayload);
-		
-		// Return the result
-		return encryptedReply;
-
+	// Make sure it is valid
+	if (!isValidAESKey(decryptedRSAKey)) {
+	    throw new IllegalArgumentException("Decrypting the content of the PublicIPNotifRequest did not result in a valid AES key (length was: "+decryptedRSAKey.length+").");
 	}
+
+	// Generate the PublicIPNotification containing the public IP of the client
+	byte[] messageBytes = new PublicIPNotification(pipnr.getRemoteAddr(), db).getBytes();
+
+	// Concatenate it with its hash
+	byte[] replyPayload = concatByteArrays(messageBytes, SHA256(messageBytes));
+
+	// Encrypt the concatenation using the AES-key supplied by the client
+	byte[] encryptedReply = AESEncrypt(decryptedRSAKey, replyPayload);
+		
+	// Return the result
+	return encryptedReply;
+
+    }
 }
