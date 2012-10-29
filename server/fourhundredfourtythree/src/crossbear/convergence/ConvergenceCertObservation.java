@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
 
-    Original authors: Thomas Riedmaier, Ralph Holz (TU München, Germany)
+    Original authors: Thomas Riedmaier, Ralph Holz (TU Muenchen, Germany)
 */
 
 package crossbear.convergence;
