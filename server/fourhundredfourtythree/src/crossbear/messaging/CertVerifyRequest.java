@@ -184,11 +184,11 @@ public class CertVerifyRequest extends Message {
      * CertVerifyResultCache-table is the hash of the CertVerifyRequest. This hash is calculated here.
      * 
      * @return The hash of the CertVerifyRequest-Object
-     * @throws CertificateEncodingException
+     * @throws MessageSerializationException
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
-    public byte[] getHash() throws CertificateEncodingException, IOException, NoSuchAlgorithmException{
+    public byte[] getHash() throws MessageSerializationException, IOException, NoSuchAlgorithmException {
 		
 	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		
@@ -306,22 +306,30 @@ public class CertVerifyRequest extends Message {
      * @see crossbear.Message#writeContent(java.io.OutputStream)
      */
     @Override
-	protected void writeContent(OutputStream out) throws CertificateEncodingException, IOException {
+	protected void writeContent(OutputStream out) throws MessageSerializationException {
 
 	// First part: The options for the verification process
-	out.write(options);	
+	try {
+	    out.write(options);
 		
-	// Second part: the number of how many certificates are part of the chain
-	out.write(this.certChain.length & 255);
+	    // Second part: the number of how many certificates are part of the chain
+	    out.write(this.certChain.length & 255);
 
-	// Third part: the certificate chain (beginning with the server certificate)
-	for (int i = 0; i < Math.min(this.certChain.length, 255); i++) {
-	    out.write(this.certChain[i].getEncoded());
+	    // Third part: the certificate chain (beginning with the server certificate)
+	    for (int i = 0; i < Math.min(this.certChain.length, 255); i++) {
+		out.write(this.certChain[i].getEncoded());
+	    }
+
+	    // Forth part: The server's Hostname, IP and port
+	    out.write(new String(hostName + "|" + hostIP.getHostAddress() + "|" + String.valueOf(hostPort)).getBytes());
 	}
 
-	// Forth part: The server's Hostname, IP and port
-	out.write(new String(hostName + "|" + hostIP.getHostAddress() + "|" + String.valueOf(hostPort)).getBytes());
-
+	catch (IOException e) {
+	    throw new MessageSerializationException("Could not serialize certificate verification request", e);
+	}
+	catch (CertificateEncodingException e) {
+	    throw new MessageSerializationException("Could not serialize certificate verification request", e);
+	}
     }
 
-}
+    }
