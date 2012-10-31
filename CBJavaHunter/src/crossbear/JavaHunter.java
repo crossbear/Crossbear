@@ -380,8 +380,9 @@ public class JavaHunter {
 	    logger.info("Chain could not be completed.");
 	    targetCertChain = completedChain.toArray(new X509Certificate[]{});
 	}
-	logger.info("Chain has been completed.");
-
+	else {
+	    logger.info("Chain has been completed.");
+	}
 
 	// Calculate the Hash of the Target's certificate chain
 	byte[] targetCertChainHash = calculateCertChainHash(targetCertChain);
