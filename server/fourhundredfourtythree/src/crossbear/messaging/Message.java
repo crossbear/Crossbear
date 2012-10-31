@@ -70,6 +70,10 @@ public abstract class Message {
 	public static final byte MESSAGE_TYPE_TASK_REPLY_NEW_CERT = 20;
 	public static final byte MESSAGE_TYPE_TASK_REPLY_KNOWN_CERT = 21;
 	
+	// Messages to request a host key fingerprint verification and to receive it's result
+	public static final byte MESSAGE_TYPE_FP_VERIFY_REQUEST = 50;
+	public static final byte MESSAGE_TYPE_FP_VERIFY_RESULT = 60;
+	
 	// Messages to request a certificate verification and to receive it's result
 	public static final byte MESSAGE_TYPE_CERT_VERIFY_REQUEST = 100;
 	public static final byte MESSAGE_TYPE_CERT_VERIFY_RESULT = 110;
