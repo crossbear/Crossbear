@@ -89,7 +89,7 @@ public class PIPFetcher {
 
 	this.cbServerCert = cbServerCert;
 		
-	// Obtain the IP-addresses of the Crossbear-Server
+	// Obtain the IP addresses of the Crossbear-Server
 	getServerIPs(cbServerHost);
 		
     }
