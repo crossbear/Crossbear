@@ -54,6 +54,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.NoSuchPaddingException;
 
 import java.util.logging.Logger;
+import java.util.logging.LogManager;
 import java.util.logging.FileHandler;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -137,6 +138,9 @@ public class JavaHunter {
 	 * Encryption all of these are used in Crossbear.
 	 */
 	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+	// disable extra functionality we would have due to the default configuration
+	LogManager.getLogManager().reset();
 
 	logger = Logger.getLogger("JavaHunter");
 	logger.setLevel(Level.INFO);
