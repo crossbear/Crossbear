@@ -40,6 +40,7 @@ import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -71,6 +72,9 @@ import crossbear.messaging.MessageSerializationException;
  */
 public class PIPFetcher {
 
+    // the logger
+    Logger logger = null;
+
     /**
      * Create a new Public-IP-Fetcher.
      * 
@@ -80,6 +84,8 @@ public class PIPFetcher {
      * @throws NamingException
      */
     public PIPFetcher(String cbServerHost, X509Certificate cbServerCert) throws UnknownHostException, NamingException {
+
+	logger = Logger.getLogger("JavaHunter");
 
 	this.cbServerCert = cbServerCert;
 		
@@ -118,14 +124,18 @@ public class PIPFetcher {
 	pipReq.setRsaEncryptedKey(rsaEncryptedKey);
 
 	// And send this request to the server
+	logger.info("Sending PublicIP Notification Request to Crossbear server.");
 	byte[] serverReply = sendPubIPRequestToCBServer(ipVersion, pipReq);
 		
 	// In case the server could not be contacted using the specified IP-version: return null
-	// TODO: this should probably be logged and dealt with in a different way? Throw an exception?
-	if (serverReply == null)
+	// TODO: this should probably be dealt with in a different way? Throw an exception?
+	if (serverReply == null) {
+	    logger.warning("Server could not be contacted using IPv" + ipVersion);
 	    return null;
+	}
 
 	// Decrypt the server's reply ...
+	logger.info("Decrypting Crossbear server's reply.");
 	byte[] decryptedServerReply = AESDecrypt(aesKey.getEncoded(), serverReply);
 
 	// ... and validate it. The reply has the format PLAINTEXT|SUPPOSED_HASH(32bytes). First: Split the server's reply:
@@ -386,7 +396,7 @@ public class PIPFetcher {
 
 	} catch (IOException e) {
 	    // If it was not possible to connect to the Crossbear-Server using "ipVersion" return null
-	    System.err.println("Could not connect to the crossbear server using IPv" + ipVersion);
+	    logger.severe("Could not connect to the crossbear server using IPv" + ipVersion);
 	    return null;
 	}
 
