@@ -403,6 +403,7 @@ public class JavaHunter {
 	logger.info(certIsKnown ? "This certificate chain is already known (hash matches)." : "This certificate chain is so far unknown (no hash matches).");
 	
 	// Perform a traceroute for the Target's IP
+	logger.info("Starting Tracer");
 	String trace = tracer.traceroute(task.getTargetIP(), taskIsv4 ? 4 : 6);
 	trace = Tracer.addOwnPublicIPAndRemovePrivateIPs(taskIsv4 ? pip4.getPublicIP() : pip6.getPublicIP(), trace);
 	
