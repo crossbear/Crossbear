@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.logging.Logger;
 
 import crossbear.messaging.Message;
 
@@ -40,6 +41,8 @@ import crossbear.messaging.Message;
  *
  */
 public class Tracer {
+
+    Logger logger = null;
 
     /**
      * For the task of locating a Mitm the information of what
@@ -233,6 +236,8 @@ public class Tracer {
      * @param samplesPerHop Number of samples to be taken per hop (i.e. should be sent with the same TTL)
      */
     public Tracer(int maxHops, int samplesPerHop) {
+	logger = Logger.getLogger("JavaHunter");
+
 	this.maxHops = maxHops;
 	this.samplesPerHop = samplesPerHop;
     }
@@ -257,6 +262,7 @@ public class Tracer {
      * @throws IOException
      */
     public String traceroute(InetAddress ip, int ipVersion) throws TraceException, IOException {
+	logger.info("Starting traceroute.");
 	LinkedList<String> re = new LinkedList<String>();
 
 	// Perform pings with an increasing TTL (starting at 1 and ending with self.MaxHops)
@@ -292,6 +298,7 @@ public class Tracer {
 	}
 
 	// Finally add the Target's IP to the list of Hops (which will be transformed in a "\n"-seperated list) and return the trace
+	logger.info("Finished traceroute.");
 	return (join(re, '\n') + '\n' + ip.getHostAddress()).trim();
     };
 
