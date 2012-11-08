@@ -138,38 +138,6 @@ public class Tracer {
     }
 
     /**
-     * Join all elements of a LinkedList of type E into a separator-separated String
-     * 
-     * This code was created by the use of http://snippets.dzone.com/posts/show/91
-     * 
-     * @param list A LinkedList of elements whose String-representations should be concatenated (e.g. "a"->"b"->"c")
-     * @param separator The separator to put between the elements of the list (e.g. '|')
-     * @return The String-concatenation of all elements of "list" separated by "separator"
-     */
-    private static <E> String join(LinkedList<E> list, char separator) {
-		
-	// Create an output buffer
-	StringBuffer buffer = new StringBuffer();
-		
-	// Go through all elements of the list ...
-	Iterator<E> iter = list.iterator();
-	while (iter.hasNext()) {
-			
-	    // ... and append them to the output buffer.
-	    buffer.append(iter.next());
-			
-	    // In case the element was not the last one in the list ...
-	    if (iter.hasNext()) {
-		// ... append a separator-char to the list.
-		buffer.append(separator);
-	    }
-	}
-		
-	// Finally: return the buffer
-	return buffer.toString();
-    }
-
-    /**
      * Perform a ping on a Unix/Linux system. This is currently done
      * by executing "ping"/"ping6" and reading its output. Depending
      * on that output it is then decided if the ping reached the host,
@@ -301,5 +269,38 @@ public class Tracer {
 	logger.info("Finished traceroute.");
 	return (join(re, '\n') + '\n' + ip.getHostAddress()).trim();
     };
+
+
+    /**
+     * Join all elements of a LinkedList of type E into a separator-separated String
+     * 
+     * This code was created by the use of http://snippets.dzone.com/posts/show/91
+     * 
+     * @param list A LinkedList of elements whose String-representations should be concatenated (e.g. "a"->"b"->"c")
+     * @param separator The separator to put between the elements of the list (e.g. '|')
+     * @return The String-concatenation of all elements of "list" separated by "separator"
+     */
+    private static <E> String join(LinkedList<E> list, char separator) {
+		
+	// Create an output buffer
+	StringBuffer buffer = new StringBuffer();
+		
+	// Go through all elements of the list ...
+	Iterator<E> iter = list.iterator();
+	while (iter.hasNext()) {
+			
+	    // ... and append them to the output buffer.
+	    buffer.append(iter.next());
+			
+	    // In case the element was not the last one in the list ...
+	    if (iter.hasNext()) {
+		// ... append a separator-char to the list.
+		buffer.append(separator);
+	    }
+	}
+		
+	// Finally: return the buffer
+	return buffer.toString();
+    }
 
 }
