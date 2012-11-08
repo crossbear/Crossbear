@@ -205,6 +205,8 @@ public class Tracer {
      */
     public Tracer(int maxHops, int samplesPerHop) {
 	logger = Logger.getLogger("JavaHunter");
+	
+	logger.info("Created a Tracer.");
 
 	this.maxHops = maxHops;
 	this.samplesPerHop = samplesPerHop;
@@ -267,8 +269,12 @@ public class Tracer {
 
 	// Finally add the Target's IP to the list of Hops (which will be transformed in a "\n"-seperated list) and return the trace
 	logger.info("Finished traceroute.");
+	logger.finer( (join(re, ' ') + ' ' + ip.getHostAddress()).trim() );
 	return (join(re, '\n') + '\n' + ip.getHostAddress()).trim();
     };
+
+
+
 
 
     /**
