@@ -400,7 +400,7 @@ public class JavaHunter {
 		break;
 	    }
 	}
-	logger.info(certIsKnown ? "This certificate chain is already known (hash matches)." : "This certificate chain is so far unknown (no hash matches).");
+	logger.info(certIsKnown ? "This certificate chain is already known by the Crossbear server." : "This certificate chain is so far unknown by the Crossbear server.");
 	
 	// Perform a traceroute for the Target's IP
 	logger.info("Starting Tracer");
