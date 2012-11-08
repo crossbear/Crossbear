@@ -261,7 +261,7 @@ public class Tracer {
 		}
 	    }
 
-	    // For each HOP: Generate a "|"-seperated list of IPs that replied
+	    // For each HOP: Generate a "|"-separated list of IPs that replied
 	    if (samplesOfHop.size() > 0) {
 		re.add(join(samplesOfHop, '|'));
 	    }
