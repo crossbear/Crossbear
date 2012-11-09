@@ -64,14 +64,19 @@ def main():
     for row in c:
     	(issuer, aki) = getIssuerAndAKI(row)
     	if(None in (issuer,aki)):
-    		print "problem.."
-    		continue
-    	sqlInsertResults = "INSERT INTO issuer_info (issuing_ca, aki) VALUES ('"+issuer+"', '"+aki+"')"
+            # TODO: add logging
+            print "problem.."
+            continue
+    	
+        # sqlInsertResults = "INSERT INTO issuer_info (issuing_ca, aki) VALUES ('"+issuer+"', '"+aki+"')"
+        sqlInsertResults = "INSERT INTO issuer_info (issuing_ca, aki) VALUES (%s, %s)"
     	try:
-            up.execute(sqlInsertResults)
+            up.execute(sqlInsertResults, (issuer, aki))
         except Exception, e:
             logging.error("SELECT FF OIDs failed.")
             logging.error(e)
             continue
+
+        conn.commit()
 if __name__ == "__main__":
 	main()
