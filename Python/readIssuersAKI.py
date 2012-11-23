@@ -4,6 +4,21 @@ import re
 import logging
 import getpass
 import sys
+from ConfigParser import SafeConfigParser
+
+#configfile = home + "/pki_crawl.conf"
+#confparser = SafeConfigParser()
+#confparser.read(configfile)
+#dbname = confparser.get('database', 'dbname')
+#username = confparser.get('database', 'username')
+#dbhost = confparser.get('database', 'host')
+#password = confparser.get('database', 'password')
+#logpath = confparser.get('log', 'logpath')
+#loglevel = "logging." + confparser.get('log', 'loglevel')
+
+# TODO
+# LOG_FILENAME = logpath + "/readIssuersAKI_" + date + ".log"
+# logging.basicConfig(filename=LOG_FILENAME, level=loglevel, filemode='w')
 
 re_akid = re.compile("X509v3 Authority Key Identifier:.*\n.*keyid:(.*)")
 re_issuer = re.compile("(Issuer: .*)")
