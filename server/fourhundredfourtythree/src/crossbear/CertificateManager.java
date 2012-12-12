@@ -178,7 +178,11 @@ public class CertificateManager {
 		Iterator<X509Certificate> iter = certList.iterator();
 		while (iter.hasNext()) {
 			// Get the PEM-encoding for each certificate, calculate its MD5-hash and append its HEX-String representation to the output
-			re.append(Message.byteArrayToHexString(MD5(getPemEncoding(iter.next()).getBytes("UTF-8"))));
+		    String hulla = getPemEncoding(iter.next());
+		    System.out.println("PEM encoding: " + hulla);
+		    String m = Message.byteArrayToHexString(MD5(hulla.getBytes("UTF-8")));
+		    System.out.println("My hash is: " + m);
+			re.append(m);
 		}
 
 		return re.toString();
