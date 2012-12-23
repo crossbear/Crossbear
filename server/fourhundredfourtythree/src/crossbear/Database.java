@@ -85,7 +85,7 @@ public class Database {
 				ps.setString(i+1, ((InetAddress)params[i]).getHostAddress());
 				
 			} else {
-				throw new InvalidParameterException("Unsupported/Unimplemented type of parameter");
+				throw new InvalidParameterException("Unsupported/Unimplemented type of parameter: " + params[i].getClass().getName());
 			}		
 		}
 	}
