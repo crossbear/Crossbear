@@ -133,6 +133,11 @@ public class Ssh {
 	 * @return Fingerprint object with fingerprint from server (null if a problem occurred)
 	 * and the current time
 	 */
+
+
+        /*
+	  TODO: think about replacing this with native SSH code. Candidates?
+	 */
 	public static Fingerprint fetchSshFp(InetAddress ip, int port, KeyType keyType, int nid, long timeoutMs) {
 
 		// Fingerprint result
