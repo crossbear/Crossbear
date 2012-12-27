@@ -81,6 +81,7 @@ public class FpVRProcessor {
 		
 		Object[] params = { fpvr.getHostIP(), Integer.valueOf(fpvr.getHostPort()), Ssh.keyTypeToString(fpvr.getKeyType(), fpvr.getKeyNid()) };
 		
+		// Execute the query via the Database class (so it is a prepared statement)
 		ResultSet rs = db.executeQuery("SELECT fingerprint, ts FROM hosts JOIN ssh2 ON hosts.id = ssh2.host_id WHERE ip_addr = inet(?) AND port = ? AND host_key_type = ? ORDER BY ts DESC", params);
 		
 		// No entry was found in DB
@@ -135,6 +136,12 @@ public class FpVRProcessor {
 	 * @return Message list consisting of one FpVerifyResult message.
 	 * @throws InvalidParameterException
 	 * @throws SQLException
+	 */
+
+        /*
+	  TODO: make sure the code catches any undesired user input to
+	  get rid of malicious injections (this stuff gets passed to
+	  command-line)
 	 */
 	public MessageList process() throws InvalidParameterException, SQLException  {
 
