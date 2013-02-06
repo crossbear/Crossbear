@@ -1,0 +1,3 @@
+clean:
+	@echo Cleaning directory...
+	rm -rf *pyc *\~ \#*\#
