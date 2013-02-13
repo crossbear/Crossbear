@@ -22,8 +22,7 @@ import pprint
 
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
-    def __init__(self, cbServerHostName, tracerMHops, tracerSPerHop,
-                 cbServerCert):
+    def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
         
         self.cbServerHostName    = cbServerHostName
         self.tracer              = Tracer(tracerMHops, tracerSPerHop)
@@ -61,16 +60,20 @@ class PyHunter(object):
         """
         validity = 60000
         try:
+	    print ipv
+	    print self.hts
             if (time() - self.hts["pip"][ipv]["ts"] < validity):
                 return True
-        except KeyError:
+        except KeyError, e:
+	    print e
             return False
         try:
-            print "Geting a new Public IP Notification!"
+            print "Getting a new Public IP Notification!"
             pipn = self.pipfetcher.getPublicIPN(ipv)
             self.hts["pip"][ipv]["not"] = pipn
             return True
-        except Exception:
+        except Exception, e:
+	    print e
             return False
 
     def send_results(self, hts):
