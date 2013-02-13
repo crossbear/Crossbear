@@ -1,7 +1,7 @@
 from twisted.python import usage
 from ooni.nettest import NetTestCase
 from ooni.PyHunter import PyHunter
-
+import ConfigParser
 
 class CbOptions(usage.Options):
     optParameters = [
@@ -65,7 +65,7 @@ class CBTester(NetTestCase):
         CBTester.merge(r1)
 
         r2 = ph.executeHTL()
-        CBTester.merge(report, r2)
+        CBTester.merge(r2)
 
 
 
