@@ -19,6 +19,9 @@ packages enabled), we also recommend you install libdnet from the
 tar ball (see OONI readme), but pypcap from the distro repositories.
 The work-flow as given in the OONI readme will not work.
 
+Then, do the pip -r requirements.txt as given in the OONI install
+instructions.
+
 
 2) Installing OONIBear.
 
