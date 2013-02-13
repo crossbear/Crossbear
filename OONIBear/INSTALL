@@ -1,0 +1,53 @@
+Installing OONIBear:
+
+Instructions are for Debian and derived distributions. We will
+install OONIBear as symlinks into the ooni-probe directory.
+The Crossbear/OONIBear repo can reside anywhere on your drive.
+
+1) Installing OONI (www.ooni.nu)
+
+Clone the OONI repository.
+
+Mostly, we can follow the instructions given in OONI. In particular,
+we also recommend using a virtualenv. However, OONI's instructions
+here are not up to date - we recommend having a look at
+           http://www.virtualenv.org/en/latest/
+for the correct installation instructions.
+
+Once you got your virtualenv set up (we do it with system-site 
+packages enabled), we also recommend you install libdnet from the
+tar ball (see OONI readme), but pypcap from the distro repositories.
+The work-flow as given in the OONI readme will not work.
+
+
+2) Installing OONIBear.
+
+Switch to the OONIBear branch to get the latest development version
+of OONIBear.
+
+Create symlinks in path/to/ooni-probe:
+
+ln -s /path/to/OONIBear.py
+ln -s /path/to/cb.conf
+ln -s /path/to/cbserver.crt
+
+In /path/to/ooni-probe/ooni:
+ln -s /path/to/PyHunter
+
+Switch to the new PyHunter dir. Kill any symlinks you find in there
+(if there are any). Now, in this dir:
+
+ln -s /path/to/cbutils
+ln -s /path/to/cbmessaging
+
+That's it. OONIBear will now be accessible to OONI.
+
+
+3) Calling OONIBear from OONI
+Once you've done that, change to root (sudo -s) and then activate
+the virtualenv. That's important as otherwise OONI/OONIBear won't
+find the necessary python libs (calling ooni-probe with sudo from
+within a virtualenv will kick you out of the virtualenv).
+
+In practice, we have not found it necessary to start Tor for running
+OONIBear, but it will work, too.
