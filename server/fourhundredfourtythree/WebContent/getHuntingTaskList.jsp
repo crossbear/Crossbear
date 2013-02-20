@@ -92,6 +92,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		reply.add(new PublicIPNotification(remoteIP, db));
 		reply.add(new CurrentServerTime());
 
+		// TODO: if signatures used, this is where to add them
+
 		//Send the Hunting Task List to the client
 		outStream.write(reply.getBytes());
 		
