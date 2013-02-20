@@ -13,8 +13,11 @@ On Linux, open Firefox. Tools -> Add-ons. Click the icon that so nicely
 wishes to imitate the look of a wrench. Choose "install add-on from file".
 
 Team:
-Thomas Riedmaier
-Ralph Holz
+Ralph Holz (coordinator, developer)
+Thomas Riedmaier (developer, did the original SSL!)
+Vedat Levi Alev (developer, works on the OONI integration)
+Oliver Gasser (developer, does the new extension that also starts with 'S')
+Phillip Dowling (developer, does Python tools for processing certs)
 
 Licensing: Crossbear code is GPLv3 - see notice contained in every
 source file. However, some components we redistribute (e.g. Java

@@ -1,5 +1,5 @@
 <%--
-
+/*
     This file is part of Crossbear.
 
     Crossbear is free software: you can redistribute it and/or modify
@@ -15,7 +15,8 @@
     You should have received a copy of the GNU General Public License
     along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
 
-    Original authors: Thomas Riedmaier, Ralph Holz (TU München, Germany)
+    Original authors: Thomas Riedmaier, Ralph Holz (TU Muenchen, Germany)
+*/
 
 --%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream"
 	 language="java"
@@ -133,6 +134,8 @@
 			//... and store it in the database
 			cvrp.storeCertVerifyResultInCache(reply,cacheValidity);
 		}
+
+		// TODO: if signatures are used, this is the moment to do it
 
 		// Send the reply to the client
 		outStream.write(reply);

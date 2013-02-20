@@ -1,5 +1,4 @@
 <%--
-
     This file is part of Crossbear.
 
     Crossbear is free software: you can redistribute it and/or modify
@@ -16,7 +15,6 @@
     along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
 
     Original authors: Thomas Riedmaier, Ralph Holz (TU München, Germany)
-
 --%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.net.InetAddress"
 	language="java" 
 	contentType="application/octet-stream"
@@ -85,6 +83,7 @@
 		reply.add(new PublicIPNotification(remoteIP, db));
 		reply.add(new CurrentServerTime());
 
+		// TODO: if signatures used, this is where to add them
 		//Send the Hunting Task List to the client
 		outStream.write(reply.getBytes());
 		
