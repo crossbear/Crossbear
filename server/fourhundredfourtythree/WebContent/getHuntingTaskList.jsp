@@ -84,6 +84,8 @@
 		reply.add(new CurrentServerTime());
 
 		// TODO: if signatures used, this is where to add them
+		SignatureMessage sigm = new SignatureMessage(reply.getBytes());
+		reply.add(sigm);
 		//Send the Hunting Task List to the client
 		outStream.write(reply.getBytes());
 		

@@ -127,15 +127,16 @@
 		byte[] reply = cvrp.getCachedCertVerifyResult();
 		
 		if(reply == null){
-
+			// Can we also cache the signature of the Message? Should be okay, since the message doesn't change much.
+			MessageList ml = cvrp.process();
+			SignatureMessage sigm = new SignatureMessage(ml.getBytes());
+			ml.add(sigm);
 			// If that failed calculate the reply ...
-			reply = cvrp.process().getBytes();
+			reply = ml.getBytes();
 			
 			//... and store it in the database
 			cvrp.storeCertVerifyResultInCache(reply,cacheValidity);
 		}
-
-		// TODO: if signatures are used, this is the moment to do it
 
 		// Send the reply to the client
 		outStream.write(reply);
