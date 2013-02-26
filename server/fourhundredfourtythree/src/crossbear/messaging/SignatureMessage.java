@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.File;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
@@ -16,10 +16,12 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.KeySpec;
 import java.security.KeyFactory;
 import java.security.Signature;
-import java.security.spec.InvalidKeySpecException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.SignatureException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
+
+import org.bouncycastle.openssl.PEMReader;
 
 import crossbear.CertificateManager;
 
@@ -28,24 +30,15 @@ public class SignatureMessage extends Message {
 
 	private byte[] signatureBytes;
 	
-	public SignatureMessage(byte[] data) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, InvalidKeyException {
+	public SignatureMessage(byte[] data) throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
 		super(Message.MESSAGE_TYPE_SIGNATURE);
 		// Also needs the server certificate to calculate the correct signature
 		// Calculate the signature for the message here.
 		// Key ist im fourfourthree-ordner
-		File keyfile = new File("/path/to/key");
-		BufferedInputStream bis = new BufferedInputStream(new FileInputStream(keyfile));
-		// XXX Possible bug with large key files
-		byte[] keybytes = new byte[(int)keyfile.length()];
-		bis.read(keybytes);
-		bis.close();
-		KeyFactory kf = KeyFactory.getInstance("RSA");
-		// Do this from a PEM encoded file.
-		KeySpec ks = new PKCS8EncodedKeySpec(keybytes);
-		RSAPrivateKey privKey = ((RSAPrivateKey)kf.generatePrivate(ks));
-		// XXX is this an acceptable algorithm?
+		PEMReader pemparser = new PEMReader(new FileReader("/path/to/key"));
+		KeyPair kp = ((KeyPair)pemparser.readObject());
 		Signature sig = Signature.getInstance("SHA256withRSA");
-		sig.initSign(privKey);
+		sig.initSign(kp.getPrivate());
 		sig.update(data);
 		signatureBytes = sig.sign();
 	}
