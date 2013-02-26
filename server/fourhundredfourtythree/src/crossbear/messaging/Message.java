@@ -61,6 +61,10 @@ public abstract class Message {
 	
 	// Message telling which is the current local time at the server (to loosely synchronize clocks)
 	public static final byte MESSAGE_TYPE_CURRENT_SERVER_TIME = 5;
+
+	// Message containing a signature of the preceding messages.
+	public static final byte MESSAGE_TYPE_SIGNATURE = 6;
+
 	
 	// Messages representing hunting tasks
 	public static final byte MESSAGE_TYPE_IPV4_SHA256_TASK = 10;

@@ -179,6 +179,17 @@ public class MessageList {
 		messages.add(message);
 	}
 
+	/**
+	 * Remove a single Message from the Message List. Used for
+	 * removing signature messages and recoding the message.
+	 *
+	 * @param message The message to remove
+	 */
+
+	public void remove(Message message) {
+		messages.remove(message);
+	}
+
 	
 	/**
 	 * In case Messages are not generated freshly but read from a cache they will be in their byte[]-representation. These Messages can be added to a MessageList by calling this function.
