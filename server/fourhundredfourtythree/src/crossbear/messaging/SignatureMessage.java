@@ -16,6 +16,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.KeySpec;
 import java.security.KeyFactory;
 import java.security.Signature;
+import java.security.PrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.SignatureException;
 import java.security.InvalidKeyException;
@@ -35,10 +36,10 @@ public class SignatureMessage extends Message {
 		// Also needs the server certificate to calculate the correct signature
 		// Calculate the signature for the message here.
 		// Key ist im fourfourthree-ordner
-		PEMReader pemparser = new PEMReader(new FileReader("/path/to/key"));
-		KeyPair kp = ((KeyPair)pemparser.readObject());
+		PEMReader pemparser = new PEMReader(new FileReader("/home/jeeger/uni/crossbear/server/fourhundredfourtythree/server-private-key.pem"));
+		PrivateKey pk = ((PrivateKey)pemparser.readObject());
 		Signature sig = Signature.getInstance("SHA256withRSA");
-		sig.initSign(kp.getPrivate());
+		sig.initSign(pk);
 		sig.update(data);
 		signatureBytes = sig.sign();
 	}
