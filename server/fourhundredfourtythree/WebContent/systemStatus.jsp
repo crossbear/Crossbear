@@ -18,7 +18,7 @@
     Original authors: Thomas Riedmaier, Ralph Holz (TU München, Germany)
 
 --%>
-<%@ page import="crossbear.*" language="java" contentType="text/html; charset=ISO-8859-1"
+<%@ page import="crossbear.*,java.io.File" language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%><%!
 
 	/*
@@ -30,14 +30,15 @@
 
 	//Constructor-like functionality: Only performed the first time the page is loaded
 	public void jspInit() {
-
+		ServletContext sc = getServletContext();
+		String contextPath = sc.getRealPath(File.separator);
+		
 		try {
-					
 			// Load the porperties and settings from the config file
-			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
+			properties = new Properties(contextPath.concat("../crossbear.properties"));
+			
 
 		} catch (Exception e) {
-
 			Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.systemStatus.init.error", e);
 		}
 	}
@@ -54,10 +55,8 @@
 Database db = null;
 
 try {
-
 	// open a database connection
 	db = new Database(properties.getProperty("database.url"),properties.getProperty("database.user"),properties.getProperty("database.password"));
-
 	// get the status of the crossbear system and display its HTML encoded representation
 	out.println(SystemStatus.getStatusHTML(db));
 
@@ -66,7 +65,6 @@ try {
 	* None of the calls above catches exceptions. Whenever something went wrong (e.g. when accessing the database)
 	* an exception is thrown and cought here. Since it's not very smart to tell attackers what went wrong a dummy reply is sent to them.
 	*/
-
 	// For debugging reasons: Log what went wrong
 	Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.systemStatus.processing.error", e);
 

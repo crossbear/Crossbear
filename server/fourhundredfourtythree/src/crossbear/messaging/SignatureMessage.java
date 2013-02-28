@@ -31,12 +31,12 @@ public class SignatureMessage extends Message {
 
 	private byte[] signatureBytes;
 	
-	public SignatureMessage(byte[] data) throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+	public SignatureMessage(byte[] data, String keyPath) throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
 		super(Message.MESSAGE_TYPE_SIGNATURE);
 		// Also needs the server certificate to calculate the correct signature
 		// Calculate the signature for the message here.
 		// Key ist im fourfourthree-ordner
-		PEMReader pemparser = new PEMReader(new FileReader("/home/jeeger/uni/crossbear/server/fourhundredfourtythree/server-private-key.pem"));
+		PEMReader pemparser = new PEMReader(new FileReader(keyPath));
 		PrivateKey pk = ((PrivateKey)pemparser.readObject());
 		Signature sig = Signature.getInstance("SHA256withRSA");
 		sig.initSign(pk);

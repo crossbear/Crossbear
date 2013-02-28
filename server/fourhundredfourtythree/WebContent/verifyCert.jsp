@@ -129,7 +129,7 @@
 		if(reply == null){
 			// Can we also cache the signature of the Message? Should be okay, since the message doesn't change much.
 			MessageList ml = cvrp.process();
-			SignatureMessage sigm = new SignatureMessage(ml.getBytes());
+			SignatureMessage sigm = new SignatureMessage(ml.getBytes(), properties.getProperty("privatekey.path"));
 			ml.add(sigm);
 			// If that failed calculate the reply ...
 			reply = ml.getBytes();

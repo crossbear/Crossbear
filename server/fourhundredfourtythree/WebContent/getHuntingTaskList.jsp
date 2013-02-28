@@ -1,3 +1,4 @@
+<%@ page trimDirectiveWhitespaces="true" %>
 <%--
     This file is part of Crossbear.
 
@@ -15,7 +16,7 @@
     along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
 
     Original authors: Thomas Riedmaier, Ralph Holz (TU München, Germany)
---%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.net.InetAddress"
+--%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.net.InetAddress, java.io.File"
 	language="java" 
 	contentType="application/octet-stream"
 %><%!
@@ -42,6 +43,8 @@
 
 	//Constructor-like functionality: Only performed the first time the page is loaded
 	public void jspInit() {
+		ServletContext sc = getServletContext();
+		String contextPath = sc.getRealPath(File.separator);
 
 		try {
 			/*
@@ -52,9 +55,10 @@
 			* all of these are used in Crossbear.
 			*/
 			Security.addProvider(new BouncyCastleProvider());
-					
+		
 			// Load the porperties and settings from the config file
-			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
+			properties = new Properties(contextPath.concat("../crossbear.properties"));
+	
 
 		} catch (Exception e) {
 
@@ -83,8 +87,9 @@
 		reply.add(new PublicIPNotification(remoteIP, db));
 		reply.add(new CurrentServerTime());
 
+
 		// TODO: if signatures used, this is where to add them
-		SignatureMessage sigm = new SignatureMessage(reply.getBytes());
+		SignatureMessage sigm = new SignatureMessage(reply.getBytes(), properties.getProperty("privatekey.path"));
 		reply.add(sigm);
 		//Send the Hunting Task List to the client
 		outStream.write(reply.getBytes());
