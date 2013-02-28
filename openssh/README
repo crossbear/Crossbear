@@ -1,0 +1,11 @@
+This patch is to be applied against openssh 6.1p1.
+
+It enables a new option to cross-check a received hostkey
+with the Crossbear SSH notary, which will go live in
+January 2012.
+
+We will post an update as soon as you can use it.
+
+Here's the syntax:
+
+ssh -o VerifyHostKeyNotary=Yes user@example.com
