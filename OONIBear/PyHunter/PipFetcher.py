@@ -14,6 +14,7 @@ from Crypto.Hash        import SHA256
 from cbutils.PKCS7         import PKCS7
 from cbutils.X509toPubKey  import extractPubKey
 from cbmessaging.Message import Message
+from cbmessaging.MessageList import MessageList
 from cbmessaging.PipReq import PipReq
 from cbmessaging.PipNot import PipNot
 import requests
@@ -32,7 +33,8 @@ class PipFetcher(object):
         self.cbServerCert = cbServerCert
         self.cbServerHost = cbServerHost
         # Rename sip to something understandable, e.g. serverIP
-        self.sip          = {4 : None, 6 : None}
+        self.serverIPv4 = None
+        self.serverIPv6 = None
         try:
             with open(self.cbServerCert, "r") as cf:
                 cert = cf.read()
@@ -59,15 +61,18 @@ class PipFetcher(object):
         """
         # TODO find a way to get the two addresses in a single query
         # Isn't it possible to request two records?
-        self.sip = {4 : None, 6 : None}
         answers = resolver.query(cbServerHost, 'A')
         # TODO: actually, we expect there to be only one answer per
-        # RR
+        # RR. Choose the first address of type A.
         for rdata in answers:
-            self.sip[4] = rdata.address
+            if isinstance(rdata,dns.rdtypes.IN.A.A):
+                self.serverIPv4 = rdata.address
+                break
+
         answers = resolver.query(cbServerHost, 'AAAA')
         for rdata in answers:
-            self.sip[6] = rdata.address
+            if isinstance(rdata,dns.rdtypes.IN.AAAA.AAAA):
+                self.serverIPv6 = rdata.address
         # FIXME: deal with fail state if someone is blocking our DNS
         # E.g. find out if result is empty, and exit.
         # Also, find out what WHOIS says?
@@ -106,17 +111,22 @@ class PipFetcher(object):
         """
         
         # Simplified - RH
-        if self.sip[ipv] == None:
+        if ((ipv == 6 and self.serverIPv6 == None) 
+            or (ipv == 4 and self.serverIPv4 == None)):
             # TODO: log
             print "Couldn't connect to the crossbear server using IPv%d" % ipv
             return None
         # TODO: do we still need the try/catch?
         # Actually send via HTTP POST
         try:
-            ips = self.sip[ipv] if ipv == 4 else "[%s]" % self.sip[ipv]
+            if ipv == 6:
+                ips = "[%s]" % self.serverIPv6
+            else:
+                ips = self.serverIPv4
             # send using the Python requests module
+            data = MessageList.getBytesForMessage(pipReq)
             r = requests.post(url = "http://%s/getPublicIP.jsp" % ips,
-                             data = pipReq.binary())
+                             data = data)
             return r.content
         except IOError, e:
             # TODO Log usefully what happend
@@ -147,7 +157,8 @@ class PipFetcher(object):
         
         pipReq = PipReq(reKey)
         reply  = self.sendPublicIPR(ipv, pipReq)
-
+        messages = MessageList(reply)
+        
         # decrypt the reply
         iv     = reply[:16]
         aes    = AES.new(aeskey, AES.MODE_CBC, iv)
@@ -171,7 +182,7 @@ class PipFetcher(object):
         # IPv4 or IPv6
         # TODO: shouldn't we check here if the value is the expected
         # IP version?
-        if Message.ba2int(ptext[0], fmt="B") in [0,1]:
+        if struct.unpack(">B", ptext[0])[0] in [0,1]:
             return PipNot(pText[3:], ipv)
         else:
             raise ValueError, "Message type unknown!"

@@ -10,10 +10,14 @@ from Message import Message
 # TODO This class will be renamed to PubIPRequest or something similar
 
 class PipReq(Message):
-    def __init__(self, rsadkey=bytes()):
-        Message.__init__(self, ("PipReq",), len(rsadkey))
+    def __init__(self, key):
+        self.rsadkey = key
+    
+    def createFromBytes_(self, msgtype, content):
+        Message.createFromBytes(self, msgtype, content)
         # rsa encrypted aes key 
-        self.rsadkey = rsadkey
-        print len(rsadkey)
+        # TODO: Decode this?
+        self.rsadkey = content
+        
     def getBytes(self):
         return self.rsadkey
