@@ -157,7 +157,6 @@ class PipFetcher(object):
         
         pipReq = PipReq(reKey)
         reply  = self.sendPublicIPR(ipv, pipReq)
-        messages = MessageList(reply)
         
         # decrypt the reply
         iv     = reply[:16]
@@ -182,9 +181,6 @@ class PipFetcher(object):
         # IPv4 or IPv6
         # TODO: shouldn't we check here if the value is the expected
         # IP version?
-        if struct.unpack(">B", ptext[0])[0] in [0,1]:
-            return PipNot(pText[3:], ipv)
-        else:
-            raise ValueError, "Message type unknown!"
+        return PipNot(sHash, pText[3:])
 
 

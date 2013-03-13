@@ -13,6 +13,14 @@ from struct import unpack, pack
 import abc
 
 class PipNot(Message):
+
+    def __init__(self, hmac, publicIP):
+        self.publicIP = publicIP
+        if len(publicIP) == 16:
+            self.ipversion = 6
+        elif len(publicIP) == 4:
+            self.ipversion = 4
+        self.hmac = hmac
     
     def createFromBytes(self, msgtype, data):
         Message.createFromBytes(self, msgtype, data)
