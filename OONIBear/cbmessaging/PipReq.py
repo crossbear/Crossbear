@@ -10,7 +10,7 @@ from Message import Message
 # TODO This class will be renamed to PubIPRequest or something similar
 
 class PipReq(Message):
-    def __init__(self, key):
+    def createFromValues(self, key):
         self.rsadkey = key
     
     def createFromBytes_(self, msgtype, content):

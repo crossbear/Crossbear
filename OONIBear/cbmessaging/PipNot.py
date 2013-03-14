@@ -14,7 +14,7 @@ import abc
 
 class PipNot(Message):
 
-    def __init__(self, hmac, publicIP):
+    def createFromValues(self, hmac, publicIP):
         self.publicIP = publicIP
         if len(publicIP) == 16:
             self.ipversion = 6

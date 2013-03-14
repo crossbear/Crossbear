@@ -22,9 +22,10 @@ class CurServTime(Message):
             raise (ValueError,
                         "Supplied data doesn't have the correct length: " +\
                         str(len(data)))
-        # get four bytes from data and convert them to long. Signed long???
+        # get four bytes from data and convert them to long. Why is this a signed long?
         # Python documentation says that time() returns a float.
-        self.diff = (unpack(">l", data[:4])[0]) - time()
+        (self.servertime,) = unpack(">l", data[:4])
+        self.diff = self.servertime - time()
         
 
     def currentServTime(self):
@@ -35,5 +36,4 @@ class CurServTime(Message):
         return long(time() + self.diff)
 
     def getBytes(self):
-        # Note: This uses the current client time.
-        return pack(">l", time())
+        return pack(">l", self.servertime)

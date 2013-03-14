@@ -10,6 +10,7 @@ from cbmessaging.HuntingTask import HuntingTask
 from cbmessaging.SignatureMessage import SignatureMessage
 from cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
 from Crypto.Hash import SHA256
+from M2Crypto import BIO, RSA, EVP
 from cbmessaging.PipNot  import PipNot
 from cbmessaging.CurServTime import CurServTime
 
@@ -37,3 +38,21 @@ class HTLFetcher(object):
         resp = conn.getresponse()
         ml = MessageList(resp)
         return ml
+
+    def verify(self, messagelist):
+        messageindex = 0
+        for index in messagelist.length():
+            if typeof(messagelist.getMessage(index)) is cbmessaging.SignatureMessage:
+                messageindex = index
+                break
+        sigmessage = l.getMessage(messageindex)
+        l.removeMessage(messageindex)
+        toverify = l.getBytes()
+        # TODO: Add correct key path
+        key = RSA.load_pub_key("server-public-key.pem")
+        pubkey = EVP.PKey()
+        pubkey.assign_rsa(key)
+        pubkey.reset_context(md="sha256")
+        pubkey.verify_init()
+        pubkey.verify_update(toverify)
+        return (pubkey.verify_final(sigmessage.signature) == 1)
