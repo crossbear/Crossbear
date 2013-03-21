@@ -9,31 +9,23 @@ at that time.
 
 from Message import Message
 from time    import time
+from struct import unpack, pack
 
 class CurServTime(Message):
-    """
-    Message to represent the current server time.
-
-    Arguments:
-    data -- timestamp (must be 4 byte)
-    TODO: why do we need IPv?
-    ipv -- IP version (either 4 or 6, integer)
-
-    Extends: Message
-    """
-
-    # TODO: why do we need IPv?
-    def __init__(self, data, ipv=None):
+    def createFromBytes(self, msgtype, data):
         """
         Initialiser. Compute the difference between cb server time and local time
         # (in milliseconds) and store it.
         """
-        Message.__init__(self, ("CurServTime",), len(data))
+        Message.createFromBytes(self, msgtype, data)
         if len(data) != 4:
             raise (ValueError,
                         "Supplied data doesn't have the correct length: " +\
                         str(len(data)))
-        self.diff = Message.ba2int(data, "l") - time()
+        # get four bytes from data and convert them to long. Why is this a signed long?
+        # Python documentation says that time() returns a float.
+        (self.servertime,) = unpack(">l", data[:4])
+        self.diff = self.servertime - time()
         
 
     def currentServTime(self):
@@ -42,3 +34,6 @@ class CurServTime(Message):
         local time plus the difference received by the server.
         """
         return long(time() + self.diff)
+
+    def getBytes(self):
+        return pack(">l", self.servertime)

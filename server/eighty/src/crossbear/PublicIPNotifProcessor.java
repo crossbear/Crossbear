@@ -52,12 +52,20 @@ import crossbear.messaging.PublicIPNotification;
 import crossbear.messaging.MessageSerializationException;
 
 /**
- * PublicIPNotifProcessor is the class used by getPublicIP.jsp to generate a encrypted and integrity protected PublicIPNotification out of a PublicIPNotifRequest
+ * PublicIPNotifProcessor is the class used by getPublicIP.jsp to
+ * generate a encrypted and integrity protected PublicIPNotification
+ * out of a PublicIPNotifRequest
  * 
- * To guarantee the confidentiality and integrity of the PublicIPNotification on it's way to the client the PublicIPNotification-Message is first hashed and concatenated with it's hash. The result will then be AES
- * encrypted and sent to the client. This procedure is necessary since getPublicIP.jsp is accessed over plain http and thus there is no ssl protection of the messages. 
+ * To guarantee the confidentiality and integrity of the
+ * PublicIPNotification on it's way to the client the
+ * PublicIPNotification-Message is first hashed and concatenated with
+ * it's hash. The result will then be AES encrypted and sent to the
+ * client. This procedure is necessary since getPublicIP.jsp is
+ * accessed over plain http and thus there is no ssl protection of the
+ * messages.
  * 
- * The AES key that is required for the transmission is provided by the client in RSA-encrypted version.
+ * The AES key that is required for the transmission is provided by
+ * the client in RSA-encrypted version.
  * 
  * @author Thomas Riedmaier
  * 

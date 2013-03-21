@@ -86,14 +86,17 @@ public class FpVerifyResult extends Message {
 	 * @see crossbear.Message#writeContent(java.io.OutputStream)
 	 */
 	@Override
-	protected void writeContent(OutputStream out) throws IOException {
+	protected void writeContent(OutputStream out) throws MessageSerializationException {
 	
 		if (this.result == null) {
 			throw new RuntimeException("Result for message was not set.");
 		}
+		try {
+		    out.write(MESSAGE_TYPE_FP_VERIFY_RESULT_FORMAT_VERSION);
 		
-		out.write(MESSAGE_TYPE_FP_VERIFY_RESULT_FORMAT_VERSION);
-		
-		out.write((byte) this.result.ordinal());		
+		    out.write((byte) this.result.ordinal());
+		} catch (IOException e) {
+		    throw new MessageSerializationException("Could not write to output stream", e);
+		}
 	}	
 }

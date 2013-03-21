@@ -318,8 +318,9 @@ public class FpVerifyRequest extends Message {
 	 * @see crossbear.Message#writeContent(java.io.OutputStream)
 	 */
 	@Override
-	protected void writeContent(OutputStream out) throws CertificateEncodingException, IOException {
+	protected void writeContent(OutputStream out) throws MessageSerializationException {
 		
+		try {
 		// Write message format version
 		out.write(MESSAGE_TYPE_FP_VERIFY_REQUEST_FORMAT_VERSION);
 		
@@ -335,5 +336,8 @@ public class FpVerifyRequest extends Message {
 		
 		// Write fingerprint
 		out.write(fingerprint.getBytes());
+		} catch (IOException e) {
+			throw new MessageSerializationException("Could not write to output stream", e);
+		}
 	}	
 }

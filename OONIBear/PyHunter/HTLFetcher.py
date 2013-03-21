@@ -7,73 +7,19 @@ __author__ = "Vedat Levi Alev"
 
 from cbmessaging.Message import Message
 from cbmessaging.HuntingTask import HuntingTask
+from cbmessaging.SignatureMessage import SignatureMessage
 from cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
 from Crypto.Hash import SHA256
+from M2Crypto import BIO, RSA, EVP
 from cbmessaging.PipNot  import PipNot
 from cbmessaging.CurServTime import CurServTime
 
 class HTLFetcher(object):
 
-    hts = {"PipNot" : PipNot, "CurServTime" : CurServTime,
-        "Sha256Task" : HuntingTask}
-
-
-
     def __init__(self, servHost, servPort, servCert):
         self.servHost     = servHost
         self.servPort     = servPort
         self.servCert     = servCert
-
-
-
-    @staticmethod
-    def extractNext(resp):
-        """
-        Extract the messages in a Hunting Task List sent
-        by the Crossbear server.
-        """
-
-        try:
-            msgType = Message.ba2int(resp.read(1), "B")
-        except Exception:
-            # TODO: Yikes. Return something meaningful.
-            return
-
-        # TODO: comment this
-        trace = None
-
-        # FIXME: we abuse the structure of Message.type 
-        # (dictionary with the depth 2) by 
-        # performing a depth first search on it. as the depth is bounded by
-        # two, two explicit loops should suffice. this might be problematic,
-        # if the need occurs to extend the message class
-        for key in Message.types:
-            if type(Message.types[key]) != type({}):
-                if Message.types[key] == msgType:
-                    trace = (key,)
-                    break
-            else:
-                for keyj in Message.types[key]:
-                    if Message.types[key][keyj] == msgType:
-                        trace = (key,keyj)
-                        break
-            if trace != None:
-                break
-        if not HTLFetcher.hts.has_key(trace[0]):
-            raise ValueError, "Message type %d not expected." % msgType
-        # Now that we know this is in fact a crossbear hunting task, we read
-        # its length (it is a short so the corresponding format string is "h")
-        msgLen = Message.ba2int(resp.read(2), "h")
-        # we read 3 bytes so far, so the raw data consists of msgLen - 3 bytes
-        data = resp.read(msgLen - 3)
-        # FIXME: this is a bit hackish, nevertheless i still find it
-        # to be better than the original java implementation.
-        if len(trace) == 1:
-            args = (data,)
-        else:
-            args = (data, trace[1])
-        # TODO: make this easier - I don't get it
-        return HTLFetcher.hts[trace[0]](*args)
 
 
 
@@ -90,18 +36,23 @@ class HTLFetcher(object):
         # Now request the current hunting task list
         conn.request("GET", "/getHuntingTaskList.jsp")
         resp = conn.getresponse()
+        ml = MessageList(resp)
+        return ml
 
-        # Extract "messages" in reply
-        # TODO: are these really messages?
-        huntingTasks = []
-
-        # TODO ARGH replace this loop
-        # Make extractNext return None or something iterable
-        while 1:
-            next = HTLFetcher.extractNext(resp)
-            if next:
-                huntingTasks.append(next)
-            else:
-                resp.close()
+    def verify(self, messagelist):
+        messageindex = 0
+        for index in messagelist.length():
+            if typeof(messagelist.getMessage(index)) is cbmessaging.SignatureMessage:
+                messageindex = index
                 break
-        return huntingTasks
+        sigmessage = l.getMessage(messageindex)
+        l.removeMessage(messageindex)
+        toverify = l.getBytes()
+        # TODO: Add correct key path
+        key = RSA.load_pub_key("server-public-key.pem")
+        pubkey = EVP.PKey()
+        pubkey.assign_rsa(key)
+        pubkey.reset_context(md="sha256")
+        pubkey.verify_init()
+        pubkey.verify_update(toverify)
+        return (pubkey.verify_final(sigmessage.signature) == 1)
