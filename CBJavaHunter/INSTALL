@@ -1,0 +1,42 @@
+Preparations
+============
+
+You will need JDK 7.
+
+If you do not run OpenJDK, but an export-limited JDK (like the Oracle
+JDK), then your JVM must be adjusted to run the Java Hunters properly.
+For Oracle JDK, UnlimitedJCEPolicy has to be installed - unzip the
+files contained therein and place in the correct locations for your OS
+(a quick Google check will give you those). E.g., on a Linux it might
+be /usr/java/jdk1.7.0_07/jre/lib/security/. Finally,
+"jdk.certpath.disabledAlgorithms" in java.security has to be set to
+"BLABLABLA" (same location).
+
+If you have OpenJDK, you should be OK from the start.
+
+Compiling
+=========
+The key to compiling everything is to compile step by step:
+first server/fourhundredfortythree (including the code in com.google),
+server/eighty, finally CBJavaHunter.
+
+You will need to set up your CLASSPATH to include, assuming $CBHOME as 
+the directory where you store Crossbear:
+
+$CBHOME/server/fourhundredfourtythree/src/
+$CBHOME/server/fourhundredfourtythree/WebContent/WEB-INF/lib/bcprov-jdk16-146.jar
+$CBHOME/server/fourhundredfourtythree/WebContent/WEB-INF/lib/json_simple-1.1.jar
+$CBHOME/server/eighty/src
+
+I.e. for bash/zsh:
+export CLASSPATH=$CBHOME/server/fourhundredfourtythree/src/:$CBHOME/server/fourhundredfourtythree/src/crossbear/messaging/:$CBHOME/server/fourhundredfourtythree/WebContent/WEB-INF/lib/bcprov-jdk16-146.jar:$CBHOME/server/fourhundredfourtythree/WebContent/WEB-INF/lib/json_simple-1.1.jar:$CBHOME/server/eighty/src/
+
+Then:
+In server/fourhundredfourtythree/src/crossbear/: javac *java
+In server/eighty/src/crossbear: javac *.java
+In CBJavaHunter/src/crossbear: javac *.java
+
+Running
+=======
+
+Simply do "java JavaHunter".

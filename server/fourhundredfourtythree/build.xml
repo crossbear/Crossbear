@@ -1,0 +1,15 @@
+<project name="crossbear-443" default="compile">
+	<target name="clean">
+		<delete dir="WebContent/WEB-INF/classes/"/>
+	</target>
+	<target name="compile">
+		<mkdir dir="WebContent/WEB-INF/classes/"/>
+		<javac srcdir="src/" destdir="WebContent/WEB-INF/classes/">
+			<classpath>
+				<pathelement path="src/com/"/>
+				<fileset dir="WebContent/WEB-INF/lib/" includes="*.jar"/>
+			</classpath>
+		</javac>
+	</target>
+		
+</project>

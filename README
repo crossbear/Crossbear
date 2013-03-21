@@ -1,5 +1,7 @@
 Crossbear - crossbear@pki.net.in.tum.de
 =======================================
+Also see https://pki.net.in.tum.de.
+
 
 Supported systems:
 * Windows: probably all versions from Windows XP onwards
@@ -17,7 +19,18 @@ Vedat Levi Alev (developer, works on the OONI integration)
 Oliver Gasser (developer, does the new extension that also starts with 'S')
 Phillip Dowling (developer, does Python tools for processing certs)
 
-(also see pki.net.in.tum.de)
+Licensing: Crossbear code is GPLv3 - see notice contained in every
+source file. However, some components we redistribute (e.g. Java
+Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy
+Files 7 - blame Oracle for the length of the name) are protected by
+other licenses (in the given example, Oracle's "Oracle Binary Code
+License Agreement for the Java SE Platform Products" (again, blame
+Oracle for the length of the name). See the appropriate source code
+files - the corresponding license is stored in the respective
+directory.
+
+
+
 
 Good day. Let us introduce ourselves: we are researchers at Technische
 Universität München, Germany.

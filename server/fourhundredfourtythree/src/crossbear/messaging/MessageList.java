@@ -81,8 +81,9 @@ public class MessageList {
 	 * @throws SQLException
 	 * @throws IOException
 	 * @throws CertificateEncodingException
+	 * @throws MessageSerializationException
 	 */
-	public static MessageList getCurrentHuntingTaskList( InetAddress requesterIP, long validity, Database db) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, IOException, CertificateEncodingException {
+    public static MessageList getCurrentHuntingTaskList( InetAddress requesterIP, long validity, Database db) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, IOException, CertificateEncodingException, MessageSerializationException {
 
 		// Remember the fact that somebody requested the Hunting Task list
 		Object[] params = { requesterIP.getHostAddress(), new Timestamp(System.currentTimeMillis()) };
@@ -178,6 +179,17 @@ public class MessageList {
 		messages.add(message);
 	}
 
+	/**
+	 * Remove a single Message from the Message List. Used for
+	 * removing signature messages and recoding the message.
+	 *
+	 * @param message The message to remove
+	 */
+
+	public void remove(Message message) {
+		messages.remove(message);
+	}
+
 	
 	/**
 	 * In case Messages are not generated freshly but read from a cache they will be in their byte[]-representation. These Messages can be added to a MessageList by calling this function.
@@ -208,8 +220,9 @@ public class MessageList {
 	 * @throws IOException
 	 * @throws SQLException
 	 * @throws CertificateEncodingException
+	 * @throws MessageSerializationException
 	 */
-	public byte[] getBytes() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException, SQLException, CertificateEncodingException {
+    public byte[] getBytes() throws InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, IOException, CertificateEncodingException, MessageSerializationException {
 
 		// Firstly get the Messages' bytes (of the Messages that are not yet encoded) and calculate the length of all concatenated messages
 		byte[][] messagesBytes = new byte[messages.size()][];

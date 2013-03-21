@@ -61,6 +61,10 @@ public abstract class Message {
 	
 	// Message telling which is the current local time at the server (to loosely synchronize clocks)
 	public static final byte MESSAGE_TYPE_CURRENT_SERVER_TIME = 5;
+
+	// Message containing a signature of the preceding messages.
+	public static final byte MESSAGE_TYPE_SIGNATURE = 6;
+
 	
 	// Messages representing hunting tasks
 	public static final byte MESSAGE_TYPE_IPV4_SHA256_TASK = 10;
@@ -255,14 +259,9 @@ public abstract class Message {
 	 * - Concatenate them and return that as byte[]
 	 * 
 	 * @return The byte[]-representation of the Message-Object
-	 * @throws IOException
-	 * @throws InvalidKeyException
-	 * @throws NoSuchAlgorithmException
-	 * @throws NoSuchProviderException
-	 * @throws SQLException
-	 * @throws CertificateEncodingException
+	 * @throws MessageSerializationException
 	 */
-	public byte[] getBytes() throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SQLException, CertificateEncodingException {
+	public byte[] getBytes() throws MessageSerializationException {
 		
 		// Generate a new OutputStream into which the Message's bytes will be written
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -271,13 +270,18 @@ public abstract class Message {
 		buffer.write(type);
 		
 		// Write the Message's length (not yet known so a dummy-value is written)
-		buffer.write(new byte[]{0,0});
+		try {
+		    buffer.write(new byte[]{0,0});
+		}
+		catch (IOException e) {
+		    throw new MessageSerializationException("Error in writing to buffer.", e);
+		}
 		
 		// Write the Message's content
 		writeContent(buffer);
 		
 		// Transform the OutputStream into an array
-		byte[] messageBytes= buffer.toByteArray();;
+		byte[] messageBytes= buffer.toByteArray();
 		
 		// Assert that the Message length is not more than 16 byte (This is not allowed since the Message's length-field is only two bytes long)
 		if(messageBytes.length >= (1<<16)){
@@ -304,13 +308,8 @@ public abstract class Message {
 	 * Create a byte[] representation of the messages's content.
 	 * 
 	 * @param out The OutputStream into which the content will be writen in a serialized form.
-	 * @throws IOException
-	 * @throws InvalidKeyException
-	 * @throws NoSuchAlgorithmException
-	 * @throws NoSuchProviderException
-	 * @throws CertificateEncodingException
-	 * @throws SQLException
+	 * @throws MessageSerializationException
 	 */
-	protected abstract void writeContent(OutputStream out) throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException,CertificateEncodingException, SQLException;
+	protected abstract void writeContent(OutputStream out) throws MessageSerializationException;
 	
 }
