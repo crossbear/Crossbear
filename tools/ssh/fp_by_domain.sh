@@ -1,3 +1,4 @@
 #!/bin/bash
-ip=$(echo $(host -t a $1) | sed 's/.*address\ //g')
-dig -t TXT $ip.cbssh.net.in.tum.de
+for ip in $(dig +short $1); do
+  dig -t TXT $ip.cbssh.net.in.tum.de
+done

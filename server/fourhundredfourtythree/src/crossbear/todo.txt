@@ -1,0 +1,4 @@
+server:
+The CertificateManager tries to complete chains using the JVM-wide root store. This might differ between JVMs. It would be better to deploy a root store of our own. The Firefox root store seems to be a good candidate. Also of advantage because both hunters and clients would use the same root store. Caveat: this would make it necessary to deploy a new root store every time Firefox changes theirs. Which is often.
+
+server: do we need the reordering business? I fear we might because Firefox does it and, in our add-on, we probably get Firefox's reordered chain... But in that case, we should go over all possible permutations rather than stopping at a parameterised maximum

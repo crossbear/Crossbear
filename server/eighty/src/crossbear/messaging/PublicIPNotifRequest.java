@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 
+import crossbear.messaging.MessageSerializationException;
 
 /**
  * A PublicIPNotifRequest is a message that is meant to be sent to the getPublicIP.jsp. It contains a AES256 key encrypted with the server's public RSA key. The AES- key is required to safely send the
@@ -123,8 +124,13 @@ public class PublicIPNotifRequest extends Message{
 	 * @see crossbear.Message#writeContent(java.io.OutputStream)
 	 */
 	@Override
-	protected void writeContent(OutputStream out) throws IOException {
-
+	protected void writeContent(OutputStream out) throws MessageSerializationException {
+	    try {
 		out.write(rsaEncryptedKey);
+	    }
+	    catch (Exception e) {
+		// TODO: this error message is probably misleading
+		throw new MessageSerializationException("Could not serialize key", e);
+	    }
 	}
 }

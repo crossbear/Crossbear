@@ -152,7 +152,8 @@ public class CertificateManager {
 				lastCaughtException = e;
 			}
 		}
-
+		// TODO uh, wait a second -- this looks a lot as if we throw an IOException if we cannot connect at all
+		// - and that IOException would wander up the whole stack and crash the main
 		throw lastCaughtException;
 
 	}
@@ -176,7 +177,11 @@ public class CertificateManager {
 		Iterator<X509Certificate> iter = certList.iterator();
 		while (iter.hasNext()) {
 			// Get the PEM-encoding for each certificate, calculate its MD5-hash and append its HEX-String representation to the output
-			re.append(Message.byteArrayToHexString(MD5(getPemEncoding(iter.next()).getBytes("UTF-8"))));
+		    String hulla = getPemEncoding(iter.next());
+		    System.out.println("PEM encoding: " + hulla);
+		    String m = Message.byteArrayToHexString(MD5(hulla.getBytes("UTF-8")));
+		    System.out.println("My hash is: " + m);
+			re.append(m);
 		}
 
 		return re.toString();
@@ -606,14 +611,14 @@ public class CertificateManager {
 	private int cacheValidity;
 
 	/**
-	 * Create a new CertificateManager.
+	 * Create a new CertificateManager with a database backend.
 	 * 
 	 * During the creation the local system's trusted root-CA KeyStore will be read and stored in the ChainCerts-table and the localCAKeystore variable. The localCAKeystore is needed because some
 	 * websites don't send complete certificate chains since they assume that the clients know their root certificate. Crossbear tries to store the certificate chain for each certificate it observes.
 	 * However, this is only done when the chain could be validated and that might require the local system's root-CA KeyStore.
 	 * 
 	 * @param db
-	 *            The database connection that will be used to insert the local system's root-CAs into the ChainCerts-table (set this to null if the current system has no database; e.g. if the CertificateManager is instantiated by a Hunter)
+	 *            The database connection that will be used to insert the local system's root-CAs into the ChainCerts-table.
 	 * @param cacheValidity
 	 *            The duration in seconds a entry will be valid in a cache. This value is used when writing into a cache not when reading from it.
 	 * @param password The password for accessing the local CA Keystore
@@ -623,15 +628,39 @@ public class CertificateManager {
 	 * @throws CertificateException
 	 * @throws IOException
 	 */
-	public CertificateManager(Database db, int cacheValidity, String password) throws NoSuchAlgorithmException, KeyStoreException, SQLException, CertificateException, IOException {
+    public CertificateManager(Database db, int cacheValidity, String password) throws NoSuchAlgorithmException, KeyStoreException, SQLException, CertificateException, IOException {
 
 		// Remember the cacheValidity
 		this.cacheValidity = cacheValidity;
 
 		// Load the local system's root-CA KeyStore and store it in the ChainCerts-table
 		this.localCAKeystore = getLocalCAKeystore(password);
-		if(db != null)addCAsFromLocalCAKeyStoreToDB(db);
+		addCAsFromLocalCAKeyStoreToDB(db);
+	}
 
+	/**
+	 * Create a new CertificateManager without a database backend.
+	 * 
+	 * During the creation the local system's trusted root-CA KeyStore will be read and stored in the ChainCerts-table and the localCAKeystore variable. The localCAKeystore is needed because some
+	 * websites don't send complete certificate chains since they assume that the clients know their root certificate. Crossbear tries to store the certificate chain for each certificate it observes.
+	 * However, this is only done when the chain could be validated and that might require the local system's root-CA KeyStore.
+	 * 
+	 * @param cacheValidity
+	 *            The duration in seconds a entry will be valid in a cache. This value is used when writing into a cache not when reading from it.
+	 * @param password The password for accessing the local CA Keystore
+	 * @throws NoSuchAlgorithmException
+	 * @throws KeyStoreException
+	 * @throws SQLException
+	 * @throws CertificateException
+	 * @throws IOException
+	 */
+	public CertificateManager(int cacheValidity, String password) throws NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException {
+
+		// Remember the cacheValidity
+		this.cacheValidity = cacheValidity;
+
+		// Load the local system's root-CA KeyStore and store it in the ChainCerts-table
+		this.localCAKeystore = getLocalCAKeystore(password);
 	}
 
 	/**
@@ -763,9 +792,17 @@ public class CertificateManager {
 	
 
 	/**
-	 * Take a certificate chain and see if there is a way in which it can be ordered that makes it valid. This is necessary since there is no guarantee, that certificate chains are transmitted in correct order.
+	 * Take a certificate chain and see if there is a way in which
+	 * it can be ordered that makes it valid. This is necessary
+	 * since there is no guarantee, that certificate chains are
+	 * transmitted in correct order.
 	 * 
-	 * If the chain's end is required to be self-signed and the root-of-trust is not within the chain, there will be an attempt to find it in the system's root-CA KeyStore.
+	 * If the chain's end is required to be self-signed and the
+	 * root-of-trust is not within the chain, there will be an
+	 * attempt to find it in the system's root-CA KeyStore.
+	 * 
+	 * @todo: the system's root CA store might be different depending on the JVM - we should replace it with a list of our own
+	 * @todo: remove the limit of maxPermutations - it is not necessary
 	 * 
 	 * @param in The certificate chain to check
 	 * @param maxPermutations The maximal number of reordering-attempts to make (first attempt will always be the original order)
@@ -777,15 +814,15 @@ public class CertificateManager {
 	 * @throws CertificateException
 	 * @throws NoSuchProviderException
 	 */
-	public LinkedList<X509Certificate> makeCertChainValid(X509Certificate[] in, int maxPermutations, boolean endMustBeSelfSigned) throws InvalidAlgorithmParameterException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException{
+	public LinkedList<X509Certificate> makeCertChainValid(X509Certificate[] in, int maxPermutations, boolean endMustBeSelfSigned) throws InvalidAlgorithmParameterException, KeyStoreException, NoSuchAlgorithmException, CertificateException, NoSuchProviderException {
 		
 		// Create a Permutation generator of suitable length
 		PermutationGenerator permGen = new PermutationGenerator(in.length - 1);
 		
 		// Set a limit of how many permutations are tried maximally and start trying them (first attempt will be the original order)
-		while (permGen.hasMore() && maxPermutations-->0) {
+		while (permGen.hasMore() && maxPermutations-- > 0) {
 
-			// Create a new cerificate permutation and set it's first element to the host's certificate
+			// Create a new cerificate permutation and set its first element to the host's certificate
 			LinkedList<X509Certificate> certPerm = new LinkedList<X509Certificate>();
 			certPerm.add(in[0]);
 

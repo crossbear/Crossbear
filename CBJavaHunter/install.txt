@@ -1,5 +1,0 @@
-JVM MUST be adjusted to run the Java Hunters properly:
-
-- UnlimitedJCEPolicy has to be installed
-- "jdk.certpath.disabledAlgorithms" has to be set to "BLABLABLA" in the "java.security"-file
-- java 7 needs to be installed

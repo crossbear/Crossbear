@@ -105,11 +105,15 @@ public class CertVerifyResult extends Message {
 	 * @see crossbear.Message#writeContent(java.io.OutputStream)
 	 */
 	@Override
-	protected void writeContent(OutputStream out) throws IOException {
+	protected void writeContent(OutputStream out) throws MessageSerializationException {
 	
+	    try {
 		out.write(getRating()); //one byte for rating the result "as a number"
-		
 		out.write(getReport().getBytes());
+	    }
+	    catch (IOException e) {
+		throw new MessageSerializationException("Could not serialize certificate verification result", e);
+	    }
 		
 	}
 	

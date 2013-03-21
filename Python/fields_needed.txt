@@ -1,0 +1,36 @@
+Neue Tabelle:
+serverhostport: varchar
+serverip: varchar
+issuing_ca: varchar
+aki: varchar
+servercertid: bigint REFERENCES servercerts(id)i
+timestamp: TIMESTAMP WITHOUT TIME ZONE
+manual_check: boolean
+
+Zuordnung:
+(serverhostport, ip) -> Issuing_CA, AKI (falls existiert)
+
+Schritte:
+
+Processor springt an:
+1) Neue Certs in DB, die noch nicht verarbeitet?
+Nein: sleep
+Ja: process.
+-> Erzeuge obige Zuordnung *im Speicher*
+-> 2)
+2) Prüfe:
+Existiert diese Zuordnung schon in Tabelle?
+(= selbe AKI und issuing_ca)
+
+Noch nie gesehen:
+- Einspeichern
+- Flag manual_check auf FALSE
+
+Existiert genau so:
+- Speichere sie zusätzlich ein
+- Setze servercertid -> servercerts(id)
+- Flag "manual_check" auf FALSE
+
+Nein, aber schon gesehen = AKI oder issuing_ca ist anders:
+- Einspeichern wie oben
+- Flag manual_check auf TRUE

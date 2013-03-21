@@ -58,6 +58,7 @@ import crossbear.messaging.HuntingTask;
 import crossbear.messaging.Message;
 import crossbear.messaging.MessageList;
 import crossbear.messaging.PublicIPNotification;
+import crossbear.messaging.MessageSerializationException;
 
 /**
  * The CVRProcessor takes as input a CertVerifyRequest and judges its certificate based on various criteria. It returns a MessageList consisting of a CertVerifyResult and optionally a
@@ -644,11 +645,10 @@ public class CVRProcessor {
 	 * @return The bytes of the CertVerifyResult
 	 * @throws InvalidParameterException
 	 * @throws SQLException
-	 * @throws CertificateEncodingException
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	public byte[] getCachedCertVerifyResult() throws InvalidParameterException, SQLException, CertificateEncodingException, NoSuchAlgorithmException, IOException {
+    public byte[] getCachedCertVerifyResult() throws InvalidParameterException, SQLException, IOException, NoSuchAlgorithmException, MessageSerializationException {
 
 		// The KEY of the CertVerifyResultCache-table is a hash of the corresponding CertVerifyRequest.
 		Object[] params = { Message.byteArrayToHexString(cvr.getHash()) };
@@ -777,7 +777,7 @@ public class CVRProcessor {
 	 * @throws IOException
 	 * @throws SQLException
 	 */
-	public void storeCertVerifyResultInCache(byte[] result, long validity) throws InvalidKeyException, CertificateEncodingException, NoSuchAlgorithmException, NoSuchProviderException, IOException, SQLException{
+    public void storeCertVerifyResultInCache(byte[] result, long validity) throws InvalidKeyException, CertificateEncodingException, NoSuchAlgorithmException, NoSuchProviderException, IOException, SQLException, MessageSerializationException{
 		
 		SQLException lastSQLException = null;
 

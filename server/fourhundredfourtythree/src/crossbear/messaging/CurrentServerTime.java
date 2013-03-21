@@ -85,8 +85,14 @@ public class CurrentServerTime extends Message {
 	 * @see crossbear.Message#writeContent(java.io.OutputStream)
 	 */
 	@Override
-	protected void writeContent(OutputStream out) throws IOException {
+	protected void writeContent(OutputStream out) throws MessageSerializationException {
+
+	    try {
 		out.write(Message.intToByteArray((int) (getCurrentServerTime().getTime() / 1000)));
+	    }
+	    catch (Exception e) {
+		throw new MessageSerializationException("Could not serialize server time", e);
+	    }
 	}
 
 }

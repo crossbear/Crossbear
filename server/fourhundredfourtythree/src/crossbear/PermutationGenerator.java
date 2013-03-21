@@ -1,5 +1,9 @@
 /**
- * This class was written by Michael Gilleland and is provided to the public at http://www.merriampark.com/perm.htm
+ * This class was written by Michael Gilleland and originally provided to the public at http://www.merriampark.com/perm.htm
+ */
+
+/**
+   TODO: If original author cannot be contacted, replace with generator of our own?
  */
 
 package crossbear;

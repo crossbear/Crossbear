@@ -2,9 +2,36 @@ import psycopg2
 import subprocess
 import re
 import logging
+import getpass
+import sys
+from ConfigParser import SafeConfigParser
+
+#configfile = home + "/pki_crawl.conf"
+#confparser = SafeConfigParser()
+#confparser.read(configfile)
+#dbname = confparser.get('database', 'dbname')
+#username = confparser.get('database', 'username')
+#dbhost = confparser.get('database', 'host')
+#password = confparser.get('database', 'password')
+#logpath = confparser.get('log', 'logpath')
+#loglevel = "logging." + confparser.get('log', 'loglevel')
+
+# TODO
+# LOG_FILENAME = logpath + "/readIssuersAKI_" + date + ".log"
+# logging.basicConfig(filename=LOG_FILENAME, level=loglevel, filemode='w')
 
 re_akid = re.compile("X509v3 Authority Key Identifier:.*\n.*keyid:(.*)")
 re_issuer = re.compile("(Issuer: .*)")
+re_opensslError = re.compile(":error:")
+
+def simpleKeyValue(regex, res):
+    resultGroup = regex.search(res)
+    if (resultGroup != None):
+        valueGrouped = resultGroup.group(0)
+        value = valueGrouped.split(": ", 1)[1]
+        return value.lstrip()
+    else:
+        return "not set"
 
 def getIssuer(res):
     global re_issuer
@@ -22,9 +49,10 @@ def getAKID(res):
     return akid
 
 def getIssuerAndAKI(rows):
-    hashcert = rows[0]
+    # print rows, len(rows)
+    ID = rows[0]
     cert = rows[1]
-
+    
     p = subprocess.Popen(["openssl", "x509", "-noout", "-text"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.stdin.write(cert)
     p.stdin.close()
@@ -33,45 +61,50 @@ def getIssuerAndAKI(rows):
     p.wait()
     p.stdout.close()
     p.stderr.close()
-
+    # print res
     resOpensslError = re_opensslError.search(resError)
     if resOpensslError != None:
-        logging.error("Critical error for certificate " + hashcert)
+        logging.error("Critical error for certificate " + ID)
         logging.error(resError)
         return None
 
     issuer = getIssuer(res)
     aki = getAKID(res)
-    return (issuer, aki)
+    # if not aki:
+    #     logging.error(res)
+    return (issuer, aki, ID)
 
 
 def main():
     issuerInfo = "issuer_info"    
-    connectString = "dbname='crossbeartesting' user='postgres' host='localhost'"
+    passwd = getpass.getpass()
+    connectString = "dbname='crossbeartesting' user='postgres' host='localhost' password='"+passwd+"'"
     conn = psycopg2.connect(connectString)
     c = conn.cursor()
     up = conn.cursor()
 
-    qlSelectCerts = "SELECT pemraw FROM servercerts"
+    sqlSelectCerts = "SELECT id, pemraw FROM servercerts;"
     try:
-        c.execute(sqlSelectCerts)
+        c.execute(sqlSelectCerts)#, ('id', 'pemraw'))
     except Exception, e:
         logging.error("SELECT FF OIDs failed.")
         logging.error(e)
         sys.exit(-1)
     conn.commit()
-
+    
     for row in c:
-    	(issuer, aki) = getIssuerAndAKI(row)
-    	if(None in (issuer,aki)):
+    	(issuer, aki,ID) = getIssuerAndAKI(row)
+    	if(None in (ID, issuer)):
+            print "ERROR: ID = "+str(ID)+" Issuer = "+str(issuer)
             # TODO: add logging
             print "problem.."
             continue
-    	
+    	if not aki:
+            aki = "None"
         # sqlInsertResults = "INSERT INTO issuer_info (issuing_ca, aki) VALUES ('"+issuer+"', '"+aki+"')"
-        sqlInsertResults = "INSERT INTO issuer_info (issuing_ca, aki) VALUES (%s, %s)"
+        sqlInsertResults = "INSERT INTO issuer_info (issuing_ca, aki, id) VALUES (%s, %s, %s)"
     	try:
-            up.execute(sqlInsertResults, (issuer, aki))
+            up.execute(sqlInsertResults, (issuer, aki,ID))
         except Exception, e:
             logging.error("SELECT FF OIDs failed.")
             logging.error(e)
