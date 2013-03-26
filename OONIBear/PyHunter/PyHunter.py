@@ -5,7 +5,7 @@ A crossbear hunter implementation in python.
 # NOTE all print commands should log to the ooni thingy.
 from   HTLFetcher                 import HTLFetcher
 from   cbmessaging.Message        import Message
-from   cbmessaging.MessageTypes   import MessageTypes
+from   cbmessaging.MessageTypes   import messageTypes
 from   cbmessaging.HTRepNewCert   import HTRepNewCert
 from   cbmessaging.HTRepKnownCert import HTRepKnownCert
 from   PipFetcher                 import PipFetcher
@@ -36,18 +36,18 @@ class PyHunter(object):
         """fetchs the hunting task list"""
         ml = self.htlfetcher.fetch()
         for msg in ml.allMessages():
-            if msg.type == MessageTypes["CURRENT_SERVER_TIME"]:
+            if msg.type == messageTypes["CURRENT_SERVER_TIME"]:
                 self.hts["cs"] = msg
                 continue
-            elif msg.type == MessageTypes["PUBLIC_IP_NOTIF4"]:
+            elif msg.type == messageTypes["PUBLIC_IP_NOTIF4"]:
                 self.hts["pip"][4]["not"] = msg
                 self.hts["pip"][4]["ts"]  = time()
                 continue
-            elif msg.type == MessageTypes["PUBLIC_IP_NOTIF6"]:
+            elif msg.type == messageTypes["PUBLIC_IP_NOTIF6"]:
                 self.hts["pip"][6]["not"] = msg
                 self.hts["pip"][6]["ts"] = time()
                 continue
-            elif msg.type == MessageTypes["IPV4_SHA256_TASK"] or msg.type == MessageTypes["IPV6_SHA256_TASK"]:
+            elif msg.type == messageTypes["IPV4_SHA256_TASK"] or msg.type == messageTypes["IPV6_SHA256_TASK"]:
                 self.hts["tasks"].append(msg)
                 continue
         # TODO: Return useful log information
@@ -85,7 +85,7 @@ class PyHunter(object):
 
     def executeHT(self,ht):
         """executes a hunting task"""
-        ipv = 4 if ht.type == Message.types["Sha256Task"][4] else 6
+        ipv = 4 if ht.type == messageTypes["IPV4_SHA256_TASK"] else 6
 
         # TODO get this to the report
         if not self.freshen_pip(ipv):
