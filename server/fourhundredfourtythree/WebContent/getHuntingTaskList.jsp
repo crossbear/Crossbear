@@ -57,7 +57,7 @@
 			Security.addProvider(new BouncyCastleProvider());
 		
 			// Load the porperties and settings from the config file
-			properties = new Properties(contextPath.concat("../crossbear.properties"));
+			properties = new Properties(contextPath.concat("../../crossbear.properties"));
 	
 
 		} catch (Exception e) {

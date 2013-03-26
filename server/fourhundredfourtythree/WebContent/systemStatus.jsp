@@ -35,7 +35,8 @@
 		
 		try {
 			// Load the porperties and settings from the config file
-			properties = new Properties(contextPath.concat("../crossbear.properties"));
+			// TODO: Do it like this for all jsp pages
+			properties = new Properties(contextPath.concat("../../crossbear.properties"));
 			
 
 		} catch (Exception e) {

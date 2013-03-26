@@ -39,6 +39,9 @@
 
 	//Constructor-like functionality: Only performed the first time the page is loaded
 	public void jspInit() {
+		ServletContext sc = getServletContext();
+		String contextPath = sc.getRealPath(File.separator);
+
 
 		try {
 			
@@ -52,7 +55,7 @@
 			Security.addProvider(new BouncyCastleProvider());
 					
 			// Load the porperties and settings from the config file
-			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
+			properties = new Properties(contextPath.concat("../../crossbear.properties"));
 
 			/*
 			* Like mentioned above the CertificateManager needs to load the local keystore on initilization.
