@@ -6,6 +6,8 @@ __author__ = "Vedat Levi Alev"
 
 
 from dns                import resolver
+import dns.rdtypes.IN.A
+import dns.rdtypes.IN.AAAA
 from Crypto.PublicKey   import RSA
 from Crypto.Cipher      import PKCS1_OAEP
 from Crypto.Cipher      import AES
