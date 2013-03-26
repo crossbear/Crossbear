@@ -48,10 +48,14 @@
 			* - "RSA/None/OAEPWithSHA1AndMGF1Padding"-Asymmetric Encryption
 			* all of these are used in Crossbear.
 			*/
+			ServletContext sc = getServletContext();
+			String contextPath = sc.getRealPath(File.separator);
+
+
 			Security.addProvider(new BouncyCastleProvider());
 
 			// Load the porperties and settings from the config file
-			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
+			properties = new Properties(contextPath.concat("../../crossbear.properties"))
 					
 			/*
 			* Like mentioned above the PublicIPNotifProcessor needs to load the RSA key on initilization.

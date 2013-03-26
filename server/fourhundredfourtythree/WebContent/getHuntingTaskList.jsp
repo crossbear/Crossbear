@@ -63,8 +63,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			Security.addProvider(new BouncyCastleProvider());
 					
 			// Load the porperties and settings from the config file
-			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
 
+			properties = new Properties(contextPath.concat("../../crossbear.properties"));
+	
 		} catch (Exception e) {
 
 			Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.getHuntingTaskList.init.error", e);
