@@ -4,7 +4,7 @@
 	</target>
 	<target name="compile">
 		<mkdir dir="WebContent/WEB-INF/classes/"/>
-		<javac srcdir="src/" destdir="WebContent/WEB-INF/classes/">
+		<javac srcdir="src/" destdir="WebContent/WEB-INF/classes/" includeantruntime="false">
 			<classpath>
 				<pathelement path="src/com/"/>
 				<fileset dir="WebContent/WEB-INF/lib/" includes="*.jar"/>

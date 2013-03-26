@@ -67,7 +67,10 @@
 	public void jspInit() {
 
 		try {
-			
+			ServletContext sc = getServletContext();
+			String contextPath = sc.getRealPath(File.separator);
+
+
 			/*
 			* Adding the bouncy castle Security Provider is required for the use of 
 			* - "SHA256"-HMAC
@@ -78,7 +81,7 @@
 			Security.addProvider(new BouncyCastleProvider());
 					
 			// Load the porperties and settings from the config file
-			properties = new Properties("/opt/apache-tomcat/webapps/crossbear.properties");
+			properties = new Properties(contextPath.concat("../../crossbear.properties"));
 
 			/*
 			* As mentioned above the CertificateManager needs to load the local keystore on initilization.
