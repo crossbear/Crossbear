@@ -4,6 +4,11 @@ Instructions are for Debian and derived distributions. We will
 install OONIBear as symlinks into the ooni-probe directory.
 The Crossbear/OONIBear repo can reside anywhere on your drive.
 
+Dependencies:
+Swig
+M2Crypto
+Pyopenssl
+
 1) Installing OONI (www.ooni.nu)
 
 Clone the OONI repository.
