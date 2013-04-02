@@ -18,13 +18,13 @@ from   Tracer                     import Tracer
 import random
 import ssl
 import pprint 
-
+import traceback
 
 
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
     def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
-        
+
         self.cbServerHostName    = cbServerHostName
         self.tracer              = Tracer(tracerMHops, tracerSPerHop)
         self.hts                 = {"tasks" : [], "pip": {4:{}, 6:{}}}

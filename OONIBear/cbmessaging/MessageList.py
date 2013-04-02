@@ -64,18 +64,10 @@ class MessageList(object):
     def length(self):
         return len(self.messages)
 
-import httplib
+import urllib
 from pprint import pprint
 if __name__ == '__main__':
-    conn = httplib.HTTPConnection("localhost", 8080)
-    conn.request("GET", "/crossbear/getHuntingTaskList.jsp")
-    resp = conn.getresponse()
-    body = resp.read()
-    l = MessageList(body)
-    out2 = open("/home/jeeger/tmp/getHuntingTaskList.jsp", 'w')
-    out2.write(body)
-    out2.close()
+    conn = urllib.urlopen("https://cefalu.net.in.tum.de/getHuntingTaskList.jsp")
+    l = MessageList(conn.read())
     pprint(l.__dict__)
-    out = open("/home/jeeger/tmp/getHuntingTaskList-python.jsp", 'w')
-    out.write(l.getBytes())
-    out.close()
+    print l.getMessage(3).targetIP

@@ -7,6 +7,7 @@ __author__ = "Vedat Levi Alev"
 
 from cbmessaging.Message import Message
 from cbmessaging.HuntingTask import HuntingTask
+from cbmessaging.MessageList import MessageList
 from cbmessaging.SignatureMessage import SignatureMessage
 from cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
 from Crypto.Hash import SHA256
@@ -36,7 +37,7 @@ class HTLFetcher(object):
         # Now request the current hunting task list
         conn.request("GET", "/getHuntingTaskList.jsp")
         resp = conn.getresponse()
-        ml = MessageList(resp)
+        ml = MessageList(resp.read())
         return ml
 
     def verify(self, messagelist):

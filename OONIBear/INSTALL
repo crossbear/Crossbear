@@ -8,6 +8,7 @@ Dependencies:
 Swig
 M2Crypto
 Pyopenssl
+requests
 
 1) Installing OONI (www.ooni.nu)
 

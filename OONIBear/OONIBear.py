@@ -1,6 +1,7 @@
 from twisted.python import usage
 from ooni.nettest import NetTestCase
 from ooni.PyHunter import PyHunter
+import traceback
 import ConfigParser
 
 class CbOptions(usage.Options):
@@ -60,14 +61,18 @@ class CBTester(NetTestCase):
             return
     
     def test_cb(self):
-        ph = PyHunter.PyHunter(self.cb_host, self.cb_cert, self.max_hops, self.samples_per_hop)
-        r1 = ph.getHTL()
-        CBTester.merge(r1)
+        try:
+            ph = PyHunter.PyHunter(self.cb_host, self.cb_cert, self.max_hops, self.samples_per_hop)
+            r1 = ph.getHTL()
+            CBTester.merge(r1)
 
-        r2 = ph.executeHTL()
-        CBTester.merge(r2)
+            r2 = ph.executeHTL()
+            CBTester.merge(r2)
+        except Exception, e:
+            print e
+            traceback.print_exc()
 
-
+            
 
 
 

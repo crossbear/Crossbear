@@ -8,6 +8,8 @@ from MessageTypes import messageTypes
 from cStringIO import StringIO
 #import ipaddr
 from struct import unpack
+import struct
+import sys
 
 class HuntingTask(Message):
     def createFromBytes(self, msgtype, data):
@@ -16,12 +18,12 @@ class HuntingTask(Message):
         # extract the task id
         pos = 0
 
-        self.taskID  = unpack(">I", data[:4])
+        (self.taskID,)  = unpack(">I", data[:4])
         pos += 4
         
         # extract the number of well known certificate chain hashes
         # Why 0xff?
-        knownCerts = 0xff & unpack(">B", data[4])
+        knownCerts = 0xff & unpack(">B", data[4])[0]
         pos += 1
         
         # store all the known cert hashes in a list
@@ -39,12 +41,11 @@ class HuntingTask(Message):
         elif msgtype == messageTypes['IPV6_SHA256_TASK']:
             ipLen = 16
             self.ipVer = 6
-        
-        self.targetIP = unpack('>' + 'B' * ipLen, data[pos + ipLen]);
+        self.targetIP = ".".join(str(x) for x in unpack('>' + 'B' * ipLen, data[pos: pos + ipLen]))
         pos += ipLen
 
         # extract the port of the hunting task's target
-        self.targetPort = unpack('>I', data[pos:pos + 2])
+        (self.targetPort,) = unpack('>H', data[pos:pos + 2])
         pos += 2
         # The rest is the target host name.
         self.targetHost = data[pos:]
@@ -53,11 +54,12 @@ class HuntingTask(Message):
         out = StringIO()
         out.write(pack(">I", self.taskID))
         out.write(pack(">B", len(self.knownCertHashes)))
+        ipsplit = self.targetIP.split(".")
         for h in self.knownCertHashes:
             out.write(h)
         if self.ipVer == 4:
-            out.write(pack(">BBBB", *self.targetIP))
+            out.write(pack(">BBBB", *ipsplit))
         elif self.ipVer == 6:
-            out.write(pack(">BBBBBBBBBBBBBBBB", *self.targetIP))
+            out.write(pack(">BBBBBBBBBBBBBBBB", *ipsplit))
         out.write(self.targetHost)
         return
