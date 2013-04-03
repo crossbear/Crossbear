@@ -80,7 +80,7 @@ class PyHunter(object):
         """sends the results to the CB server"""
 
         conn = SingleTrustHTTPS(self.cbServerCert, self.cbServerHostName, 443)
-        conn.request("SEND", "", "".join(h.binary() for h in hts))
+        conn.request("SEND", "", "".join(h.getBytes() for h in hts))
         conn.close()
 
     def executeHT(self,ht):
@@ -128,15 +128,21 @@ class PyHunter(object):
         if cert_known:
             # TODO get this to report
             print "Cert Known!"
-            return HTRepKnownCert(ht.taskID, ht.hmac, cccHash, trace)
+            rep = HTRepKnownCert()
+            # TODO: I don't know if the selection of the hmac is correct.
+            # Previously, it was ht.hmac, but that never existed AFAIK
+            rep.createFromValues(ht.taskID, self.hts["pip"][ipv]["not"].hmac, cccHash, trace)
+            return rep
         else:
             # TODO get this to report
             print "Cert New!"
-            return HTRepNewCert(ht.taskID,
+            rep = HTRepNewCert()
+            rep.createFromValues(ht.taskID,
                                 self.hts["cs"].currentServTime(),
                                 self.hts["pip"][ipv]["not"].hmac,
                                 chain,
                                 trace)
+            return rep
 
         # TODO get this to report
         print "Done!"

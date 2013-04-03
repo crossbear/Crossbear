@@ -1,6 +1,7 @@
 from twisted.python import usage
 from ooni.nettest import NetTestCase
 from ooni.PyHunter import PyHunter
+from pprint import pprint
 import traceback
 import ConfigParser
 
@@ -41,6 +42,7 @@ class CBTester(NetTestCase):
     def __init__(self):
         self.cb_host = self.cb_cert = self.max_hops = self.samples_per_hop = None
         NetTestCase.__init__(self)
+
     def setUp(self):
         # TODO: Find a smart way of handling corrupt config files
         try:
@@ -68,9 +70,15 @@ class CBTester(NetTestCase):
 
             r2 = ph.executeHTL()
             CBTester.merge(r2)
+            print '---'
+            pprint(r1)
+            print '---'
+            pprint(r2)
+            print '---'
         except Exception, e:
             print e
             traceback.print_exc()
+            raise e
 
             
 

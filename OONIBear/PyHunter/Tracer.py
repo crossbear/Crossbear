@@ -27,6 +27,7 @@ class Tracer(object):
         Arguments:
         dst -- destination host, an IP address 
         """
+        # TODO: Add some sort of output here
         # TODO: document
         recv = socket.getprotobyname('icmp')
         send = socket.getprotobyname('udp')

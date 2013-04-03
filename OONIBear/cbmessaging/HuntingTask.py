@@ -62,4 +62,4 @@ class HuntingTask(Message):
         elif self.ipVer == 6:
             out.write(pack(">BBBBBBBBBBBBBBBB", *ipsplit))
         out.write(self.targetHost)
-        return
+        return out.getvalue()

@@ -15,6 +15,7 @@ Structure:
 """
 
 from Message import Message
+from MessageTypes import messageTypes
 from struct  import pack
 import ssl
 class HTRepNewCert(Message):
@@ -31,10 +32,10 @@ class HTRepNewCert(Message):
 
     # RH: CONTINUE HERE
 
-    def __init__(self, taskid, ts, hmac, certchain, trace):
+    def createFromValues(self, taskid, ts, hmac, certchain, trace):
         # set message type and length (72B for taskid, ts, hmac and
         # plus length of traceroute)
-        Message.__init__(self, ("CertRep", "New"), 40 + len(trace))
+        Message.createFromValues(self, messageTypes['TASK_REPLY_NEW_CERT'], 40 + len(trace))
         self.taskid    = taskid
         self.ts        = ts
         self.hmac      = hmac
@@ -44,10 +45,14 @@ class HTRepNewCert(Message):
 
     def getBytes(self):
         timeStamp = int( self.ts / 1000 )
-        out = [pack("II", self.taskid, timeStamp), self.hmac,
-               pack("B", 0xff & len(self.certchain))]
+        # Pack in network byte order
+        out = [pack(">II", self.taskid, timeStamp), self.hmac,
+               pack(">B", 0xff & len(self.certchain))]
         for cert in self.certchain[:min(255, len(self.certchain))]:
             out.append(ssl.PEM_cert_to_DER_cert(cert))
                       
         out.append(self.trace)
+        print "\n"
+        print out
+        print "\n"
         return "".join(out)

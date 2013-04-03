@@ -6,8 +6,9 @@ the hash value instead of the full certificate chain.
 """
 
 from Message import Message
+from MessageTypes import messageTypes
 from struct  import pack
-
+# TODO: Add createFromBytes and createFromValues methods
 
 class HTRepKnownCert(Message):
     """
@@ -20,13 +21,12 @@ class HTRepKnownCert(Message):
     certhash -- hash of the observed certificate chain (byte array, 32B)
     trace -- Traceroute to the alleged victim host (String, variable length)
     """
-    def __init__(self, taskid, ts, hmac, certhash, trace):
+
+    # TODO: Move this into a createFromValues function
+    def createFromValues(self, taskid, ts, hmac, certhash, trace):
         # set message type and length (72B for taskid, ts, hmac and
         # certhash plus length of traceroute)
-
-        # TODO: we should check for malformed messages, i.e. correct
-        # length checks of the input - is this done somewhere else?
-        Message.__init__(self, ("CertRep", "Known"), 72 + len(trace))
+        Message.createFromValues(self, messageTypes['TASK_REPLY_KNOWN_CERT'], 72 + len(trace))
         self.taskid = taskid
         self.ts     = ts
         self.hmac   = hmac
@@ -43,8 +43,16 @@ class HTRepKnownCert(Message):
         # We need to divide by 1000 to obtain the results in seconds
         # (the server likes to keep timestamps in ms)
         timeStamp = int(self.ts / 1000)
-        out = [pack("II", self.taskid, timeStamp), self.hmac, self.certhash,
+        out = [pack(">II", self.taskid, timeStamp), self.hmac, self.certhash,
                self.trace]
                 #pack("%dc" % len(trace), *list(trace))]
         # Concatenate the strings (no delimiter) and return the result
         return "".join(out)
+
+    # TODO: Finish this
+    def createFromBytes(self, message_type, content):
+        # Message.createFromBytes(self, message_type, content)
+        # (taskid, timeStamp) = unpack(">II", content[:8])
+        # self.hmac = content[8:40]
+        # self.certhash = (0xff & 1)
+        return

@@ -24,7 +24,7 @@ class PipNot(Message):
     
     def createFromBytes(self, msgtype, data):
         Message.createFromBytes(self, msgtype, data)
-        self.hmac = unpack(">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", data[:32])
+        self.hmac = data[:32]
         if msgtype == MessageTypes.messageTypes['PUBLIC_IP_NOTIF4']:
             ipLen = 4
             self.ipversion = 4
@@ -36,7 +36,7 @@ class PipNot(Message):
 
     def getBytes(self):
         bytes = ""
-        bytes += pack(">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", *self.hmac);
+        bytes += self.hmac
         if self.ipversion == 4:
             bytes += pack(">BBBB", *self.publicIP)
         elif self.ipversion == 6:
