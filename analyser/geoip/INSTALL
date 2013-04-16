@@ -1,0 +1,14 @@
+# To use the MaxMind GeoIPCity, see the installation instructions on 
+# http://www.maxmind.com/app/installation?city=1
+#
+# First get yourself the C Library --> http://www.maxmind.com/download/geoip/api/c/
+	# tar xfz GeoIP-1.4.8.tar.gz
+	# ./configure
+	# make
+	# make check
+	# sudo make install
+
+# Secondly download the Python class - http://www.maxmind.com/download/geoip/api/python/
+	# tar
+	# python setup.py build
+	# python setup.py install

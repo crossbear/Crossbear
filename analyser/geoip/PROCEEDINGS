@@ -1,0 +1,10 @@
+# This document contains information on how to upgrade the monthly 
+# updated GeoIp database from MaxMind.com
+
+wget -N -q http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+cp GeoLiteCity.dat.gz ../
+cd ..
+gunzip GeoLiteCity.dat.gz
+
+#
+
