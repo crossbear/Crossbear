@@ -1,0 +1,10 @@
+There is memcache involved. 
+
+So first get 
+	wget http://ftp.tummy.com/pub/python-memcached/old-releases/python-memcached-1.48.tar.gz
+	tar xvfz python-memcached-1.48.tar.gz
+	cd python-memcached-1.48/
+	  --> skip if allready installed:   sudo apt-get install python-setuptools
+	sudo python setup.py install
+
+
