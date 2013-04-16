@@ -1,0 +1,113 @@
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/svn/!svn/ver/16/trunk/module/libgds
+END
+stream.c
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/16/trunk/module/libgds/stream.c
+END
+stream.h
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/16/trunk/module/libgds/stream.h
+END
+trie.c
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/16/trunk/module/libgds/trie.c
+END
+radix-tree.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/16/trunk/module/libgds/radix-tree.c
+END
+stack.c
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/16/trunk/module/libgds/stack.c
+END
+trie.h
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/16/trunk/module/libgds/trie.h
+END
+memory.c
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/16/trunk/module/libgds/memory.c
+END
+radix-tree.h
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/16/trunk/module/libgds/radix-tree.h
+END
+types.h
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/16/trunk/module/libgds/types.h
+END
+stack.h
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/16/trunk/module/libgds/stack.h
+END
+memory.h
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/16/trunk/module/libgds/memory.h
+END
+gds.c
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/16/trunk/module/libgds/gds.c
+END
+array.c
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/16/trunk/module/libgds/array.c
+END
+enumerator.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/16/trunk/module/libgds/enumerator.c
+END
+gds.h
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/16/trunk/module/libgds/gds.h
+END
+memory_debug.h
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/16/trunk/module/libgds/memory_debug.h
+END
+array.h
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/16/trunk/module/libgds/array.h
+END
+enumerator.h
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/16/trunk/module/libgds/enumerator.h
+END
