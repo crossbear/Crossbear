@@ -23,7 +23,6 @@ class HTLFetcher(object):
         self.servCert     = servCert
 
 
-
     def fetch(self):
         """
         Fetch the current list of Hunting Tasks from the Crossbear

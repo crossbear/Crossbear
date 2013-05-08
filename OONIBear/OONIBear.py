@@ -21,7 +21,6 @@ class CBTester(NetTestCase):
 
     report = {}
     report['errors'] = []
-
     usageOptions = CbOptions
     
     # for tracerouting
