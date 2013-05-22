@@ -17,6 +17,7 @@ Ralph Holz (coordinator, developer)
 Thomas Riedmaier (developer, did the original SSL!)
 Vedat Levi Alev (developer, works on the OONI integration)
 Oliver Gasser (developer, does the new extension that also starts with 'S')
+Jan Seeger (developer, does the automated analysis)
 Phillip Dowling (developer, does Python tools for processing certs)
 
 Licensing: Crossbear code is GPLv3 - see notice contained in every
