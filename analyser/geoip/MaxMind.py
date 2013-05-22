@@ -20,45 +20,33 @@ import os, sys
 import urllib2
 import gzip
 import shutil
+from ConfigParser import SafeConfigParser
 
 class MaxMindUpdater(object):
-	def __init__(self, prefix, cityDbPath, cityDbDatPath, cityDbDatPath_backup , maxmind_url):
-		self.locGeoLiteCityDb = cityDbPath # is the *.gz packed file
-		self.locGeoLiteCityDbDat = cityDbDatPath
-		self.cityDbDatPath_backup = cityDbDatPath_backup 
-		self.maxmind_url = maxmind_url
-		self.prefix = prefix
-	
-	def _getBackupFileName(self):
-		"""
-			Use prefix and former filename to get filename for 
-			backing up the old GeoLiteCity DB
-		"""
-		if self.prefix.endswith('.'):
-			self.prefix = self.prefix[:-1]
-		db_dir, db_filename = os.path.split(self.locGeoLiteCityDbDat)
-		filename_parts = db_filename.split('.')
-		new_db_filename = filename_parts[0] + "_" + self.prefix + "." + filename_parts[1]
-		
-		return os.path.join(self.cityDbDatPath_backup, new_db_filename)
+	def __init__(self, config):
+		self.configfile = config
+		self.conf = SafeConfigParser()
+		self.conf.read(config)
+		self.dbpath = self.conf.get("geoloc", "dbpath")
+		self.db_backup = self.conf.get("geoloc", "db_backup")
+		self.maxmind_url = self.conf.get("geoloc","dburl")
+		self.size = int(self.conf.get("geoloc", "dbsize"))
 	
 	def _checkForDBUpdate(self):
 		# IF file already exists, check if updates are available
-		if os.path.isfile(self.locGeoLiteCityDb):
+		if os.path.isfile(self.dbpath):
 			try:
 				remoteFile = urllib2.urlopen(self.maxmind_url)
 				rFileSize = long(remoteFile.headers["Content-Length"])
-				lFileSize = long(os.path.getsize(self.locGeoLiteCityDb))
 				remoteFile.close()
 			
-				if rFileSize == lFileSize:
+				if rFileSize == self.size:
 					print("MaxMind DB is up to date ... ")
 					return False
 				else:
 					print('Saving copy of the old GeoLiteCity DB ...')
-					shutil.copy(self.locGeoLiteCityDbDat, self._getBackupFileName())
-					os.remove(self.locGeoLiteCityDb)
-					os.remove(self.locGeoLiteCityDbDat)
+					shutil.copy(self.dbpath, self.db_backup)
+					os.remove(self.dbpath)
 				
 				return True
 			
@@ -70,6 +58,7 @@ class MaxMindUpdater(object):
 				print "URL Error: ", e.reason
 				print "Assuming DB okay"
 				return False
+		return True
 		
 		
 	def update(self):
@@ -79,8 +68,12 @@ class MaxMindUpdater(object):
 			# Download file
 			try:
 				downloadFile = urllib2.urlopen(self.maxmind_url)
+				size = downloadFile.headers['Content-Length']
+				self.conf.set("geoloc", "dbsize", size)
+				with open(self.configfile, 'w') as f:
+					self.conf.write(f)
 				# Open our local file for writing
-				with open(self.locGeoLiteCityDb, "wb") as local_file:
+				with open(self.dbpath +".gz", "wb") as local_file:
 					local_file.write(downloadFile.read())
 				downloadFile.close()
 			except urllib2.HTTPError, e:
@@ -94,20 +87,21 @@ class MaxMindUpdater(object):
 			
 			print('Done downloading new version of GeoLiteCity DB.')
 				# Decompress it
-			compressed = gzip.open(self.locGeoLiteCityDb, 'rb')
-			extracted = open(self.locGeoLiteCityDbDat, 'w')
+			compressed = gzip.open(self.dbpath + ".gz", 'rb')
+			extracted = open(self.dbpath, 'w')
 			extracted.write(compressed.read())
 			extracted.close()
 			compressed.close()
+			os.remove(self.dbpath + ".gz")
 			print('Updated version of MaxMind City DB.')
 		else:
 			print ('No need to update MaxMind City DB.')
 			
 
 class MaxMind(object):
-	def __init__(self, cityDbDatPath):
-		self.locGeoLiteCityDbDat = cityDbDatPath
-		self.gi = GeoIP.open(self.locGeoLiteCityDbDat,GeoIP.GEOIP_STANDARD)
+	def __init__(self, dbpath):
+		self.dbpath = dbpath
+		self.gi = GeoIP.open(self.dbpath,GeoIP.GEOIP_STANDARD)
 	
 	def queryDB(self, ip):
 		record = self.gi.record_by_addr(ip)
@@ -133,3 +127,7 @@ class MaxMind(object):
 		record['ipEnd'] = str(ipRange[1])
 		
 		return record
+
+if __name__ == "__main__":
+	mmu = MaxMindUpdater("geoip.config")
+	mmu.update()

@@ -68,6 +68,10 @@ import urllib
 from pprint import pprint
 if __name__ == '__main__':
     conn = urllib.urlopen("https://cefalu.net.in.tum.de/getHuntingTaskList.jsp")
-    l = MessageList(conn.read())
-    pprint(l.__dict__)
-    print l.getMessage(3).targetIP
+    body = conn.read()
+    with open("/home/jeeger/tmp/htl-server","w") as f:
+        f.write(body)
+    l = MessageList(body)
+    pprint(l.getMessage(3).__dict__)
+    with open("/home/jeeger/tmp/htl-client","w") as f:
+        f.write(l.getBytes())

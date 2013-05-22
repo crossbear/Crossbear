@@ -11,7 +11,7 @@ from cbmessaging.MessageList import MessageList
 from cbmessaging.SignatureMessage import SignatureMessage
 from cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
 from Crypto.Hash import SHA256
-from M2Crypto import BIO, RSA, EVP
+from M2Crypto import BIO, RSA, EVP, X509
 from cbmessaging.PipNot  import PipNot
 from cbmessaging.CurServTime import CurServTime
 
@@ -21,6 +21,22 @@ class HTLFetcher(object):
         self.servHost     = servHost
         self.servPort     = servPort
         self.servCert     = servCert
+
+    def verify(self, messagelist):
+        messageindex = 0
+        for index in range(messagelist.length()):
+            if isinstance(messagelist.getMessage(index),SignatureMessage):
+                messageindex = index
+                break
+        sigmessage = messagelist.getMessage(messageindex)
+        messagelist.removeMessage(messageindex)
+        toverify = messagelist.getBytes()
+        cert = X509.load_cert("cbserver.crt")
+        pubkey = cert.get_pubkey()
+        pubkey.reset_context(md="sha256")
+        pubkey.verify_init()
+        pubkey.verify_update(toverify)
+        return (pubkey.verify_final(sigmessage.signature) == 1)
 
 
     def fetch(self):
@@ -37,22 +53,9 @@ class HTLFetcher(object):
         conn.request("GET", "/getHuntingTaskList.jsp")
         resp = conn.getresponse()
         ml = MessageList(resp.read())
-        return ml
+        if (self.verify(ml)):
+            return ml
+        else:
+            print "Message verification failed."
+            return None
 
-    def verify(self, messagelist):
-        messageindex = 0
-        for index in messagelist.length():
-            if typeof(messagelist.getMessage(index)) is cbmessaging.SignatureMessage:
-                messageindex = index
-                break
-        sigmessage = l.getMessage(messageindex)
-        l.removeMessage(messageindex)
-        toverify = l.getBytes()
-        # TODO: Add correct key path
-        key = RSA.load_pub_key("server-public-key.pem")
-        pubkey = EVP.PKey()
-        pubkey.assign_rsa(key)
-        pubkey.reset_context(md="sha256")
-        pubkey.verify_init()
-        pubkey.verify_update(toverify)
-        return (pubkey.verify_final(sigmessage.signature) == 1)

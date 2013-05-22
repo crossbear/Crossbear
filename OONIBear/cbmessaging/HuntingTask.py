@@ -7,7 +7,7 @@ from Message import Message
 from MessageTypes import messageTypes
 from cStringIO import StringIO
 #import ipaddr
-from struct import unpack
+from struct import unpack,pack
 import struct
 import sys
 
@@ -41,7 +41,7 @@ class HuntingTask(Message):
         elif msgtype == messageTypes['IPV6_SHA256_TASK']:
             ipLen = 16
             self.ipVer = 6
-        self.targetIP = ".".join(str(x) for x in unpack('>' + 'B' * ipLen, data[pos: pos + ipLen]))
+        self.targetIP = ".".join([str(x) for x in unpack('>' + 'B' * ipLen, data[pos: pos + ipLen])])
         pos += ipLen
 
         # extract the port of the hunting task's target
@@ -54,12 +54,13 @@ class HuntingTask(Message):
         out = StringIO()
         out.write(pack(">I", self.taskID))
         out.write(pack(">B", len(self.knownCertHashes)))
-        ipsplit = self.targetIP.split(".")
+        ipsplit = [int(x) for x in self.targetIP.split(".")]
         for h in self.knownCertHashes:
             out.write(h)
         if self.ipVer == 4:
             out.write(pack(">BBBB", *ipsplit))
         elif self.ipVer == 6:
             out.write(pack(">BBBBBBBBBBBBBBBB", *ipsplit))
+        out.write(pack('>H',self.targetPort))
         out.write(self.targetHost)
         return out.getvalue()
