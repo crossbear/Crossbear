@@ -695,7 +695,11 @@ if (typeof Crossbear == "undefined") {
 			
 			switch (xml.nodeKind()) {  
 				case "text":  
-					return doc.createTextNode(String(xml));  
+					return doc.createTextNode(String(xml));
+	                        // The following are the offending lines. They make use of E4X notation
+                                // which Mozilla kindly dropped without offering a simple replacement.
+                                // Problem: other code instantiates E4X objects with new XML()
+                                // TODO: Replace that code with simpler format (JXON?) and then fix here.
 				case "element":  
 					var domnode = doc.createElementNS(xml.namespace(), xml.localName());  
 					for each (var attr in xml.@*::*)  
