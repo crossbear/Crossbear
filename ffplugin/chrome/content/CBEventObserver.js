@@ -84,7 +84,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 				if (aData == "enter") { 
 					
 					// ... notify the user that he will no longer be protected by Crossbear
-					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You entered the private-browsing mode. Crossbear will NOT protect you while you are using that mode!</p>"),0);
+					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You entered the private-browsing mode. Please note that Crossbear will NOT protect you while you are using this mode!</p>"),0);
 					
 					// ... deactivate the Protector, and
 					cbFrontend.deactivateProtector(false);
@@ -147,7 +147,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 						
 					// If not warn the user and cancel the connection
 					} else{
-						cbFrontend.warnUserAboutBeingUnderAttack(new XML('<p xmlns:html="http://www.w3.org/1999/xhtml">You tried to access a HTTPS-page using its IP-Address. This is strongly disencouraged and currently not supported by Crossbear.<html:br /><html:br /> If you want to go on you have to disable the Crossbear-Protector!</p>'),0);
+						cbFrontend.warnUserAboutBeingUnderAttack(new XML('<p xmlns:html="http://www.w3.org/1999/xhtml">You tried to access a HTTPS-page using its IP-Address. This is strongly discouraged and currently not supported by Crossbear.<html:br /><html:br /> If you want to go on, you have to disable the Crossbear protector!</p>'),0);
 						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
 						return;
 					}
@@ -160,7 +160,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					serverCert = aSubject.QueryInterface(Components.interfaces.nsIChannel).securityInfo.QueryInterface(Components.interfaces.nsISSLStatusProvider).SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus).serverCert;
 				} catch (e) {
 					// The server didn't send any certificate. Since this is very suspicious -> warn the user!
-					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You requested a SSL-secured resource but the server didn't send any certificate! You might be under an attack!</p>"),5);
+					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You requested an SSL-secured resource, but the server didn't send any certificate! You might be under an attack!</p>"),5);
 					cbFrontend.displayTechnicalFailure("CBEventObserver:observe: could not extract server certificate for "+host, false);
 					return;
 				}
