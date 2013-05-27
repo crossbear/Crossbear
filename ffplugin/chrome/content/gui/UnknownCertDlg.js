@@ -88,7 +88,8 @@ function bringToFrontAndCheckShutdown(forceWindowClose) {
 function convertJudgmentToXML(judgment){
 	
 	// Wrap the judgment's XML in a paragraph
-	var judgmentXML = new XML("<p xmlns:html=\"http://www.w3.org/1999/xhtml\" />");
+	// Changed use of E4X to DOMParser/Serializer
+	var judgmentXML = document.implementation.createDocument(null, "p", null);
 	
 	// Split the textual representation to get the single judgments
 	var judgmentLines = judgment.split("\n");
@@ -98,19 +99,31 @@ function convertJudgmentToXML(judgment){
 		
 		// Between two consecutive judgments: add a linebreak
 		if(i != 0){
-			judgmentXML.appendChild(new XML("<html:br xmlns:html=\"http://www.w3.org/1999/xhtml\" />"));
+			var brElement = judgmentXML.createElement("br");
+			judgmentXML.appendChild(brElement);
 		}
 		
 		// Check if the current judgment is a critical one (i.e. if it is marked with the "<crit>"-tags)
 		if(Crossbear.startsWith(judgmentLines[i], "<crit>") && Crossbear.endsWith(judgmentLines[i], "</crit>")){
 			
 			// Add a critical judgment to the judgment paragraph (color:red and weight:bold)
-			judgmentXML.appendChild(<html:font color="red" xmlns:html="http://www.w3.org/1999/xhtml" ><html:b>{judgmentLines[i].substr(6,judgmentLines[i].length-13)}</html:b></html:font>);
+			// TODO: This use of font is horribly deprecated - beautify
+			var fontElement = judgmentXML.createElement("font");
+			fontElement.setAttribute("color","red");
+			var bElement = judgmentXML.createElement("b");
+			var bContent = judgmentXML.createTextNode({judgmentLines[i].substr(6,judgmentLines[i].length-13)});
+			bElement.appendChild(bContent);
+			fontElement.appendChild(bElement);
+			judgmentXML.appendChild(fontElement);
+/* kept for comparison
+			judgmentXML.appendChild(<html:font color="red" xmlns:html="http://www.w3.org/1999/xhtml" ><html:b>{judgmentLines[i].substr(6,judgmentLines[i].length-13)}</html:b></html:font>); */
 			
 		} else {
 			
 			// Add a normal judgment to the judgment paragraph
-			judgmentXML.appendChild(<>{judgmentLines[i]}</>);
+			var normalContent = judgmentXML.createTextNode({judgmentLines[i]});
+			judgmentXML.appendChild(normalContent);
+			//judgmentXML.appendChild(<>{judgmentLines[i]}</>);
 			
 		}
 	}
