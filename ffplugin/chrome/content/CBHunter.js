@@ -232,7 +232,10 @@ Crossbear.CBHunter = function (cbFrontend) {
 					
 					// If somebody tampered with the data: Warn the user!
 					if (!Crossbear.arrayCompare(supposedHash, actualHash)) {
-						cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.</p>"),5);
+					        var tamperWarningXML = document.implementation.createDocument(null, "p", null);
+                                                var tamperWarning = tamperWarningXML.createTextNode("Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.");
+                    				tamperWarningXML.appendChild(tamperWarning);
+						cbFrontend.warnUserAboutBeingUnderAttack(tamperWarningXML,5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: received invalid input: "+plaintext+supposedHash+":"+actualHash, true);
 						return;
 					}
