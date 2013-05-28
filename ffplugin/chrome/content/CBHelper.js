@@ -684,7 +684,7 @@ if (typeof Crossbear == "undefined") {
 			// Finally return the decoded messages
 			return decodedMessages;
 		},
-		
+	/*	
 		xmlToDOM : function (xml, doc, nodes) {  
 			if (xml.length() != 1) {  
 				 var domnode = doc.createDocumentFragment();  
@@ -713,7 +713,7 @@ if (typeof Crossbear == "undefined") {
 				default:  
 					return null;  
 			}  
-		} 
+		}  */
 
 	};
 	
