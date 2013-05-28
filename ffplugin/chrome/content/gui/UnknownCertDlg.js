@@ -149,7 +149,9 @@ function onLoad() {
 	
 	// Set the judgment text
 	var nodes = {};
-	srd.appendChild(Crossbear.xmlToDOM(convertJudgmentToXML(window.arguments[0].inn.judgment), document, nodes));
+	srd.appendChild(convertJudgmentToXML(window.arguments[0].inn.judgment), document, nodes);
+	// This is the old method with E4X:
+	// srd.appendChild(Crossbear.xmlToDOM(convertJudgmentToXML(window.arguments[0].inn.judgment), document, nodes));
 	
 	// If the judgment div became too big: Limit its width
 	if(srd.offsetWidth>415){
