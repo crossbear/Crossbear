@@ -27,6 +27,7 @@
  * @param cbFrontend The cbFrontend-class that will be used to display information/errors to the user and to read the user preferences and settings.
  * 
  * @author Thomas Riedmaier
+ * @author Ralph Holz
  */
 Crossbear.CBProtector = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;

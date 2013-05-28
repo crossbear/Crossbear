@@ -28,6 +28,7 @@
  * @param cbFrontend The cbFrontend-class that will be used to display information/errors to the user
  * 
  * @author Thomas Riedmaier
+ * @author Ralph Holz
  */
 Crossbear.CBEventObserver = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
