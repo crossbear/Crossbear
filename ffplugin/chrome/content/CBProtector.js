@@ -420,7 +420,7 @@ Crossbear.CBProtector = function (cbFrontend) {
 			var brElement = mitmWarningXML.createElement("br");
 			var emailRequest = mitmWarningXML.createElement("a");
 			emailRequest.setAttribute("style", "text-decoration:underline");
-                        emailRequest.setAttribute("href", {emailLinkText});
+                        emailRequest.setAttribute("href", emailLinkText);
                         var mitmWarningHeader = mitmWarningXML.createTextNode("You could do the research community a big favor by ");
 			var emailText = mitmWarningXML.createTextNode(" sending an e-mail ");
                         var mitmWarningTrailer = mitmWarningXML.createTextNode(" to the Crossbear team.");
