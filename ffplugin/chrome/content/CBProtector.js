@@ -415,7 +415,22 @@ Crossbear.CBProtector = function (cbFrontend) {
 			
 			// Display the warning dialog to the user and ask him/her to send the certificate chain to the Crossbear-Team
 			var emailLinkText = "mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+hostIPPort+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User";
-			cbFrontend.warnUserAboutBeingUnderAttack(<p xmlns:html="http://www.w3.org/1999/xhtml">The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Do not visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style="text-decoration:underline" href={emailLinkText}> sending an email </html:a> to the Crossbear-Team.<html:br /><html:br /></p>,5);
+			var mitmWarningXML = document.implementation.createDocument(null, "p", null);
+                        var mitmWarning = mitmWarningXML.createTextNode("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a man-in-the-middle! This means an attacker can potentially read and alter everything you send from your browser!");
+			var brElement = mitmWarningXML.createElement("br");
+			var emailRequest = mitmWarningXML.createElement("a");
+			emailRequest.setAttribute("style", "text-decoration:underline");
+                        emailRequest.setAttribute("href", {emailLinkText});
+                        var mitmWarningHeader = mitmWarningXML.createTextNode("You could do the research community a big favor by ");
+			var emailText = mitmWarningXML.createTextNode(" sending an e-mail ");
+                        var mitmWarningTrailer = mitmWarningXML.createTextNode(" to the Crossbear team.");
+			emailRequest.appendChild(emailText);
+			mitmWarningXML.appendChild(mitmWarning);
+			mitmWarningXML.appendChild(brElement);
+			mitmWarningXML.appendChild(mitmWarningHeader);
+			mitmWarningXML.appendChild(emailRequest);
+			mitmWarningXML.appendChild(mitmWarningTrailer);
+			cbFrontend.warnUserAboutBeingUnderAttack(mitmWarningXML,5);
 			
 			// Cancel the connection attempt
 			channel.cancel(Components.results.NS_BINDING_SUCCEEDED);
