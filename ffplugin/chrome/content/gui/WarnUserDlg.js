@@ -30,7 +30,9 @@ function onLoad() {
 	
 	// Set the crossbear-warning-text according to the threat that the user should be warned about
 	var nodes = {};
-	wtd.appendChild(Crossbear.xmlToDOM(window.arguments[0].inn.warningXML, document, nodes));
+	wtd.appendChild(window.arguments[0].inn.warningXML, document, nodes);
+	// This is the old method with E4X:
+	//wtd.appendChild(Crossbear.xmlToDOM(window.arguments[0].inn.warningXML, document, nodes));
 
 	//Disable the "I understand" button
 	document.documentElement.getButton("accept").disabled = true;
