@@ -85,7 +85,7 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					
 					// ... notify the user that he will no longer be protected by Crossbear
 					var pbWarningXML = document.implementation.createDocument(null, "p", null);
-					var pbWarning = warningXML.createTextNode("You entered the private-browsing mode. Please note that Crossbear will NOT protect you while you are using this mode!");
+					var pbWarning = pbWarningXML.createTextNode("You entered the private-browsing mode. Please note that Crossbear will NOT protect you while you are using this mode!");
 					pbWarningXML.appendChild(pbWarning);
 					cbFrontend.warnUserAboutBeingUnderAttack(pbWarningXML,0);
 					
