@@ -2,6 +2,9 @@ Crossbear - crossbear@pki.net.in.tum.de
 =======================================
 Also see https://pki.net.in.tum.de.
 
+Attention: The Crossbear Firefox add-on currently only works until
+Firefox version 17. We're working on the new version for more recent
+versions of Firefox. The reason is a deprecated API.
 
 Supported systems:
 * Windows: probably all versions from Windows XP onwards
