@@ -337,7 +337,11 @@ Crossbear.CBHunter = function (cbFrontend) {
 						
 					// If it's neither then something went wrong
 					} else {
-						cbFrontend.warnUserAboutBeingUnderAttack(<p>Your DNS server generates generates invalid DNS entries: {currentAddr}</p>,5);
+						var dnsWarningXML = document.implementation.createDocument(null, "p", null);
+						// TODO: actually output {currentAddr}
+						var dnsWarning = dnsWarningXML.createTextNode("Your DNS server generates generates invalid DNS entries.");
+						dnsWarningXML.appendChild(dnsWarning);
+						cbFrontend.warnUserAboutBeingUnderAttack(dnsWarningXML,5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receiveCBServerIPs: parsing DNS entry failed: "+currentAddr, true);
 					}
 				}
