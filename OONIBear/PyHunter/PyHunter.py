@@ -9,9 +9,10 @@ from   cbmessaging.MessageTypes   import messageTypes
 from   cbmessaging.HTRepNewCert   import HTRepNewCert
 from   cbmessaging.HTRepKnownCert import HTRepKnownCert
 from   PipFetcher                 import PipFetcher
+#from   cbmessaging.CurServTime    import CurServTime
 from   time                       import time
-from   cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
-from   cbutils.CertificateFetcher import get_chain
+from   cbutils.SingleTrustHTTPS      import SingleTrustHTTPS
+from   cbutils.CertificateFetcher    import get_chain
 from   Crypto.Hash                import SHA256, MD5
 from   Tracer                     import Tracer
 import random
@@ -19,7 +20,6 @@ import ssl
 import pprint 
 import traceback
 
-from  itertools import permutations
 
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
@@ -60,9 +60,8 @@ class PyHunter(object):
         """
         validity = 60000
         try:
-	    print "---"
-            print "IP Version", ipv
-	    pprint.pprint(self.hts)
+	    print ipv
+	    print self.hts
             if (time() - self.hts["pip"][ipv]["ts"] < validity):
                 return True
         except KeyError, e:
@@ -95,60 +94,45 @@ class PyHunter(object):
             return
 
         # TODO get this to the report
-        print "Executing task", ht.taskID
-        print "The known hashes are", map(lambda x : x.encode("base64"), ht.knownCertHashes)
-        
+        print "Executing task", ht.taskID, "(", map(lambda x : x.encode("base64"), ht.knownCertHashes), ")"
         print ht.targetIP, ht.targetPort
         chain = get_chain(ht.targetIP,ht.targetPort)
-        # TODO: Debug output
-        # pprint.pprint(chain)
-        # print len(chain)
+        pprint.pprint(chain)
         h = SHA256.new()
         h.update(ssl.PEM_cert_to_DER_cert(chain[0]))
         scertH = h.hexdigest()
 
         def md5it(c):
             h = MD5.new()
-            #cprime = ssl.PEM_cert_to_DER_cert(c)
-            #h.update(cprime)
             h.update(c)
-            return h.digest()
+            return h.hexdigest()
         
-        
-        ccmd5s = map(lambda z: ''.join(map(md5it, z)),
-                     permutations(chain[1:]))
+        #chain = chain[::-1]
+        ccmd5 = "".join(map(md5it, chain[1:]))
 
-        def end_val(c):
-            h = SHA256.new()
-            h.update(scertH + c)
-            return h.digest()
-
-        cccHashs = map(end_val, ccmd5s)
-        
-        print "Possible hashes are", map(lambda z: z.encode('base64'), cccHashs)
-        
         # TODO get this to report
-        # print "hash of server cert:", cccHash.encode("base64")
-        
-        witness = None
-        for cHash in cccHashs:
-            if any(sHash == cHash for sHash in ht.knownCertHashes):
-                witness = cHash
-                break
+        print "md5 of chain:", ccmd5
+
+        h = SHA256.new()
+        h.update(scertH + ccmd5)
+        cccHash = h.digest()
+
+        # TODO get this to report
+        print "hash of server cert:",cccHash.encode("base64")
+        cert_known = any(cHash == cccHash for cHash in ht.knownCertHashes)
 
         # TODO get this to report
         print "Tracerouting!"
         trace      = self.tracer.traceroute(ht.targetIP)
 
-        if witness:
+        if cert_known:
             # TODO get this to report
             print "Cert Known!"
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.
             # Previously, it was ht.hmac, but that never existed AFAIK
-            rep.createFromValues(ht.taskID, self.hts["pip"][ipv]["not"].hmac, witness, trace)
+            rep.createFromValues(ht.taskID, self.hts["pip"][ipv]["not"].hmac, cccHash, trace)
             return rep
-        
         else:
             # TODO get this to report
             print "Cert New!"
@@ -162,7 +146,6 @@ class PyHunter(object):
 
         # TODO get this to report
         print "Done!"
-        
     def executeHTL(self):
         nr = 0
         htr = []
