@@ -21,6 +21,7 @@ import traceback
 
 from  itertools import permutations
 
+display = lambda l : map(lambda z: z.encode('base64'), l)
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
     def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
@@ -96,49 +97,52 @@ class PyHunter(object):
 
         # TODO get this to the report
         print "Executing task", ht.taskID
-        print "The known hashes are", map(lambda x : x.encode("base64"), ht.knownCertHashes)
+        print "The known hashes are", display(ht.knownCertHashes)
         
-        print ht.targetIP, ht.targetPort
+        print "IP Address and Port", ht.targetIP, ht.targetPort
         chain = get_chain(ht.targetIP,ht.targetPort)
-        # TODO: Debug output
-        # pprint.pprint(chain)
-        # print len(chain)
-        h = SHA256.new()
-        h.update(ssl.PEM_cert_to_DER_cert(chain[0]))
-        scertH = h.hexdigest()
 
-        def md5it(c):
-            h = MD5.new()
-            #cprime = ssl.PEM_cert_to_DER_cert(c)
-            #h.update(cprime)
-            h.update(c)
-            return h.digest()
-        
-        
-        ccmd5s = map(lambda z: ''.join(map(md5it, z)),
-                     permutations(chain[1:]))
-
-        def end_val(c):
-            h = SHA256.new()
-            h.update(scertH + c)
-            return h.digest()
-
-        cccHashs = map(end_val, ccmd5s)
-        
-        print "Possible hashes are", map(lambda z: z.encode('base64'), cccHashs)
-        
-        # TODO get this to report
-        # print "hash of server cert:", cccHash.encode("base64")
-        
         witness = None
-        for cHash in cccHashs:
-            if any(sHash == cHash for sHash in ht.knownCertHashes):
-                witness = cHash
-                break
+        if ht.knownCertHashes:
+            # TODO: Debug output
+            # pprint.pprint(chain)
+            # print len(chain)
+            h = SHA256.new()
+            h.update(ssl.PEM_cert_to_DER_cert(chain[0]))
+            scertH = h.hexdigest()
+
+            def md5it(c):
+                h = MD5.new()
+                #cprime = ssl.PEM_cert_to_DER_cert(c)
+                #h.update(cprime)
+                h.update(c)
+                return h.digest()
+
+
+            ccmd5s = map(lambda z: ''.join(map(md5it, z)),
+                         permutations(chain[1:]))
+
+            def end_val(c):
+                h = SHA256.new()
+                h.update(scertH + c)
+                return h.digest()
+
+            cccHashs = map(end_val, ccmd5s)
+
+            print "Possible hashes are", display(cccHashs)
+
+            # TODO get this to report
+            # print "hash of server cert:", cccHash.encode("base64")
+
+
+            for cHash in cccHashs:
+                if any(sHash == cHash for sHash in ht.knownCertHashes):
+                    witness = cHash
+                    break
 
         # TODO get this to report
         print "Tracerouting!"
-        trace      = self.tracer.traceroute(ht.targetIP)
+        trace = self.tracer.traceroute(ht.targetIP)
 
         if witness:
             # TODO get this to report
