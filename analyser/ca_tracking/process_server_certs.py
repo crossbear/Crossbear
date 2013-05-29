@@ -13,6 +13,7 @@ import subprocess
 import re
 import time
 import logging
+from ConfigParser import SafeConfigParser
 
 def printUsage():
   print """
@@ -32,7 +33,7 @@ if tablename != "servercerts" and tablename != "chaincerts":
 date = time.strftime("%Y-%m-%d-%H:%M")
 home = os.environ["HOME"]
 
-configfile = home + "/cb_analysis.conf"
+configfile = "cb_analysis.conf"
 confparser = SafeConfigParser()
 confparser.read(configfile)
 dbname = confparser.get('database', 'dbname')
@@ -40,7 +41,6 @@ username = confparser.get('database', 'username')
 dbhost = confparser.get('database', 'host')
 password = confparser.get('database', 'password')
 logpath = confparser.get('log', 'logpath')
-loglevel = "logging." + confparser.get('log', 'loglevel')
 
 # Database
 conn = None
