@@ -36,10 +36,10 @@ home = os.environ["HOME"]
 configfile = "cb_analysis.conf"
 confparser = SafeConfigParser()
 confparser.read(configfile)
-dbname = confparser.get('database', 'dbname')
-username = confparser.get('database', 'username')
+db_name = confparser.get('database', 'dbname')
+db_username = confparser.get('database', 'username')
 dbhost = confparser.get('database', 'host')
-password = confparser.get('database', 'password')
+db_password = confparser.get('database', 'password')
 logpath = confparser.get('log', 'logpath')
 
 # Database
@@ -380,7 +380,7 @@ def main():
 
     # Open and init the DB
     # new interface
-    conn = psycopg2.connect("dbname='pki_crawl' user='postgres' host='localhost' password='11npfP38'")
+    conn = psycopg2.connect("dbname='" + db_name + "' user='" + db_username + "' host='localhost' password='" + db_password + "'")
     c = conn.cursor()
     loopCursor = conn.cursor()
 
