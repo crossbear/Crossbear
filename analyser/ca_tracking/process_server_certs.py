@@ -384,36 +384,9 @@ def main():
     c = conn.cursor()
     loopCursor = conn.cursor()
 
-    # Get lists of EV OIDs
-    sqlSelectFFOids = "SELECT oid FROM " + tnEVFF + " WHERE oid != '0.0.0.0'"
-    try:
-      c.execute(sqlSelectFFOids)
-    except Exception, e:
-      logging.error("ERROR: SELECT FF OIDs failed.")
-      logging.error(e)
-      sys.exit(-1)
-    conn.commit()
-
-    rows = c.fetchall()
-    for row in rows:
-      ffOidList.append(row[0])
-
-
-    sqlSelectMozOids = "SELECT oid FROM " + tnEVMoz + " WHERE oid != '0.0.0.0'"
-    try:
-      c.execute(sqlSelectMozOids)
-    except Exception, e:
-      logging.error("ERROR: SELECT Moz OIDs failed.")
-      logging.error(e)
-      sys.exit(-1)
-    conn.commit()
-
-    rows = c.fetchall()
-    for row in rows:
-      mozOidList.append(row[0])
 
     # CHANGED: select distinct certs to make it go faster
-    loopCursor.execute("SELECT DISTINCT ON(hashcert) hashcert, cert FROM " + tablenameCerts)
+    loopCursor.execute("SELECT DISTINCT ON(md5pemhash) md5pemhash, pemraw FROM " + tablename)
     # This is if you need a second go because of some error in the first round:
     # UNTESTED
     #failedList = (...)
