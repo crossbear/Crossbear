@@ -18,10 +18,12 @@ import random
 import ssl
 import pprint 
 import traceback
+import binascii
+
 
 from  itertools import permutations
 
-display = lambda l : map(lambda z: z.encode('base64'), l)
+display = lambda l : map(lambda z: binascii.hexlify(z), l)
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
     def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
@@ -45,6 +47,7 @@ class PyHunter(object):
                 self.hts["pip"][4]["ts"]  = time()
                 continue
             elif msg.type == messageTypes["PUBLIC_IP_NOTIF6"]:
+                print 'bum'
                 self.hts["pip"][6]["not"] = msg
                 self.hts["pip"][6]["ts"] = time()
                 continue
@@ -52,6 +55,7 @@ class PyHunter(object):
                 self.hts["tasks"].append(msg)
                 continue
         # TODO: Return useful log information
+        pprint.pprint(self.hts)
         return {}
         
     def freshen_pip(self,ipv):
@@ -63,7 +67,6 @@ class PyHunter(object):
         try:
 	    print "---"
             print "IP Version", ipv
-	    pprint.pprint(self.hts)
             if (time() - self.hts["pip"][ipv]["ts"] < validity):
                 return True
         except KeyError, e:
@@ -98,38 +101,45 @@ class PyHunter(object):
         # TODO get this to the report
         print "Executing task", ht.taskID
         print "The known hashes are", display(ht.knownCertHashes)
-        
-        print "IP Address and Port", ht.targetIP, ht.targetPort
-        chain = get_chain(ht.targetIP,ht.targetPort)
 
+        print "IP Address and Port", ht.targetIP, ht.targetPort
+        print "Target host name is", ht.targetHost
+        
+        
+        
+        chain = get_chain(ht.targetIP,ht.targetPort)
+        
+        
         witness = None
         if ht.knownCertHashes:
-            # TODO: Debug output
-            # pprint.pprint(chain)
-            # print len(chain)
-            h = SHA256.new()
-            h.update(ssl.PEM_cert_to_DER_cert(chain[0]))
-            scertH = h.hexdigest()
-
-            def md5it(c):
-                h = MD5.new()
-                #cprime = ssl.PEM_cert_to_DER_cert(c)
-                #h.update(cprime)
-                h.update(c)
-                return h.digest()
-
-
-            ccmd5s = map(lambda z: ''.join(map(md5it, z)),
-                         permutations(chain[1:]))
-
-            def end_val(c):
+            def compute_hash(chainp):
+                            
                 h = SHA256.new()
-                h.update(scertH + c)
-                return h.digest()
+                h.update(ssl.PEM_cert_to_DER_cert(chainp[0]))
+                scertH = h.hexdigest().upper()
+                
+                def md5it(c):
+                    h = MD5.new()
+                    #cprime = ssl.PEM_cert_to_DER_cert(c)
+                    #h.update(cprime)
+                    h.update(c)
+                    hh = h.hexdigest().upper()
+                    print hh
+                    return hh
 
-            cccHashs = map(end_val, ccmd5s)
 
+                ccmd5 = ''.join(map(md5it, chainp[1:]))
+                
+                
+                h2 = SHA256.new()
+                h2.update(scertH + ccmd5)
+                return h2.digest()
+                
+            cccHashs = map(compute_hash,
+                           permutations(chain))
+                
             print "Possible hashes are", display(cccHashs)
+
 
             # TODO get this to report
             # print "hash of server cert:", cccHash.encode("base64")
@@ -150,7 +160,10 @@ class PyHunter(object):
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.
             # Previously, it was ht.hmac, but that never existed AFAIK
-            rep.createFromValues(ht.taskID, self.hts["pip"][ipv]["not"].hmac, witness, trace)
+            rep.createFromValues(ht.taskID,
+                                 self.hts["pip"][ipv]["not"].hmac,
+                                 witness,
+                                 trace)
             return rep
         
         else:
@@ -163,9 +176,6 @@ class PyHunter(object):
                                 chain,
                                 trace)
             return rep
-
-        # TODO get this to report
-        print "Done!"
         
     def executeHTL(self):
         nr = 0
@@ -173,6 +183,7 @@ class PyHunter(object):
         random.shuffle(self.hts["tasks"])
         
         for r in self.hts["tasks"]:
+            
             rep = self.executeHT(r)
 
             if rep:
@@ -183,29 +194,9 @@ class PyHunter(object):
                 self.send_results(htr)
                 nr = 0
                 htr = []
+                
         if htr:
             self.send_results(htr)
         # TODO: Return useful log information
         return {}
-    
         
-        
-        
-    
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
