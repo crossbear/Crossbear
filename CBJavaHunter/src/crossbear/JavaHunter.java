@@ -608,7 +608,7 @@ public class JavaHunter {
 	// Get the concatenation of the md5 hashes of the chain certificates ...
 	String certChainMD5 = CertificateManager.getCertChainMD5(certChainLL);
 	
-	// Calculate the SHA256-hash of the server certificate
+	// Calculate the SHA256-hash of the server certificate. Uses ASN.1 DER encoding
 	byte[] serverCertHash = CertificateManager.SHA256(certChain[0].getEncoded());
 	
 	// Concatenate the hash of the server certificate with the ones of its chain and calculate the SHA256-hash for the result

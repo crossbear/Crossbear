@@ -11,7 +11,7 @@ from   cbmessaging.HTRepKnownCert import HTRepKnownCert
 from   PipFetcher                 import PipFetcher
 from   time                       import time
 from   cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
-from   cbutils.CertificateFetcher import get_chain
+from   cbutils.CertUtils import get_chain, compute_chain_hashes
 from   Crypto.Hash                import SHA256, MD5
 from   Tracer                     import Tracer
 import random
@@ -21,9 +21,8 @@ import traceback
 import binascii
 
 
-from  itertools import permutations
+from itertools import permutations
 
-display = lambda l : map(lambda z: binascii.hexlify(z), l)
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
     def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
@@ -100,11 +99,11 @@ class PyHunter(object):
 
         # TODO get this to the report
         print "Executing task", ht.taskID
+        display = lambda l : map(lambda z: binascii.hexlify(z), l)
         print "The known hashes are", display(ht.knownCertHashes)
 
         print "IP Address and Port", ht.targetIP, ht.targetPort
         print "Target host name is", ht.targetHost
-        
         
         
         chain = get_chain(ht.targetIP,ht.targetPort)
@@ -112,33 +111,9 @@ class PyHunter(object):
         
         witness = None
         if ht.knownCertHashes:
-            def compute_hash(chainp):
-                            
-                h = SHA256.new()
-                h.update(ssl.PEM_cert_to_DER_cert(chainp[0]))
-                scertH = h.hexdigest().upper()
-                
-                def md5it(c):
-                    h = MD5.new()
-                    #cprime = ssl.PEM_cert_to_DER_cert(c)
-                    #h.update(cprime)
-                    h.update(c)
-                    hh = h.hexdigest().upper()
-                    print hh
-                    return hh
 
-
-                ccmd5 = ''.join(map(md5it, chainp[1:]))
-                
-                
-                h2 = SHA256.new()
-                h2.update(scertH + ccmd5)
-                return h2.digest()
-                
-            cccHashs = map(compute_hash,
-                           permutations(chain))
-                
-            print "Possible hashes are", display(cccHashs)
+            cccHashs = compute_chain_hashes(chain)
+            print "Possible hashes are", pprint.pprint(cccHashs)
 
 
             # TODO get this to report
@@ -152,7 +127,7 @@ class PyHunter(object):
 
         # TODO get this to report
         print "Tracerouting!"
-        trace = self.tracer.traceroute(ht.targetIP)
+        trace = [] # self.tracer.traceroute(ht.targetIP)
 
         if witness:
             # TODO get this to report
