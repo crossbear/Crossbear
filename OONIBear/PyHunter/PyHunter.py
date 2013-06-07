@@ -159,10 +159,11 @@ class PyHunter(object):
             report[ht.taskID]['target port']     = ht.targetPort
             report[ht.taskID]['target host']     = ht.targetHost
             report[ht.taskID]['possible hashes'] = display(ht.cccHashs)
-
+            
             if rep:
                 print "Hunting task result",  messageNames[rep.type]
                 report[ht.taskID]['reply type'] = messageNames[rep.type]
+                report[ht.taskID]['trace'] = rep.trace
                 htr.append(rep)
                 nr += 1
                 
