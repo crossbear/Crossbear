@@ -87,6 +87,7 @@ class Tracer(object):
         if ttl % 1 != 1:
             print 'TTL %s; Current hop %s' % (ttl, last)
             
-        # TODO: document
-        return "\n".join(filter(lambda x: x, hops)) + ("%s" % dst)
-
+        # remove empty samples, interleave the rest with new lines
+        filtered = '\n'.join(filter(lambda x: x, hops))
+        # add the host address to this chunk
+        return (filtered + '\n' + '%s' % dst).strip()
