@@ -79,7 +79,7 @@ def get_chain(host, port):
 
 
 if __name__ == "__main__":
-    c = get_chain("www.facebook.com", 443)
+    c = get_chain("saanet.sg", 443)
     pprint(c)
     pprint(compute_chain_hashes(c))
     
