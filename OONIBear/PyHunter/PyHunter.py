@@ -127,7 +127,7 @@ class PyHunter(object):
 
         # TODO get this to report
         print "Tracerouting!"
-        trace = [] # self.tracer.traceroute(ht.targetIP)
+        self.tracer.traceroute(ht.targetIP)
 
         if witness:
             # TODO get this to report
