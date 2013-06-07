@@ -49,7 +49,6 @@ class PyHunter(object):
                 self.hts["pip"][4]["ts"]  = time()
                 continue
             elif msg.type == messageTypes["PUBLIC_IP_NOTIF6"]:
-                print 'bum'
                 self.hts["pip"][6]["not"] = msg
                 self.hts["pip"][6]["ts"] = time()
                 continue
@@ -67,8 +66,6 @@ class PyHunter(object):
         """
         validity = 60000
         try:
-	    print "---"
-            print "IP Version", ipv
             if (time() - self.hts["pip"][ipv]["ts"] < validity):
                 return True
         except KeyError, e:
@@ -96,8 +93,8 @@ class PyHunter(object):
 
         # TODO get this to the report
         if not self.freshen_pip(ipv):
-            print ("Skipping execution of task", ht.taskID, "due to the lack",
-                    "of fresh PublicIP for it.")
+            print "Skipping execution of task", ht.taskID, "due to the lack",\
+                    "of fresh PublicIP for it."
             return None
 
         # TODO get this to the report      
@@ -108,7 +105,7 @@ class PyHunter(object):
         if ht.knownCertHashes:
 
             ht.cccHashs = compute_chain_hashes(chain)
-            print "Possible hashes are", ht.cccHashs
+            print "Possible hashes are", display(ht.cccHashs)
 
 
             for cHash in ht.cccHashs:
@@ -150,8 +147,7 @@ class PyHunter(object):
         
         for ht in self.hts["tasks"]:
 
-
-
+            print "---"
             print "Executing task", ht.taskID
             print "IP Address and Port", ht.targetIP, ht.targetPort
             print "Target host name is", ht.targetHost
