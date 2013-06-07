@@ -166,8 +166,11 @@ class PyHunter(object):
                 htr.append(rep)
                 nr += 1
                 
-            if nr >= 5:
+            else:
+                print "Hunting task result Nil"
                 report[ht.taskID]['reply type'] = 'Nil'
+
+            if nr >= 5:
                 self.send_results(htr)
                 nr = 0
                 htr = []
