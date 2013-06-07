@@ -56,13 +56,14 @@ class CBTester(NetTestCase):
             self.cb_cert = cp.get('Server', 'cb_cert')
             self.max_hops = int(cp.get('Tracer', 'max_hops'))
             self.samples_per_hop = int(cp.get('Tracer', 'samples_per_hop'))
+            self.period = int(cp.get('Tracer', 'period'))
         except Exception, e:
             self.report['errors'].append(e)
             return
     
     def test_cb(self):
         try:
-            ph = PyHunter.PyHunter(self.cb_host, self.cb_cert, self.max_hops, self.samples_per_hop)
+            ph = PyHunter.PyHunter(self.cb_host, self.cb_cert, self.max_hops, self.samples_per_hop, self.period)
             r1 = ph.getHTL()
             self.merge(r1)
             r2 = ph.executeHTL()

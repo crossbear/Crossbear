@@ -28,10 +28,10 @@ display = lambda l : map(lambda z: binascii.hexlify(z), l)
 
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
-    def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
+    def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop, tracerPeriod):
 
         self.cbServerHostName    = cbServerHostName
-        self.tracer              = Tracer(tracerMHops, tracerSPerHop)
+        self.tracer              = Tracer(tracerMHops, tracerSPerHop, tracerPeriod)
         self.hts                 = {"tasks" : [], "pip": {4:{}, 6:{}}}
         self.cbServerCert        = cbServerCert
         self.pipfetcher          = PipFetcher(self.cbServerHostName, self.cbServerCert)
