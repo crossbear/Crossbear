@@ -12,6 +12,10 @@ import struct
 import sys
 
 class HuntingTask(Message):
+    def __init__(self, *args):
+        self.cccHashs = []
+        Message.__init__(self, *args)
+        
     def createFromBytes(self, msgtype, data):
         Message.createFromBytes(self, msgtype, data)
         
