@@ -119,7 +119,6 @@ class PyHunter(object):
 
         if witness:
             # TODO get this to report
-            print "Cert Known!"
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.
             # Previously, it was ht.hmac, but that never existed AFAIK
@@ -130,7 +129,6 @@ class PyHunter(object):
         
         else:
             # TODO get this to report
-            print "Cert New!"
             rep = HTRepNewCert()
             rep.createFromValues(ht.taskID,
                                 self.hts["cs"].currentServTime(),
