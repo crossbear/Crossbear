@@ -1,6 +1,6 @@
 """
 The tracerouting functionality for PyHunter.
-"""
+"""nn
 
 import socket
 
@@ -84,7 +84,7 @@ class Tracer(object):
             samples = "|".join(samples)
             hops.append(samples)
             
-        if ttl % 1 != 1:
+        if ttl % self.period != 1:
             print 'TTL %s; Current hop %s' % (ttl, last)
             
         # remove empty samples, interleave the rest with new lines
