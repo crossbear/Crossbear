@@ -17,7 +17,7 @@ def compute_chain_hashes(chainp):
         serverhash = SHA256.new(servercert).hexdigest()
         chainhashes = map(lambda x: MD5.new(x).hexdigest(), p[1:])
         concatenated = ''.join(chainhashes).lower()
-        result.append(SHA256.new(unhexlify(serverhash + concatenated)).hexdigest().lower())
+        result.append(SHA256.new(unhexlify(serverhash + concatenated)).digest())
     return result 
     
         

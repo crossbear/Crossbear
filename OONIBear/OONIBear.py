@@ -27,16 +27,15 @@ class CBTester(NetTestCase):
     requiresRoot = True
     requiredOptions = ['config']
     
-    @staticmethod
-    def merge(partial_report):
+    def merge(self,partial_report):
         """
         merges the partial_report with the actual report
         """
         for p in partial_report:
             if p not in CBTester.report:
-                CBTester.report[p] = partial_report[p]
+                self.report[p] = partial_report[p]
             else:
-                CBTester.report[p] += partial_report[p]
+                self.report[p] += partial_report[p]
         
     def __init__(self):
         self.cb_host = self.cb_cert = self.max_hops = self.samples_per_hop = None
@@ -57,23 +56,18 @@ class CBTester(NetTestCase):
             self.cb_cert = cp.get('Server', 'cb_cert')
             self.max_hops = int(cp.get('Tracer', 'max_hops'))
             self.samples_per_hop = int(cp.get('Tracer', 'samples_per_hop'))
+            self.period = int(cp.get('Tracer', 'period'))
         except Exception, e:
-            CBTester.report['errors'].append(e)
+            self.report['errors'].append(e)
             return
     
     def test_cb(self):
         try:
-            ph = PyHunter.PyHunter(self.cb_host, self.cb_cert, self.max_hops, self.samples_per_hop)
+            ph = PyHunter.PyHunter(self.cb_host, self.cb_cert, self.max_hops, self.samples_per_hop, self.period)
             r1 = ph.getHTL()
-            CBTester.merge(r1)
-
+            self.merge(r1)
             r2 = ph.executeHTL()
-            CBTester.merge(r2)
-            print '---'
-            pprint(r1)
-            print '---'
-            pprint(r2)
-            print '---'
+            self.merge(r2)
         except Exception, e:
             print e
             traceback.print_exc()

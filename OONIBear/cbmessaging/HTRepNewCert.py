@@ -46,13 +46,11 @@ class HTRepNewCert(Message):
     def getBytes(self):
         timeStamp = int( self.ts / 1000 )
         # Pack in network byte order
+
         out = [pack(">II", self.taskid, timeStamp), self.hmac,
                pack(">B", 0xff & len(self.certchain))]
         for cert in self.certchain[:min(255, len(self.certchain))]:
             out.append(ssl.PEM_cert_to_DER_cert(cert))
                       
         out.append(self.trace)
-        print "\n"
-        print out
-        print "\n"
         return "".join(out)

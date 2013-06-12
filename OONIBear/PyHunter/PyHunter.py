@@ -5,7 +5,7 @@ A crossbear hunter implementation in python.
 # NOTE all print commands should log to the ooni thingy.
 from   HTLFetcher                 import HTLFetcher
 from   cbmessaging.Message        import Message
-from   cbmessaging.MessageTypes   import messageTypes
+from   cbmessaging.MessageTypes   import messageTypes, messageNames
 from   cbmessaging.HTRepNewCert   import HTRepNewCert
 from   cbmessaging.HTRepKnownCert import HTRepKnownCert
 from   PipFetcher                 import PipFetcher
@@ -23,12 +23,15 @@ import binascii
 
 from itertools import permutations
 
+
+display = lambda l : map(lambda z: binascii.hexlify(z), l)
+
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
-    def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
+    def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop, tracerPeriod):
 
         self.cbServerHostName    = cbServerHostName
-        self.tracer              = Tracer(tracerMHops, tracerSPerHop)
+        self.tracer              = Tracer(tracerMHops, tracerSPerHop, tracerPeriod)
         self.hts                 = {"tasks" : [], "pip": {4:{}, 6:{}}}
         self.cbServerCert        = cbServerCert
         self.pipfetcher          = PipFetcher(self.cbServerHostName, self.cbServerCert)
@@ -46,7 +49,6 @@ class PyHunter(object):
                 self.hts["pip"][4]["ts"]  = time()
                 continue
             elif msg.type == messageTypes["PUBLIC_IP_NOTIF6"]:
-                print 'bum'
                 self.hts["pip"][6]["not"] = msg
                 self.hts["pip"][6]["ts"] = time()
                 continue
@@ -64,8 +66,6 @@ class PyHunter(object):
         """
         validity = 60000
         try:
-	    print "---"
-            print "IP Version", ipv
             if (time() - self.hts["pip"][ipv]["ts"] < validity):
                 return True
         except KeyError, e:
@@ -93,45 +93,32 @@ class PyHunter(object):
 
         # TODO get this to the report
         if not self.freshen_pip(ipv):
-            print ("Skipping execution of task", ht.taskID, "due to the lack",
-                    "of fresh PublicIP for it.")
-            return
+            print "Skipping execution of task", ht.taskID, "due to the lack",\
+                    "of fresh PublicIP for it."
+            return None
 
-        # TODO get this to the report
-        print "Executing task", ht.taskID
-        display = lambda l : map(lambda z: binascii.hexlify(z), l)
-        print "The known hashes are", display(ht.knownCertHashes)
-
-        print "IP Address and Port", ht.targetIP, ht.targetPort
-        print "Target host name is", ht.targetHost
-        
+        # TODO get this to the report      
         
         chain = get_chain(ht.targetIP,ht.targetPort)
         
-        
-        witness = None
+        witness  = None
         if ht.knownCertHashes:
 
-            cccHashs = compute_chain_hashes(chain)
-            print "Possible hashes are", pprint.pprint(cccHashs)
+            ht.cccHashs = compute_chain_hashes(chain)
+            print "Possible hashes are", display(ht.cccHashs)
 
 
-            # TODO get this to report
-            # print "hash of server cert:", cccHash.encode("base64")
-
-
-            for cHash in cccHashs:
+            for cHash in ht.cccHashs:
                 if any(sHash == cHash for sHash in ht.knownCertHashes):
                     witness = cHash
                     break
 
         # TODO get this to report
         print "Tracerouting!"
-        trace = [] # self.tracer.traceroute(ht.targetIP)
+        trace = self.tracer.traceroute(ht.targetIP)
 
         if witness:
             # TODO get this to report
-            print "Cert Known!"
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.
             # Previously, it was ht.hmac, but that never existed AFAIK
@@ -139,32 +126,51 @@ class PyHunter(object):
                                  self.hts["pip"][ipv]["not"].hmac,
                                  witness,
                                  trace)
-            return rep
         
         else:
             # TODO get this to report
-            print "Cert New!"
             rep = HTRepNewCert()
             rep.createFromValues(ht.taskID,
                                 self.hts["cs"].currentServTime(),
                                 self.hts["pip"][ipv]["not"].hmac,
                                 chain,
                                 trace)
-            return rep
+        return rep
         
     def executeHTL(self):
-        nr = 0
-        htr = []
+        nr     = 0
+        htr    = []
+        report = {}
         random.shuffle(self.hts["tasks"])
         
-        for r in self.hts["tasks"]:
-            
-            rep = self.executeHT(r)
+        for ht in self.hts["tasks"]:
 
+            print "---"
+            print "Executing task", ht.taskID
+            print "IP Address and Port", ht.targetIP, ht.targetPort
+            print "Target host name is", ht.targetHost
+            print "The known hashes are", display(ht.knownCertHashes)
+            
+            rep = self.executeHT(ht)
+            
+            report[ht.taskID]                    = {}            
+            report[ht.taskID]['known hashes']    = display(ht.knownCertHashes)
+            report[ht.taskID]['target ip']       = ht.targetIP
+            report[ht.taskID]['target port']     = ht.targetPort
+            report[ht.taskID]['target host']     = ht.targetHost
+            report[ht.taskID]['possible hashes'] = display(ht.cccHashs)
+            
             if rep:
+                print "Hunting task result",  messageNames[rep.type]
+                report[ht.taskID]['reply type'] = messageNames[rep.type]
+                report[ht.taskID]['trace'] = rep.trace
                 htr.append(rep)
                 nr += 1
                 
+            else:
+                print "Hunting task result Nil"
+                report[ht.taskID]['reply type'] = 'Nil'
+
             if nr >= 5:
                 self.send_results(htr)
                 nr = 0
@@ -173,5 +179,6 @@ class PyHunter(object):
         if htr:
             self.send_results(htr)
         # TODO: Return useful log information
-        return {}
+        
+        return report
         
