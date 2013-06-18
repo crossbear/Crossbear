@@ -167,10 +167,12 @@ Crossbear.CBProtector = function (cbFrontend) {
 
 					// Send the message to the server ...
 					cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, {serverCertChain: serverCertChain, serverCertHash: serverCertHash, hostIPPort : hostIPPort });
+					return;
 				}
-			}
+			};
 
-			pps.asyncResolve(ioService.newURI("https://"+ hostIPPort.split("|")[0], null, null),0, asyncCallbackObj); 
+			pps.asyncResolve(ioService.newURI("https://"+ hostIPPort.split("|")[0], null, null),0, asyncCallbackObj);
+			return;
 			
 		};
 
