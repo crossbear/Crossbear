@@ -140,7 +140,10 @@ Crossbear.CBProtector = function (cbFrontend) {
 		};
 		
 		/**
-		 * Request a certificate verification from the Crossbear server
+		 * Request a certificate verification from the Crossbear server, Step 1.
+		 * In this function, we try to identify if we need to use a proxy.
+		 * Mozilla's function is asynchronous, and will call our callback once
+		 * it has a result for us.
 		 * 
 		 * @param serverCertChain The certificate chain that should be verified
 		 * @param serverCertHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
@@ -150,14 +153,31 @@ Crossbear.CBProtector = function (cbFrontend) {
 			
 			// Add an entry in the log
 			cbFrontend.displayInformation("Requesting Verification for \""+ hostIPPort + "\" from the Crossbear server");
+			
+			// use an anonymous class for the callback
+			var asyncCallbackObj = { 
+				onProxyAvailable : function(aRequest, aURI, aProxyInfo, aStatus) {
+					var resolveResult = 0;
+					if (aProxyInfo != null) {
+					    resolveResult = 1;
+					}
 
-			// Create the CertVerifyRequest-message that should be sent
-			var msg = new Crossbear.CBMessageCertVerifyRequest(serverCertChain, hostIPPort, (pps.resolve(ioService.newURI("https://"+ hostIPPort.split("|")[0], null, null),0) != null)?1:0);
+					// Create the CertVerifyRequest-message that should be sent
+					var msg = new Crossbear.CBMessageCertVerifyRequest(serverCertChain, hostIPPort, resolveResult);
 
-			// Send the message to the server ...
-			cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, {serverCertChain: serverCertChain, serverCertHash: serverCertHash, hostIPPort : hostIPPort });
+					// Send the message to the server ...
+					cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, {serverCertChain: serverCertChain, serverCertHash: serverCertHash, hostIPPort : hostIPPort });
+				}
+			}
+
+			pps.asyncResolve(ioService.newURI("https://"+ hostIPPort.split("|")[0], null, null),0, asyncCallbackObj); 
 			
 		};
+
+		Crossbear.CBProtector.prototype.requestVerificationFromServerCont = function requestVerificationFromServerCont() {
+		}
+
+		
 		
 		/**
 		 * Add a new entry in the CBTrustDecisionCache for the host's certificate and domain according to the user's choice of trust and his/hers defaultCacheValidity.
@@ -356,6 +376,7 @@ Crossbear.CBProtector = function (cbFrontend) {
 			}
 
 		};
+
 		
 		/**
 		 * Accept a connection (usually because its certificate has been approved by the user)
