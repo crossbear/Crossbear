@@ -32,7 +32,7 @@ if len(argv) != 3:
     exit(1)
 
 tdb = TraceDB(argv[1])
-g = pgv.AGraph(directed = True)
+g = pgv.AGraph(directed = True, rankdir = 'LR')
 
 for singletrace in tdb.traces(argv[2]):
     prevnodes = []
