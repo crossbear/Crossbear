@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
-from sys import argv
+from ConfigParser import SafeConfigParser
+import psycopg2
+import psycopg2.extras
 
-class TraceDB(object):
+
+class DB(object):
     def __init__(self, config_file):
         self.config = SafeConfigParser()
         self.config.read(config_file)
@@ -22,22 +25,15 @@ class TraceDB(object):
             yield result
         cursor.close()
 
-if len(argv) != 3:
-    print "Plese call with \"graph-traceroute.py <config file> <huntingtask id>\"."
-    exit(1)
 
-tdb = TraceDB(argv[1])
-g = pgv.AGraph(directed = True, rankdir = 'LR')
-
-for singletrace in tdb.traces(argv[2]):
-    prevnodes = []
-    for nextnodes in singletrace:
-        for node in nextnodes:
-            for prevnode in prevnodes:
-                g.add_edge(prevnode,node)
-        prevnodes = nextnodes
-
-g.layout(prog = "dot")
-g.draw("test.png")
-
-            
+class Trace(object):
+    
+    def __init__(self):
+        # A list of lists of IP addresses
+        self.ip_trace = []
+        # A list of lists of AS numbers.
+        self.as_trace = []
+        # If this is a victim trace or a regular trace
+        self.attacked = False
+        
+        
