@@ -29,8 +29,10 @@ class WhoisScanner(Scanner):
                 cur = self.db.cursor()
                 scanner = NICClient()
                 for ip in ips:
-                        data = scanner.whois_lookup(None, ip, NICClient.WHOIS_RECURSE)
-                        cur.execute(sql, (ip, data))
+                        if not self.cached(ip):
+                                data = scanner.whois_lookup(None, ip, NICClient.WHOIS_RECURSE)
+                                cur.execute(sql, (ip, data))
+                cur.close()
 
 if __name__ == "__main__":
         import misc.DomainHandler

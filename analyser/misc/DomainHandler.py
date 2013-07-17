@@ -21,8 +21,7 @@ from datetime import datetime
 from ConfigParser import SafeConfigParser
 
 import psycopg2
-from DB import DbPool
-
+import psycopg2.extras
 
 # IPs aus Traceroute in die Scans reinwerfen, Scan pro Hunting-Task-Result-ID. Muss mit angegeben werden!
 class IPSupplier(object):
@@ -35,8 +34,8 @@ class IPSupplier(object):
 	    user = self.config.get("crossbeardb", "user"),
 	    database = self.config.get("crossbeardb", "dbname"),
 	    password = self.config.get("crossbeardb", "password"))
-    
-    def get(self, htrid):
+        
+    def get_htr_ips(self, htrid):
         result = []
 	cursor = self.crossbeardb.cursor(cursor_factory = psycopg2.extras.DictCursor)
 	cursor.execute("SELECT trace FROM huntingtaskresults where id = %s", (htrid,))
@@ -47,14 +46,21 @@ class IPSupplier(object):
 	cursor.close()
         return result
 
+    def get_ht_ips(self, htid):
+        result = []
+        cursor = self.crossbeardb.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        cursor.execute("SELECT id FROM huntingtaskresults WHERE huntingtaskid = %s;", (htid,))
+        for row in cursor:
+            result.extend(self.get_htr_ips(row['id']))
+        cursor.close()
+        return result
+
     def __del__(self):
 	self.crossbeardb.close()
 
 
 if __name__ == "__main__":
     q = Queue.Queue()
-    conf = SafeConfigParser()
-    conf.read("config.cfg")
-    ips = IPSupplier(conf, q)
+    ips = IPSupplier("analyser.config")
     for i in ips.get(1):
 	print i
