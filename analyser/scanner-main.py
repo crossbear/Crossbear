@@ -2,9 +2,9 @@
 
 import sys
 # TODO: Rename to CamelCase
-from asn.Asn_Scanner import AsnScanner
-from geoip.GeoIp_Scanner import GeoIPScanner
-from whois.Whois_Scanner import WhoisScanner
+from asn.AsnScanner import AsnScanner
+from geoip.GeoIPScanner import GeoIPScanner
+from whois.WhoisScanner import WhoisScanner
 from misc.DomainHandler import IPSupplier
 
 
