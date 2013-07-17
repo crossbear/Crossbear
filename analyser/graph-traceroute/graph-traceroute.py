@@ -26,6 +26,7 @@ if len(argv) != 3:
     print "Plese call with \"graph-traceroute.py <config file> <huntingtask id>\"."
     exit(1)
 
+# TODO: use sensible variable names
 tdb = TraceDB(argv[1])
 g = pgv.AGraph(directed = True, rankdir = 'LR')
 
@@ -40,4 +41,7 @@ for singletrace in tdb.traces(argv[2]):
 g.layout(prog = "dot")
 g.draw("test.png")
 
-            
+# TODO:
+# * Colour victim destination node: blue
+# * Colour victim client node: blue
+# * 

@@ -1,0 +1,54 @@
+\begin{frame}
+\frametitle{Crossbear is coming to SSH}
+\begin{block}{Use our shiny new notary}
+\begin{itemize}
+  \item {\Large \textbf{\texttt{cbssh.net.in.tum.de}}}
+  \item Allows live checks, and static lookups
+\end{itemize}
+\end{block}
+\begin{block}{Build a database of keys}
+\begin{itemize}
+  \item We scanned about 75\% of IPv4 and collected host-keys
+  \item Collected about 7.5 million keys
+  \item That was a lot of fun...
+\end{itemize}
+\end{block}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{OpenSSH live checking/querying}
+\begin{block}{Proof-of-concept implementation}
+\begin{itemize}
+  \item Try our patch for OpenSSH: \\
+     \texttt{ssh -o VerifyHostKeyNotary=Yes user@example.com}
+  \item This will connect to the Crossbear server and ask it to do a live check for the host-key fingerprint.
+  \item OpenSSH will warn on mismatch
+\end{itemize}
+\end{block}
+\begin{block}{To go live for general public in February}
+\begin{itemize}
+  \item Code still needs to undergo review
+  \item Tracerouting for stand-alone hunters soon
+  \item Don't want to use our notary? It's GPL. Set up your own.
+\end{itemize}
+\end{block}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Querying our database}
+\begin{block}{We scanned IPv4 3 times and stored SSH info.}
+\begin{itemize}
+  \item Query the results via DNS
+  \item DNSSEC coming soon
+\end{itemize}
+\end{block}
+\begin{block}{}
+\texttt{dig -t TXT 5.135.53.222.cbssh.net.in.tum.de}\\
+...\\
+\scriptsize{\texttt{;; ANSWER SECTION:\\
+5.135.53.222.cbssh.net.in.tum.de. 86400 IN TXT ``\{ip: 5.135.53.222, {[\bf\{fp: 45:a2:43:de:80:2f:af:4f:18:81:01:b5:b4:95:2b:82, first-seen: 2012-09-10 18:33:28, last-seen: 2012-11-19 14:39:45, count: 2, type: ssh-rsa, ver: ssh2\}}, \{fp: a1:80:\\03:06:f6:b8:5d:91:87:11:7b:ae:ba:b4:32:a4, first-seen: 2012-09-10\\18:33:38, last-seen: 2012-11-19 14:39:57, count: 2, type: ssh-dss, ver: ssh2\}]\}''}}
+\end{block}
+\end{frame}
+
