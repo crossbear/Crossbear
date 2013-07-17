@@ -1,0 +1,92 @@
+\documentclass[t]{beamer}
+% \usepackage{ulem}
+\usepackage{pgf}
+\usepackage{helvet}
+\usepackage{calc}
+\usepackage[utf8]{inputenc} % set your input encoding differently, if you want
+\usepackage[english]{babel}
+
+% Setting style of presentation
+% =============================
+\usetheme{NET}
+\setbeamercovered{transparent=10}
+\setbeamertemplate{navigation symbols}{}
+
+
+% Some common packages
+% ====================
+\usepackage{units}
+\usepackage{amsbsy}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{wasysym}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{epsf}
+\usepackage{epsfig}
+\usepackage{fixmath}
+% \usepackage{pgfmath}
+\usepackage{wrapfig}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{subfigure}
+
+\DeclareMathOperator{\loca}{locate}
+\newcommand{\hairspace}{\hspace{1pt}}
+\newcommand{\eg}{\mbox{e.\hairspace{}g.,}\xspace}
+\newcommand{\ie}{\mbox{i.\hairspace{}e.,}\xspace}
+\newcommand{\Wlog}{\mbox{W.\hairspace{}l.\hairspace{}o.\hairspace{}g.}\xspace}
+
+
+% \newtheorem{satz}{Satz}
+% \newcommand{\myfont}{\Small}
+
+% Adapt title information
+% =======================
+\title[One year of Crossbear]{One year of Crossbear \\ (now with SSH, too!)}
+\author[Ralph Holz, Oliver Gasser]{Ralph Holz, Oliver Gasser}
+\institute{Network Architectures and Services \\ Technische Universität München}
+\date{29C3}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+%\begin{frame}
+% \frametitle{Agenda}
+% \begin{block}{}
+%    \begin{itemize}
+%      \item Starting point: X.509 vulnerabilities
+%      \item Hunting the Men-in-the-middle: Crossbear
+%        \begin{itemize}
+%          \item Idea
+%          \item Attacker model
+%          \item Methods
+%          \item Analysis and evaluation
+%        \end{itemize}
+%      \item Let's do SSH, too
+%    \end{itemize}
+% \end{block}
+%\end{frame}
+
+
+
+\include{introduction}
+\include{crossbear}
+
+
+%\part[Backup]{Backup Slides}
+%\begin{frame}
+%   \frametitle{}
+%    \vskip 3cm
+%    \begin{block}{\centering \huge Backup Slides}\end{block}
+%\end{frame}
+
+%\include{backup}
+
+\end{document}

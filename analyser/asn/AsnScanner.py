@@ -16,7 +16,6 @@ import sys
 import os.path
 
 
-
 import logging
 import PyASN
 import Queue
@@ -35,11 +34,12 @@ class AsnScanner(Scanner):
 		sql = "INSERT INTO asn_results (ip, asn) values (%s, %s);"
 		cur = self.db.cursor()
 		for ip in ips:
-			asn = self.pyasn.Lookup(ip)
-			cur.execute(sql, (ip, asn))
+                        if not self.cached(ip):
+                                asn = self.pyasn.Lookup(ip)
+                                cur.execute(sql, (ip, asn))
 
 if __name__ == "__main__":
 	import misc.DomainHandler
-	ips = misc.DomainHandler.IPSupplier("asn.config")
-	asns = AsnScanner("asn.config")
+	ips = misc.DomainHandler.IPSupplier("analyser.config")
+	asns = AsnScanner("analyser.config")
 	asns.start_scan(ips.get(1))
