@@ -1,7 +1,10 @@
 #!/usr/bin/python
 
-import pygraphviz as pgv
 from pprint import pprint
+import pygraphviz as pgv
+import networkx as nx
+from networkx.readwrite import json_graph
+import json
 import cStringIO
 
 class Graph(object):
@@ -16,13 +19,15 @@ class Graph(object):
         if nodename in self.v:
             pass
         else:
-            self.v[nodename] = 1;
+            self.v[nodename] = 1
+            self.node_attributes[nodename] = {}
 
     def add_edge(self, nodea, nodeb):
         if not (nodea in self.v and nodeb in self.v):
             raise "Nodes %s or %s not present in node set." % (nodea, nodeb)
         else:
             self.e.append((nodea,nodeb))
+            self.edge_attributes[(nodea,nodeb)] = {}
 
     def add_node_attribute(self,nodename, key, value):
         if nodename in self.node_attributes:
@@ -61,7 +66,7 @@ class Graph(object):
         g = self.get_dotgraph(dot_attributes)
         return g.string()
     
-    def get_output_string(self, format, dot_attributes = {}):
+    def get_dot_output_string(self, format, dot_attributes = {}):
         g = self.get_dotgraph(dot_attributes)
         g.layout()
         strfile = cStringIO.StringIO()
@@ -69,6 +74,24 @@ class Graph(object):
         ret = strfile.getvalue()
         strfile.close()
         return ret
+
+    def get_networkx(self):
+        g = nx.Graph()
+        nxnodes = {}
+        nodecount = 0
+        for i in self.v.keys():
+            nxnodes[i] = nodecount
+            g.add_node(nodecount, **self.node_attributes[i])
+            nodecount += 1
+        for i in self.e:
+            (edgea, edgeb) = i
+            g.add_edge(nxnodes[edgea], nxnodes[edgeb], **self.edge_attributes[i])
+        return g
+
+    def draw_to_json(self):
+        g = self.get_networkx()
+        d = json_graph.node_link_data(g)
+        json.dump(d, open("test.json", 'w'))
         
 
 if __name__ == "__main__":
@@ -77,4 +100,4 @@ if __name__ == "__main__":
     g.add_node("Test2")
     g.add_edge("Test", "Test2")
     g.add_node_attribute("Test", "color", "#ff0000")
-    print g.get_output_string("svg")
+    g.draw_to_json()
