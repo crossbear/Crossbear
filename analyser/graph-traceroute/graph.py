@@ -76,7 +76,7 @@ class Graph(object):
         return ret
 
     def get_networkx(self):
-        g = nx.Graph()
+        g = nx.DiGraph()
         nxnodes = {}
         nodecount = 0
         for i in self.v.keys():
