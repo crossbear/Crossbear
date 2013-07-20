@@ -1,3 +1,0 @@
-* Protocol flow komplett erklaeren
-* Mehr Betonung auf die Analyse
-* Statistik verstehen
