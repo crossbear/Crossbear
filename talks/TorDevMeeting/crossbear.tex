@@ -124,26 +124,22 @@
   \end{block}
 \end{frame}
 
-
-%\begin{frame}
-%\frametitle{Components}
-%\begin{block}{Server: store and analyse}
-%  \begin{itemize}
-%    \item Crossbear server at TU M{\"u}nchen, Germany
-%    \item Uses Convergence project's notaries for diversity
-%    \item Server cert hard-coded into client!
-%  \end{itemize}
-%\end{block}
-%\begin{block}{Detection and localisation}
-%  \begin{itemize}
-%    \item Clients as Firefox add-on (detection and localisation)
-%    \item 150 stand-alone hunters on stand-by on PlanetLab (localisation)
-%  \end{itemize}
-%\end{block}
-%\end{frame}
-
-
-
+\begin{frame}
+\frametitle{Components}
+\begin{block}{Server: store and analyse}
+ \begin{itemize}
+   \item Crossbear server at TU M{\"u}nchen, Germany
+   \item Uses Convergence project's notaries for diversity
+   \item Server cert hard-coded into client!
+ \end{itemize}
+\end{block}
+\begin{block}{Detection and localisation}
+ \begin{itemize}
+   \item Clients as Firefox add-on (detection and localisation)
+   \item 150 stand-alone hunters on stand-by on PlanetLab (localisation)
+ \end{itemize}
+\end{block}
+\end{frame}
 
 \begin{frame}
 \frametitle{Additional data raised}
@@ -169,33 +165,12 @@
 \frametitle{TODO: Integration into OONI}
 \begin{block}{OONI is for hunting}
   \begin{itemize}
-    \item Arguments for OONI
     \item MITM testing ground
     \item What data is sent (privacy?)
     \item Visualisation mock-up
-    \item If OONI had been active during the Iran MITM... what would we have found?
   \end{itemize}
 \end{block}
 \end{frame}
-
-%\begin{frame}
-%\frametitle{Attacker model}
-%\begin{block}{Chosen based on MitM reports we have}\end{block}
-%\begin{block}{Attacker behaviour}
-%  \begin{itemize}
-%    \item Non-selective: MitM all attached `client' systems
-%    \item Selective: MitM only some of attached `client' systems
-%  \end{itemize}
-%\end{block}
-%\begin{block}{Attacker position}
-%  \begin{itemize}
-%    \item Towards periphery, close to victim client
-%    \item Towards periphery, close to victim server
-%    \item Central location in network (important AS, ...)
-%  \end{itemize}
-%\end{block}
-%\end{frame}
-
 
 \begin{frame}
 \frametitle{Non-selective, close to victim client}
@@ -237,7 +212,7 @@
 %    \item Success depends on the number of hunters
     \item An estimate can be given: \\ $<100$ hunters for $95\%$ accuracy on AS-level
     \item Adaptive attackers are a problem (can't discuss here)
-    \item Full details in our research paper
+    \item Full details in Crossbear research paper
   \end{itemize}
 \end{block}
 \end{frame}
@@ -256,46 +231,6 @@
 %\begin{block}{Imperfect, but given lack of data probably the best we can get.}\end{block}
 %\end{frame}
 
-
-\begin{frame}
-\frametitle{Different problem: SSH}
-\begin{figure}[t]
-  \centering
-  \includegraphics[scale=.65]{figures/ssh-connect.png}
-\end{figure}
-\begin{block}{Ever had this problem?}
-\begin{itemize}
-  \item Want to compare an SSH fingerprint without 2nd channel?
-  \item No idea what the correct host-key should be?
-\end{itemize}
-\end{block}
-\end{frame}
-
-
-
-
-
-
-
-%\begin{frame}
-%\frametitle{What's next?}
-%  \begin{block}{Integration with OONI}
-%    \begin{itemize}
-%      \item Open Observatory of Network Interference
-%      \item Hopefully, many clients soon
-%      \item Plus people who are in the right locations...
-%      \item That is where all our efforts will go into in the next 6 months
-%    \end{itemize}
-%  \end{block}
-%  \begin{block}{Analysis tools}
-%    \begin{itemize}
-%      \item Automate analysis of reports
-%      \item Filter out and group by suspicious cases
-%    \end{itemize}
-%  \end{block}
-%\end{frame}
-
-
 \begin{frame}
 \frametitle{Thank you!}
 \vskip 1cm
@@ -309,28 +244,6 @@
         \item \url{https://github.com/crossbear/Crossbear}
       \end{itemize}
   \end{block}
-\end{frame}
-
-
-
-\begin{frame}
-\frametitle{Selective attacker: close to victim}
-\begin{block}{}
-  \begin{figure}[t]
-    \centering
-    \includegraphics[scale=.5]{figures/scenario3-close-to-ap-selective.pdf}
-  \end{figure}
-\end{block}
-\end{frame}
-
-\begin{frame}
-\frametitle{Selective attacker: in core}
-\begin{block}{}
-  \begin{figure}[t]
-    \centering
-    \includegraphics[scale=.5]{figures/scenario4-core-selective.pdf}
-  \end{figure}
-\end{block}
 \end{frame}
 
 
@@ -352,26 +265,6 @@
 
 
 \begin{frame}
-\frametitle{Patterns to look for}
-\begin{block}{Attack seems to be restricted to few stub AS}
-  \begin{itemize}
-    \item Use BGP data to check traceroutes for plausibility
-    \item Do MitM certificates share properties?
-    \item Which AS in which countries involved?
-  \end{itemize}
-\end{block}
-\begin{block}{MitM reports from just a few companies?}
-  \begin{itemize}
-    \item Check traceroutes for traversed countries and AS
-    \item Might be industrial espionage
-  \end{itemize}
-\end{block}
-\begin{block}{All of this is intensive manual work. But only localisation is affected, and it is better than no data all.}\end{block}
-\end{frame}
-
-
-
-\begin{frame}
 \frametitle{Other issues}
 \begin{block}{Crossbear is an open system}
 \begin{itemize}
@@ -387,3 +280,8 @@
 \end{itemize}
 \end{block}
 \end{frame}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "folien"
+%%% End:
