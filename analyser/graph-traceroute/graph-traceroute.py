@@ -1,6 +1,10 @@
 #!/usr/bin/python
 
 from sys import argv
+from ConfigParser import SafeConfigParser
+import psycopg2
+import psycopg2.extras
+import pygraphviz as pgv
 
 class TraceDB(object):
     def __init__(self, config_file):
