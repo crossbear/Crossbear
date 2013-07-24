@@ -35,7 +35,7 @@ class PyHunter(object):
         self.hts                 = {"tasks" : [], "pip": {4:{}, 6:{}}}
         self.cbServerCert        = cbServerCert
         self.pipfetcher          = PipFetcher(self.cbServerHostName, self.cbServerCert)
-        self.htlfetcher = HTLFetcher(cbServerHostName, 443, self.cbServerCert)
+        self.htlfetcher          = HTLFetcher(cbServerHostName, 443, self.cbServerCert)
 
     def getHTL(self):
         """fetchs the hunting task list"""
