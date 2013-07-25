@@ -26,11 +26,11 @@ class DB(object):
         geocursor = self.analysisdb.cursor(cursor_factory = psycopg2.extras.DictCursor)
         ascursor = self.analysisdb.cursor(cursor_factory = psycopg2.extras.DictCursor)
         # select htr.trace, co.observertype, sc.sha1derhash  from huntingtaskresults as htr full join certobservations as co on htr.observation = co.id full join servercerts as sc on co.certid = sc.id where huntingtaskid = %s'
-        tracecursor.execute("SELECT htr.trace, co.observertype, sc.sha1derhash from huntingtaskresults as htr full join " +
+        tracecursor.execute("SELECT htr.trace, co.observertype, sc.sha1derhash as hash from huntingtaskresults as htr full join " +
                        "certobservations as co on htr.observation = co.id full join servercerts as sc on co.certid = " +
                        "sc.id where huntingtaskid = %s", (huntingtaskid,))
         for row in tracecursor:
-            t = Trace()
+            t = Trace(row['observertype'], row['hash'])
             for line in row['trace'].split("\n"):
                 te = TraceElem()
                 for ip in line.split("|"):
@@ -50,19 +50,36 @@ class DB(object):
         ascursor.close()
         tracecursor.close()
 
-        
+class HuntingTaskResults(object):
+    
+    def __init__(self, traces):
+        self.traces = traces
 
-
+    def traces(self):
+        return self.traces
+    
 class Trace(object):
     
-    def __init__(self):
+    def __init__(self, type, hash):
         # A list of lists of IP addresses
         self.trace = []
-        self.type = ""
-        self.hash = ""
+        self.type = type
+        self.hash = hash
         
     def add_trace_elem(self,elem):
         self.trace.append(elem)
+
+    def trace_elems(self):
+        return self.trace
+
+    def trace_elem(self, index):
+        return self.trace[index]
+
+    def hash(self):
+        return self.hash
+
+    def type(self):
+        return self.type
 
     def __str__(self):
         trace = "\n\t".join([s.__str__() for s in self.trace])
@@ -80,7 +97,13 @@ class TraceElem(object):
         self.asn[ip] = asn;
         self.geo[ip] = geo;
 
-    def get_ips(self):
+    def geo(self, ip):
+        return self.geo[ip]
+
+    def asn(self, ip):
+        return self.asn[ip]
+
+    def ips(self):
         return self.ip
 
     def __str__(self):
