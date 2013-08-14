@@ -39,4 +39,14 @@ d3.json("test.json", function(graph, error) {
 	.data(links).enter().append("line")
 	.attr("stroke", "black")
 	.attr("class", "graphlink");
+
+    $(".graphnode").tipsy({
+	html: true,
+	gravity: 'e',
+	title: function() {
+	    var d = this.__data__;
+	    return d.geo + "<br/>" + d.asn;
+	}
+    });
+
 });

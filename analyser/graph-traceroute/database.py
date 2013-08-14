@@ -23,9 +23,9 @@ class DB(object):
         
     def traces(self, huntingtaskid):
         tracecursor = self.crossbeardb.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        #TODO: Add WHOIS information.
         geocursor = self.analysisdb.cursor(cursor_factory = psycopg2.extras.DictCursor)
         ascursor = self.analysisdb.cursor(cursor_factory = psycopg2.extras.DictCursor)
-        # select htr.trace, co.observertype, sc.sha1derhash  from huntingtaskresults as htr full join certobservations as co on htr.observation = co.id full join servercerts as sc on co.certid = sc.id where huntingtaskid = %s'
         tracecursor.execute("SELECT htr.trace, co.observertype, sc.sha1derhash as hash from huntingtaskresults as htr full join " +
                        "certobservations as co on htr.observation = co.id full join servercerts as sc on co.certid = " +
                        "sc.id where huntingtaskid = %s", (huntingtaskid,))
@@ -43,7 +43,6 @@ class DB(object):
                         te.add_ip(ip, None, None)
                     else:
                         te.add_ip(ip, asresult["asn"], georesult["country_code"])
-
                 t.add_trace_elem(te)
             yield t
         geocursor.close()
@@ -53,10 +52,10 @@ class DB(object):
 class HuntingTaskResults(object):
     
     def __init__(self, traces):
-        self.traces = traces
+        self.m_traces = traces
 
     def traces(self):
-        return self.traces
+        return self.m_traces
     
 class Trace(object):
     
@@ -86,25 +85,25 @@ class Trace(object):
         return "Trace(trace=%s, type=%s, hash=%s)" % (trace, self.type, self.hash)
 
 class TraceElem(object):
-    
-    def __init__(self):
-        self.ip = []
-        self.asn = {}
-        self.geo = {}
+
+    def __init__(self, ip = [], asn = {}, geo = {}):
+        self.m_ip = ip
+        self.m_asn = asn
+        self.m_geo = geo
 
     def add_ip(self,ip, asn, geo):
-        self.ip.append(ip)
-        self.asn[ip] = asn;
-        self.geo[ip] = geo;
+        self.m_ip.append(ip)
+        self.m_asn[ip] = asn;
+        self.m_geo[ip] = geo;
 
     def geo(self, ip):
-        return self.geo[ip]
+        return self.m_geo[ip]
 
     def asn(self, ip):
-        return self.asn[ip]
+        return self.m_asn[ip]
 
     def ips(self):
-        return self.ip
+        return self.m_ip
 
     def __str__(self):
         return "TraceElem(ips=[%s], asn={%s}, geo={%s})" % (self.ip, self.asn, self.geo)
