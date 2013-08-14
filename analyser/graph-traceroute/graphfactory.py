@@ -17,7 +17,9 @@ class GraphFactory(object):
             for i in range(1, len(t.trace_elems())):
                 lastelements = t.trace_elem(i - 1)
                 thiselements = t.trace_elem(i)
-                [g.add_edge(a,b) for a in lastelements.ips() for b in thiselements.ips()]
+                for ip1 in lastelements.ips():
+                    for ip2 in thiselements.ips():
+                        g.add_edge(ip1, ip2)
         return g
 
 

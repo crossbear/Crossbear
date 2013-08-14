@@ -77,21 +77,17 @@ class Graph(object):
 
     def get_networkx(self):
         g = nx.DiGraph()
-        nxnodes = {}
-        nodecount = 0
         for i in self.v.keys():
-            nxnodes[i] = nodecount
-            g.add_node(nodecount, **self.node_attributes[i])
-            nodecount += 1
+            g.add_node(i, **self.node_attributes[i])
         for i in self.e:
             (edgea, edgeb) = i
-            g.add_edge(nxnodes[edgea], nxnodes[edgeb], **self.edge_attributes[i])
+            g.add_edge(edgea, edgeb, **self.edge_attributes[i])
         return g
 
-    def draw_to_json(self):
+    def draw_to_json(self, filename):
         g = self.get_networkx()
         d = json_graph.node_link_data(g)
-        json.dump(d, open("test.json", 'w'))
+        json.dump(d, open(filename, 'w'))
         
 
 if __name__ == "__main__":

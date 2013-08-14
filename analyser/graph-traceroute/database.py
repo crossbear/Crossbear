@@ -22,6 +22,7 @@ class DB(object):
             password = self.config.get("analysisdb", "password"))
         
     def traces(self, huntingtaskid):
+        traces = []
         tracecursor = self.crossbeardb.cursor(cursor_factory = psycopg2.extras.DictCursor)
         #TODO: Add WHOIS information.
         geocursor = self.analysisdb.cursor(cursor_factory = psycopg2.extras.DictCursor)
@@ -30,8 +31,9 @@ class DB(object):
                        "certobservations as co on htr.observation = co.id full join servercerts as sc on co.certid = " +
                        "sc.id where huntingtaskid = %s", (huntingtaskid,))
         for row in tracecursor:
-            t = Trace(row['observertype'], row['hash'])
-            for line in row['trace'].split("\n"):
+            trace = Trace(row['observertype'], row['hash'])
+            traceval = row['trace'].split("\n")
+            for line in traceval:
                 te = TraceElem()
                 for ip in line.split("|"):
                     geocursor.execute("SELECT city, country_code FROM geo_results WHERE ip = %s", (ip,))
@@ -43,11 +45,12 @@ class DB(object):
                         te.add_ip(ip, None, None)
                     else:
                         te.add_ip(ip, asresult["asn"], georesult["country_code"])
-                t.add_trace_elem(te)
-            yield t
+                trace.add_trace_elem(te)
+            traces.append(trace)
         geocursor.close()
         ascursor.close()
         tracecursor.close()
+        return HuntingTaskResults(traces)
 
 class HuntingTaskResults(object):
     
@@ -61,35 +64,44 @@ class Trace(object):
     
     def __init__(self, type, hash):
         # A list of lists of IP addresses
-        self.trace = []
-        self.type = type
-        self.hash = hash
+        self.m_trace = []
+        self.m_type = type
+        self.m_hash = hash
         
     def add_trace_elem(self,elem):
-        self.trace.append(elem)
+        self.m_trace.append(elem)
 
     def trace_elems(self):
-        return self.trace
+        return self.m_trace
 
     def trace_elem(self, index):
-        return self.trace[index]
+        return self.m_trace[index]
 
     def hash(self):
-        return self.hash
+        return self.m_hash
 
     def type(self):
-        return self.type
+        return self.m_type
 
     def __str__(self):
-        trace = "\n\t".join([s.__str__() for s in self.trace])
-        return "Trace(trace=%s, type=%s, hash=%s)" % (trace, self.type, self.hash)
+        trace = "\n\t".join([s.__str__() for s in self.m_trace])
+        return "Trace(trace=%s, type=%s, hash=%s)" % (trace, self.m_type, self.m_hash)
 
 class TraceElem(object):
 
-    def __init__(self, ip = [], asn = {}, geo = {}):
-        self.m_ip = ip
-        self.m_asn = asn
-        self.m_geo = geo
+    def __init__(self, ip = None, asn = None, geo = None):
+        if ip == None:
+            self.m_ip = []
+        else:
+            self.m_ip = ip
+        if asn == None:
+            self.m_asn = {}
+        else:
+            self.m_asn = asn
+        if geo == None:
+            self.m_geo = {}
+        else:
+            self.m_geo = geo
 
     def add_ip(self,ip, asn, geo):
         self.m_ip.append(ip)
@@ -106,9 +118,10 @@ class TraceElem(object):
         return self.m_ip
 
     def __str__(self):
-        return "TraceElem(ips=[%s], asn={%s}, geo={%s})" % (self.ip, self.asn, self.geo)
+        return "TraceElem(ips=%s, asn=%s, geo=%s)" % (self.m_ip, self.m_asn, self.m_geo)
 
 if __name__ == "__main__":
     db = DB("analyser.config")
-    for i in db.traces(1):
-        print i
+    result = db.traces(1)
+    for trace in result.traces():
+        print trace

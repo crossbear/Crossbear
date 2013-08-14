@@ -1,11 +1,12 @@
-import OpenSSL
-from OpenSSL import crypto as ocrypto
-import socket
-from pprint import pprint
+
+from OpenSSL     import crypto as ocrypto
+from pprint      import pprint
 from Crypto.Hash import MD5,SHA256
+from  itertools  import permutations
+from binascii    import unhexlify
+import OpenSSL
+import socket
 import ssl
-from  itertools import permutations
-from binascii import unhexlify
 
 
 
