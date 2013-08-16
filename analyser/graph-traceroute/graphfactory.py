@@ -8,12 +8,17 @@ class GraphFactory(object):
 
     def tograph(self, result):
         g = graph.Graph()
+        # TODO: Make relation between Trace, TraceElement and IPs more clear.
         for t in result.traces():
             for te in t.trace_elems():
                 for i in te.ips():
                     g.add_node(i)
                     g.add_node_attribute(i, "geo", te.geo(i))
                     g.add_node_attribute(i, "asn", te.asn(i))
+            for i in t.trace_elems()[0].ips():
+                g.add_node_attribute(i, "start", "true")
+            for i in t.trace_elems()[-1].ips():
+                g.add_node_attribute(i, "end", "true")
             for i in range(1, len(t.trace_elems())):
                 lastelements = t.trace_elem(i - 1)
                 thiselements = t.trace_elem(i)

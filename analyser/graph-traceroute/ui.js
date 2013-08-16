@@ -7,11 +7,23 @@ var sampleSVG = d3.select("#viz")
 
 var force, nodes = [] , links = [], graphnodes = [], graphlinks = []
 
-function tick() {
-    nodes[nodes.length - 1].x = width - 20;
-    nodes[nodes.length - 1].y = height / 2;
-    graphnodes.attr("cx", function(d) { return d.x; })
-	.attr("cy", function(d) { return d.y; });
+function tick(e) {
+    graphnodes.attr("cx", function(d) {
+	if (d.start) {
+	    d.x = d.x - e.alpha * 100;
+	}
+	if (d.end) {
+	    d.x = d.x + e.alpha * 200;
+	}
+	return d.x;
+	})
+	.attr("cy", function(d) { return d.y; })
+	.attr("fill", function (d) {
+	    if (d.start) {
+		return "#00ff00";
+	    } else if (d.end) {
+		return "#ff0000";
+	    }});
     graphlinks.attr("x1", function(d) { return d.source.x; })
 	.attr("x2", function(d) { return d.target.x; })
 	.attr("y1", function(d) { return d.source.y; })
@@ -35,8 +47,8 @@ d3.json("out.json", function(graph, error) {
 	.data(nodes).enter().append("circle")
 	.attr("stroke", "black")
 	.attr("class", "graphnode")
-	.attr("r", 5)
-	.call(force.drag);
+	.attr("r", 5);
+
     
     graphlinks = sampleSVG.selectAll("line")
 	.data(links).enter().append("line")
