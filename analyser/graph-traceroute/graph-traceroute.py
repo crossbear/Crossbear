@@ -2,7 +2,6 @@
 from database import DB, HuntingTaskResults, TraceElem, Trace
 from graphfactory import GraphFactory
 
-
 db = DB("analyser.config")
 gf = GraphFactory()
 g = gf.tograph(db.traces(1))
