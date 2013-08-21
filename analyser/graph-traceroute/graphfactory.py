@@ -1,4 +1,3 @@
-from database import Trace,TraceElem, HuntingTaskResults
 import graph
 
 class GraphFactory(object):
@@ -6,11 +5,21 @@ class GraphFactory(object):
     def __init__(self, **options):
         self.options = options
 
+    # Return all other sources that have gotten this certificate (CVR or Server)
+    def sources_for_certificate(self, cert, certlist, type):
+        return filter(lambda x: x.hash == cert.hash and x.type == type, certlist)
+
+    def comes_from_server(self, cert, certlist):
+        return self.sources_for_certificate(cert, certlist, "CrossbearServer") == []
+
+    def comes_from_cvr(self, cert, certlist):
+        return self.sources_for_certificate(cert, certlist, "CrossbearCVR") == []
+
     def tograph(self, result):
         g = graph.Graph()
-        # TODO: Make relation between Trace, TraceElement and IPs more clear.
-        # TODO: List if hunter certificate matches a Server certificate, or a CVR.
-        for t in result.traces():
+        htrs = result.results()
+        for htr in htrs:
+            t = htr.trace()
             for te in t.trace_elems():
                 for i in te.ips():
                     g.add_node(i)
@@ -18,6 +27,8 @@ class GraphFactory(object):
                     g.add_node_attribute(i, "asn", te.asn(i))
             for i in t.trace_elems()[0].ips():
                 g.add_node_attribute(i, "start", "true")
+                g.add_node_attribute(i, "fromserver", self.comes_from_server(htr.cert(), result.certificates()))
+                g.add_node_attribute(i, "fromcvr", self.comes_from_cvr(htr.cert(), result.certificates()))
             for i in t.trace_elems()[-1].ips():
                 g.add_node_attribute(i, "end", "true")
             for i in range(1, len(t.trace_elems())):
@@ -27,17 +38,3 @@ class GraphFactory(object):
                     for ip2 in thiselements.ips():
                         g.add_edge(ip1, ip2)
         return g
-
-
-if __name__ == '__main__':
-    t = Trace("server", "12345")
-    t.add_trace_elem(TraceElem(["1.1.1.1"],{"1.1.1.1": "3"}, {"1.1.1.1": "Munich"}))
-    t.add_trace_elem(TraceElem(["1.1.1.2"],{"1.1.1.2": "3"}, {"1.1.1.2": "Cologne"}))
-    t.add_trace_elem(TraceElem(["1.1.2.1", "1.1.2.2"], {"1.1.2.1": "4", "1.1.2.2": "4"}, {"1.1.2.1": "Berlin", "1.1.2.2": "Frankfurt"}))
-    t.add_trace_elem(TraceElem(["1.1.3.1"], {"1.1.3.1": "5"}, {"1.1.3.1": "Viechtach"}))
-
-    r = HuntingTaskResults([t])
-
-    gf = GraphFactory()
-    g = gf.tograph(r)
-    g.draw_to_json()
