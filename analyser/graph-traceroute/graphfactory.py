@@ -9,6 +9,7 @@ class GraphFactory(object):
     def tograph(self, result):
         g = graph.Graph()
         # TODO: Make relation between Trace, TraceElement and IPs more clear.
+        # TODO: List if hunter certificate matches a Server certificate, or a CVR.
         for t in result.traces():
             for te in t.trace_elems():
                 for i in te.ips():
