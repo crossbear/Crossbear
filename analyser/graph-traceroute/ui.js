@@ -35,11 +35,12 @@ d3.json("out.json", function(graph, error) {
     links = graph.links;
 
     force = d3.layout.force()
-	.linkDistance(10)
 	.nodes(nodes)
 	.links(links)
 	.size([width,height])
-	.charge(-120)
+	.linkStrength(0.9)
+	.charge(-100)
+	.gravity(0.09)
 	.on("tick", tick)
 	.start();
     
@@ -57,13 +58,22 @@ d3.json("out.json", function(graph, error) {
 
     $(".graphnode").tipsy({
 	html: true,
-	gravity: 'e',
+	gravity: $.fn.tipsy.autoWE,
 	title: function() {
 	    var d = this.__data__;
+	    var certstring = "";
+	    if (d.certificate) {
+		certstring += "<span class=\"bold\">Certificate hash</span>: " + d.certificate + "<br/>";
+	    }
+	    if (d.fromserver) {
+		certstring += "Certificate also seen by server.<br/>";
+	    }
+	    if (d.fromcvr) {
+		certstring += "Certificate seen in CVR.<br/>";
+	    }
 	    return "<span class=\"bold\">IP:</span> " +
 		d.id + "<br/> <span class=\"bold\">Geoinformation:</span> " +
-		d.geo + "<br/> <span class=\"bold\">AS number:</span> " +
-		d.asn;
+		d.geo + "<br/> <span class=\"bold\">AS number:</span> " + d.asn + "<br/>" + certstring;
 	}
     });
 

@@ -66,7 +66,7 @@ class DB(object):
             for ip in line.split("|"):
                 geo = self.get_geo_information(ip)
                 asn = self.get_asn_information(ip)
-                te.add_ip(ip, geo,asn)
+                te.add_ip(ip, asn, geo)
             result.add_trace_elem(te)
         return result
                 
@@ -151,7 +151,7 @@ class HuntingTaskResult(object):
         self.m_trace = trace
         self.m_cert = cert
 
-    def cert(self):
+    def certificate(self):
         return self.m_cert
 
     def trace(self):

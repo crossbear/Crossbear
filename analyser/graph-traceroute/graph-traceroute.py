@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from database import DB, HuntingTaskResults, TraceElem, Trace
+from database import DB
 from graphfactory import GraphFactory
 
 db = DB("analyser.config")

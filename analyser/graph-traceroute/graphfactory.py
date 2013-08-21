@@ -27,8 +27,9 @@ class GraphFactory(object):
                     g.add_node_attribute(i, "asn", te.asn(i))
             for i in t.trace_elems()[0].ips():
                 g.add_node_attribute(i, "start", "true")
-                g.add_node_attribute(i, "fromserver", self.comes_from_server(htr.cert(), result.certificates()))
-                g.add_node_attribute(i, "fromcvr", self.comes_from_cvr(htr.cert(), result.certificates()))
+                g.add_node_attribute(i, "fromserver", self.comes_from_server(htr.certificate(), result.certificates()))
+                g.add_node_attribute(i, "fromcvr", self.comes_from_cvr(htr.certificate(), result.certificates()))
+                g.add_node_attribute(i, "certificate", htr.certificate().hash())
             for i in t.trace_elems()[-1].ips():
                 g.add_node_attribute(i, "end", "true")
             for i in range(1, len(t.trace_elems())):
