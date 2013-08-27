@@ -165,6 +165,16 @@ class Trace(object):
     def __init__(self):
         # A list of lists of IP addresses
         self.m_trace = []
+
+    def source(self):
+        if len(self.m_trace[0].ips()) > 1:
+            warnings.warn("More than one source in traceroute!")
+        return self.m_trace[0].ips()[0]
+
+    def target(self):
+        if len(self.m_trace[-1].ips()) > 1:
+            warnings.warn("More than one target in traceroute!")
+        return self.m_trace[-1].ips()[0]
     
     def add_trace_elem(self,elem):
         self.m_trace.append(elem)
