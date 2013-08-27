@@ -20,28 +20,49 @@ class Graph(object):
             pass
         else:
             self.v[nodename] = 1
-            self.node_attributes[nodename] = {}
 
     def add_edge(self, nodea, nodeb):
         if not (nodea in self.v and nodeb in self.v):
             raise "Nodes %s or %s not present in node set." % (nodea, nodeb)
+        elif (nodea, nodeb) in self.e:
+            pass
         else:
             self.e.append((nodea,nodeb))
-            self.edge_attributes[(nodea,nodeb)] = {}
 
-    def add_node_attribute(self,nodename, key, value):
+    def set_node_attribute(self,nodename, key, value):
         if nodename in self.node_attributes:
             self.node_attributes[nodename][key] = value;
         else:
             self.node_attributes[nodename] = {key: value}
+
+    def add_edge_attribute(self, nodea, nodeb, key, value):
+        val = self.get_edge_attribute(nodea, nodeb, key)
+        if val != None:
+            val.append(value)
+            self.set_edge_attribute(nodea, nodeb, key, val)
+        else:
+            self.set_edge_attribute(nodea, nodeb, key, [value])
             
-    def add_edge_attribute(self,nodea,nodeb, key, value):
+    def set_edge_attribute(self,nodea,nodeb, key, value):
         """Edge is passed as a tuple of nodes"""
         edge = (nodea,nodeb)
         if edge in self.edge_attributes:
             self.edge_attributes[edge][key] = value;
         else:
             self.edge_attributes[edge] = {key: value}
+
+    def get_edge_attribute(self, nodea, nodeb, key):
+        edge = (nodea, nodeb)
+        if edge in self.edge_attributes:
+            if key in self.edge_attributes[edge]:
+                return self.edge_attributes[edge][key];
+        return None
+
+    def get_node_attributes(self, nodename, key):
+        if nodename in self.node_attributes:
+            if key in self.node_attributes[nodename]:
+                return self.node_attributes[nodename][key]
+        return None
 
     def get_dotgraph(self, dot_attributes = {}):
         g = pgv.AGraph(**dot_attributes)
@@ -96,4 +117,6 @@ if __name__ == "__main__":
     g.add_node("Test2")
     g.add_edge("Test", "Test2")
     g.add_node_attribute("Test", "color", "#ff0000")
-    g.draw_to_json()
+    g.append_edge_attribute("Test", "Test2", "testattr", 1)
+    g.append_edge_attribute("Test", "Test2", "testattr", 2)
+    g.draw_to_json("test.json")
