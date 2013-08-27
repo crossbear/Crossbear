@@ -13,6 +13,9 @@ var sampleSVG = d3.select("#viz")
     .attr("width", width)
     .attr("height", height);
 
+var linkscale = d3.scale.linear().domain([0,1,5]).range([1, 3, 8]).clamp(true);
+
+// Add arrow markers to the svg defs
 sampleSVG.append("defs").append("marker")
     .attr("id", "endArrow")
     .attr("viewBox", "0 0 10 10")
@@ -29,24 +32,9 @@ sampleSVG.append("defs").append("marker")
 var force, nodes = [] , links = [], graphnodes = [], graphlinks = []
 
 function tick(e) {
-    graphnodes.attr("cx", function(d) {
-	if (d.start) {
-	    d.x = d.x - e.alpha * 100;
-	}
-	if (d.end) {
-	    d.x = d.x + e.alpha * 200;
-	}
-	return d.x;
-    })
+    graphnodes.attr("cx", function(d) { return d.x; })
 	.attr("cy", function(d) { return d.y; })
-    // Change colors
-	.attr("fill", function (d) {
-	    if (d.start) {
-		return "#00ff00";
-	    } else if (d.end) {
-		return "#ff0000";
-	    }});
-
+    
     graphlinks
 	.attr("x1", function(d) { return d.source.x; })
 	.attr("x2", function(d) { return d.target.x; })
@@ -56,47 +44,38 @@ function tick(e) {
 
 // Still a bug where highlighted isn't set to false correctly.
 // Color trace when selected
-function highlighttrace(c) {
-    if (c.start) {
-	var source = c.id;
-	if (c.highlighted) {
-	    // reset trace
-
-	    graphlinks.attr("stroke-width", function(d) {
-		if (d.tracesource) {
-		    if (d.tracesource.indexOf(source) != -1) {
-			d.target.highlighted = false;
-			d.source.highlighted = false;
-			d.highligted = false;
-			return 1;
-		    } else {
-			return this.getAttribute("stroke-width");
-		    }
+function select(d) {
+    if (d.start) {
+	var source = d.id;
+	if (d.highlightedBy.length > 0) {
+	    // deselect trace
+	    links.forEach(function (l) {
+		var index = l.highlightedBy.indexOf(source);
+		if (index != -1) {
+		    l.highlightedBy.splice(index, 1);
+		}
+		index = l.source.highlightedBy.indexOf(source);
+		if (index != -1) {
+		    l.source.highlightedBy.splice(index, 1);
 		}
 	    });
 	} else {
-	    graphlinks.attr("stroke-width", function(d) {
-		if (d.tracesource) {
-		    if (d.tracesource.indexOf(source) != -1) {
-			d.highlighted = true;
-			if (! d.target.end)
-			    d.target.highlighted = true;
-			d.source.highlighted = true;
-			return 2;
-		    } else {
-			// Don't change stroke width.
-			return this.getAttribute("stroke-width");
-		    }
+	    // select trace
+	    links.forEach(function (l) {
+		if (l.tracesource.indexOf(source) != -1) {
+		    l.highlightedBy.push(source);
+		    l.source.highlightedBy.push(source);
 		}
 	    });
 	}
     }
+
+    graphlinks.attr("stroke-width", function (d, i) {
+	return linkscale(d.highlightedBy.length);
+    });
+
     graphnodes.attr("stroke-width", function (d, i) {
-	if (d.highlighted) {
-	    return 2;
-	} else {
-	    return 1;
-	}
+	return linkscale(d.highlightedBy.length);
     });
 }
 
@@ -130,13 +109,23 @@ d3.json("out.json", function(graph, error) {
     nodes = graph.nodes;
     links = graph.links;
 
+    nodes.forEach(function (d) {
+	d.highlightedBy = [];
+    });
+
+    links.forEach(function (d) {
+	d.highlightedBy = [];
+    });
+    
+    var color = d3.scale.category10()
+
     force = d3.layout.force()
 	.nodes(nodes)
 	.links(links)
 	.size([width,height])
-	.linkStrength(0.9)
-	.charge(-100)
-	.gravity(0.09)
+	.linkStrength(2)
+	.charge(-400)
+	.gravity(0.3)
 	.on("tick", tick)
 	.start();
 
@@ -184,14 +173,21 @@ d3.json("out.json", function(graph, error) {
 	.attr("class", "graphlink")
 	.attr("marker-end", "url(#endArrow)");
 
-
-    
     graphnodes = sampleSVG.selectAll("circle")
 	.data(nodes).enter().append("circle")
 	.attr("stroke", "black")
 	.attr("class", "graphnode")
+	.attr("fill", function (d, i) {
+	    if (d.start) {
+		return color("start");
+	    } else if (d.end) {
+		return color("end");
+	    } else {
+		return color("other");
+	    }
+	})
 	.attr("r", 5)
-	.on("click",highlighttrace)
+	.on("click",select)
 	.style("z-index", 1);
 
     
