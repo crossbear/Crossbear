@@ -4,6 +4,36 @@
   intersecting a malicious trace.
 */
 
+function Highlightable(data) {
+    for (var prop in data) {
+	if (data.hasOwnProperty(prop)) {
+	    this[prop] = data[prop];
+	}
+    }
+    this.highlightedBy = [];
+}
+
+Highlightable.prototype.isHighlighted = function() {
+    return this.highlightedBy.length > 0;
+}
+
+Highlightable.prototype.isHighlightedBy = function(source) {
+    return this.highlightedBy.indexOf(source) != -1;
+}
+
+Highlightable.prototype.highlightBy = function(source) {
+    if (! this.isHighlightedBy(source)) {
+	this.highlightedBy.push(source);
+    }
+}
+
+Highlightable.prototype.unhighlightBy = function(source) {
+    var index = this.highlightedBy.indexOf(source);
+    if (index != -1) {
+	this.highlightedBy.splice(index,1);
+    }
+}
+
 var width = window.innerWidth;
 var height = window.innerHeight;
 var sampleSVG = d3.select("#viz")
@@ -13,7 +43,8 @@ var sampleSVG = d3.select("#viz")
     .attr("width", width)
     .attr("height", height);
 
-var linkscale = d3.scale.linear().domain([0,1,5]).range([1, 3, 8]).clamp(true);
+var sizescale = d3.scale.linear().domain([0,1,10]).range([5, 7, 30]).clamp(true);
+
 
 // Add arrow markers to the svg defs
 sampleSVG.append("defs").append("marker")
@@ -47,35 +78,35 @@ function tick(e) {
 function select(d) {
     if (d.start) {
 	var source = d.id;
-	if (d.highlightedBy.length > 0) {
+	if (d.isHighlighted()) {
 	    // deselect trace
 	    links.forEach(function (l) {
-		var index = l.highlightedBy.indexOf(source);
-		if (index != -1) {
-		    l.highlightedBy.splice(index, 1);
-		}
-		index = l.source.highlightedBy.indexOf(source);
-		if (index != -1) {
-		    l.source.highlightedBy.splice(index, 1);
-		}
+		l.unhighlightBy(source);
+	    });
+	    nodes.forEach(function (n) {
+		n.unhighlightBy(source);
 	    });
 	} else {
 	    // select trace
 	    links.forEach(function (l) {
 		if (l.tracesource.indexOf(source) != -1) {
-		    l.highlightedBy.push(source);
-		    l.source.highlightedBy.push(source);
+		    l.highlightBy(source);
+		    l.source.highlightBy(source);
 		}
 	    });
 	}
     }
 
     graphlinks.attr("stroke-width", function (d, i) {
-	return linkscale(d.highlightedBy.length);
+	if (d.isHighlighted()) {
+	    return 3;
+	} else {
+	    return 1;
+	}
     });
 
-    graphnodes.attr("stroke-width", function (d, i) {
-	return linkscale(d.highlightedBy.length);
+    graphnodes.attr("r", function (d, i) {
+	return sizescale(d.highlightedBy.length);
     });
 }
 
@@ -91,32 +122,15 @@ function reset() {
     });
 }
 
-function hideselected() {
-    graphlinks.style("visibility", function (d, i) {
-	if (d.highlighted) {
-	    return "hidden";
-	}
-    });
-    graphnodes.style("visibility", function (d, i) {
-	if (d.highlighted) {
-	    return "hidden";
-	}
-    });
-}
-
-
 d3.json("out.json", function(graph, error) {
-    nodes = graph.nodes;
-    links = graph.links;
-
-    nodes.forEach(function (d) {
-	d.highlightedBy = [];
-    });
-
-    links.forEach(function (d) {
-	d.highlightedBy = [];
+    graph.nodes.forEach(function (n) {
+	nodes.push(new Highlightable(n));
     });
     
+    graph.links.forEach(function (n) {
+	links.push(new Highlightable(n));
+    });
+
     var color = d3.scale.category10()
 
     force = d3.layout.force()
@@ -125,45 +139,9 @@ d3.json("out.json", function(graph, error) {
 	.size([width,height])
 	.linkStrength(2)
 	.charge(-400)
-	.gravity(0.3)
+	.gravity(0.35)
 	.on("tick", tick)
 	.start();
-
-    sampleSVG.append("rect")
-	.attr("height", 50)
-	.attr("width", 100)
-	.attr("x", 10)
-	.attr("y", 10)
-	.attr("fill", "white")
-	.attr("stroke", "black")
-	.attr("stroke-width", 2)
-	.on("click", reset);
-
-    sampleSVG.append("rect")
-	.attr("height", 50)
-	.attr("width", 100)
-	.attr("x", 10)
-	.attr("y", 70)
-	.attr("fill", "white")
-	.attr("stroke", "black")
-	.attr("stroke-width", 2)
-	.on("click", hideselected);
-
-
-    sampleSVG.append("text")
-	.text("Reset")
-	.attr("x", 20)
-	.attr("y", 35)
-	.attr("dy", "0.25em")
-	.on("click", reset);
-
-    sampleSVG.append("text")
-	.text("Hide selected")
-	.attr("x", 20)
-	.attr("y", 85)
-	.attr("dy", "0.25em")
-	.on("click", hideselected);
-
 
     // Order is important, we want to drav the circles OVER the lines, so we have
     // to add them later.
