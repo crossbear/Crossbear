@@ -2,32 +2,34 @@ Installing OONIBear
 ===================
 
 Instructions are for Debian and derived distributions.
-TODO: Run as root?
 
 1) Installing OONI (www.ooni.nu)
 
 Clone the OONI repository at git.torproject.org/ooni-probe.git
 
+	su -c "apt-get install git"
     mkdir ooni-probe && cd ooni-probe && git clone \
     git://git.torproject.org/ooni-probe.git .
 
 Install the virtualenvwrapper to work with python virtualenvs more
 easily, and some dependencies for ooni.
   
-    apt-get install virtualenvwrapper python-dev tcpdump libpcap-dev \
-    libssl-dev tor tor-geoipdb
+    su -c "apt-get install virtualenvwrapper python-dev tcpdump libpcap-dev \
+    libssl-dev tor tor-geoipdb libyaml-dev"
+
+Set up virtualenvwrapper (for Debian systems only!):
+
+	echo "source /etc/bash_completion.d/virtualenvwrapper" >> ~/.bashrc
 
 Set up a virtual python environment for ooni using virtualenvwrapper:
 
-	export WORKON_HOME=~/.virtualenvs
-	source /etc/bash_completion.d/virtualenvwrapper
 	mkvirtualenv --system-site-packages oonibear
 
 Now you are inside the oonibear virtual environment, and you can
 install the OONI requirements.
 
+	cd ooni-probe
 	pip install --pre -r requirements.txt
-	pip install pyrex
 
 Since the debian packages for pypcap and libdnet do not work properly,
 the python library needs to be installed manually (instructions taken
@@ -62,30 +64,44 @@ First, clone the crossbear repository.
 
 Then, install the crossbear prerequisites:
 
-	apt-get install swig m2crypto
+	su -c 'apt-get install swig m2crypto'
 	pip install requests pycrypto
 
-Create symlinks in the ooniprobe directory:
+Create symlinks in the ooni-probe directory:
 
-	cd ~/ooniprobe/ooni/
+	cd ~/ooni-probe/
 	ln -s ~/crossbear/OONIBear/OONIBear.py
 	ln -s ~/crossbear/OONIBear/cb.conf
 	ln -s ~/crossbear/OONIBear/cbserver.crt
-	ln -s ~/crossbear/OONIBear/PyHunter
+	ln -s ~/crossbear/OONIBear/PyHunter ooni/
+
+Create the ooni-probe configuration file and directory:
+
+	su -c "mkdir ~/.ooni/"
+	cd ~/crossbear/OONIBear & su -c "cp ooniprobe.conf ~/.ooni/"
+
+Finally, change the ooni configuration to point at the data directory
+of the ooni-probe directory you just downloaded:
+
+	su -c "nano ~/.ooni/ooniprobe.conf"
 
 That's it. OONIBear will now be accessible to OONI.
 
 
 3) Calling OONIBear from OONI
 
-Once you've done that, change to root (sudo -s) and then activate
-the virtualenv. That's important as otherwise OONI/OONIBear won't
-find the necessary python libs (calling ooni-probe with sudo from
-within a virtualenv will kick you out of the virtualenv).
+Once you've done that, change to root using either ```sudo``` or
+ ```su``` and then activate the virtualenv. That's important as
+ otherwise OONI/OONIBear won't find the necessary python libs (calling
+ ooni-probe with sudo from within a virtualenv will kick you out of
+ the virtualenv).
 
+	su
+	export WORKON_HOME=<virtualenv directory chosen in step 1>
+	source /etc/bash_completion.d/virtualenvwrapper
 	workon oonibear
 
 Start oonibear with:
 
-	cd ooniprobe
-	bin/ooniprobe OONIBear.py
+	cd ooni-probe
+	bin/ooni-probe -n OONIBear.py
