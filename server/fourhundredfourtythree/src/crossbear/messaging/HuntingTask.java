@@ -233,6 +233,11 @@ public class HuntingTask extends Message {
      * hunting task if it has been observed for the HuntingTask's
      * scan-target.
      * 
+     * TODO|XXX: This is definitely the wrong way to do this. We have our
+     * own taskID, we can get to the cert observation via huntingtask
+     * -\> huntingtaskresult -\> certobservation. Instead, we search
+     * by hostname:port. Why? JS
+     * 
      * @param max The maximum number of hashes to be returned.
      * @param db The Database connection to use
      * @return An array of SHA256Hashes - one for each well known certificate chain for the current HuntingTask (limited by the "max" parameter)

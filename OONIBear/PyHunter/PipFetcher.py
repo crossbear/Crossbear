@@ -4,23 +4,22 @@ A Public IP Notification fetcher for Crossbear PyHunter.
 
 __author__ = "Vedat Levi Alev"
 
-
-from dns                import resolver
 import dns.rdtypes.IN.A
 import dns.rdtypes.IN.AAAA
-from Crypto.PublicKey   import RSA
-from Crypto.Cipher      import PKCS1_OAEP
-from Crypto.Cipher      import AES
-from Crypto.Random      import _UserFriendlyRNG as RNG
-from Crypto.Hash        import SHA256
-from cbutils.PKCS7         import PKCS7
-from cbutils.X509toPubKey  import extractPubKey
-from cbmessaging.Message import Message
-from cbmessaging.MessageList import MessageList
-from cbmessaging.PipReq import PipReq
-from cbmessaging.PipNot import PipNot
-import requests
 
+from dns                     import resolver
+from Crypto.PublicKey        import RSA
+from Crypto.Cipher           import PKCS1_OAEP
+from Crypto.Cipher           import AES
+from Crypto.Random           import _UserFriendlyRNG as RNG
+from Crypto.Hash             import SHA256
+from cbutils.PKCS7           import PKCS7
+from cbutils.X509toPubKey    import extractPubKey
+from cbmessaging.Message     import Message
+from cbmessaging.MessageList import MessageList
+from cbmessaging.PipReq      import PipReq
+from cbmessaging.PipNot      import PipNot
+import requests
 
 class PipFetcher(object):
     """
@@ -52,8 +51,6 @@ class PipFetcher(object):
         # For auth, the cert is enough, though.
         self.getServerIPs(cbServerHost)
 
-
-
     def getServerIPs(self, cbServerHost):
         """ 
         Looks up the ipv4 and ipv6 addresses of Crossbear server
@@ -79,9 +76,6 @@ class PipFetcher(object):
         # E.g. find out if result is empty, and exit.
         # Also, find out what WHOIS says?
 
-
-
-
     @staticmethod
     def genAESKey(key_length):
         """
@@ -95,10 +89,6 @@ class PipFetcher(object):
         """
         key = RNG.get_random_bytes( key_length / 8 )
         return key
-
-
-
-
 
     def sendPublicIPR(self, ipv, pipReq):
         """
@@ -118,6 +108,7 @@ class PipFetcher(object):
             # TODO: log
             print "Couldn't connect to the crossbear server using IPv%d" % ipv
             return None
+        
         # TODO: do we still need the try/catch?
         # Actually send via HTTP POST
         try:
@@ -135,9 +126,6 @@ class PipFetcher(object):
             print "Couldn't connect to the crossbear server using IPv%d" % ipv
             print e
             return None
-
-
-
 
     def getPublicIPN(self, ipv):
         """
@@ -175,6 +163,7 @@ class PipFetcher(object):
         hasher = SHA256.new()
         hasher.update(pText)
         aHash  = hasher.digest()
+        
         if aHash != sHash:
             # TODO: should we really crash to console here?
             raise (ValueError, "Decoding failed beccause of an unexpected" +

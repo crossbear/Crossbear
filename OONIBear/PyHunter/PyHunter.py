@@ -5,32 +5,38 @@ A crossbear hunter implementation in python.
 # NOTE all print commands should log to the ooni thingy.
 from   HTLFetcher                 import HTLFetcher
 from   cbmessaging.Message        import Message
-from   cbmessaging.MessageTypes   import messageTypes
+from   cbmessaging.MessageTypes   import messageTypes, messageNames
 from   cbmessaging.HTRepNewCert   import HTRepNewCert
 from   cbmessaging.HTRepKnownCert import HTRepKnownCert
 from   PipFetcher                 import PipFetcher
 #from   cbmessaging.CurServTime    import CurServTime
 from   time                       import time
-from   cbutils.SingleTrustHTTPS      import SingleTrustHTTPS
-from   cbutils.CertificateFetcher    import get_chain
+from   cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
+from   cbutils.CertUtils import get_chain, compute_chain_hashes
 from   Crypto.Hash                import SHA256, MD5
 from   Tracer                     import Tracer
 import random
 import ssl
 import pprint 
 import traceback
+import binascii
 
+
+from itertools import permutations
+
+
+display = lambda l : map(lambda z: binascii.hexlify(z), l)
 
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
-    def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop):
+    def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop, tracerPeriod):
 
         self.cbServerHostName    = cbServerHostName
-        self.tracer              = Tracer(tracerMHops, tracerSPerHop)
+        self.tracer              = Tracer(tracerMHops, tracerSPerHop, tracerPeriod)
         self.hts                 = {"tasks" : [], "pip": {4:{}, 6:{}}}
         self.cbServerCert        = cbServerCert
         self.pipfetcher          = PipFetcher(self.cbServerHostName, self.cbServerCert)
-        self.htlfetcher = HTLFetcher(cbServerHostName, 443, self.cbServerCert)
+        self.htlfetcher          = HTLFetcher(cbServerHostName, 443, self.cbServerCert)
 
     def getHTL(self):
         """fetchs the hunting task list"""
@@ -51,6 +57,7 @@ class PyHunter(object):
                 self.hts["tasks"].append(msg)
                 continue
         # TODO: Return useful log information
+        pprint.pprint(self.hts)
         return {}
         
     def freshen_pip(self,ipv):
@@ -60,8 +67,6 @@ class PyHunter(object):
         """
         validity = 60000
         try:
-	    print ipv
-	    print self.hts
             if (time() - self.hts["pip"][ipv]["ts"] < validity):
                 return True
         except KeyError, e:
@@ -89,102 +94,92 @@ class PyHunter(object):
 
         # TODO get this to the report
         if not self.freshen_pip(ipv):
-            print ("Skipping execution of task", ht.taskID, "due to the lack",
-                    "of fresh PublicIP for it.")
-            return
+            print "Skipping execution of task", ht.taskID, "due to the lack",\
+                    "of fresh PublicIP for it."
+            return None
 
-        # TODO get this to the report
-        print "Executing task", ht.taskID, "(", map(lambda x : x.encode("base64"), ht.knownCertHashes), ")"
-        print ht.targetIP, ht.targetPort
-        chain = get_chain(ht.targetIP,ht.targetPort)
-        pprint.pprint(chain)
-        h = SHA256.new()
-        h.update(ssl.PEM_cert_to_DER_cert(chain[0]))
-        scertH = h.hexdigest()
-
-        def md5it(c):
-            h = MD5.new()
-            h.update(c)
-            return h.hexdigest()
+        # TODO get this to the report      
         
-        #chain = chain[::-1]
-        ccmd5 = "".join(map(md5it, chain[1:]))
+        chain = get_chain(ht.targetIP,ht.targetPort)
+        
+        witness  = None
+        if ht.knownCertHashes:
 
-        # TODO get this to report
-        print "md5 of chain:", ccmd5
+            ht.cccHashs = compute_chain_hashes(chain)
+            print "Possible hashes are", display(ht.cccHashs)
 
-        h = SHA256.new()
-        h.update(scertH + ccmd5)
-        cccHash = h.digest()
 
-        # TODO get this to report
-        print "hash of server cert:",cccHash.encode("base64")
-        cert_known = any(cHash == cccHash for cHash in ht.knownCertHashes)
+            for cHash in ht.cccHashs:
+                if any(sHash == cHash for sHash in ht.knownCertHashes):
+                    witness = cHash
+                    break
 
         # TODO get this to report
         print "Tracerouting!"
-        trace      = self.tracer.traceroute(ht.targetIP)
+        trace = self.tracer.traceroute(ht.targetIP)
 
         if cert_known:
             # TODO get this to report
-            print "Cert Known!"
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.
             # Previously, it was ht.hmac, but that never existed AFAIK
-            rep.createFromValues(ht.taskID, self.hts["pip"][ipv]["not"].hmac, cccHash, trace)
-            return rep
+            rep.createFromValues(ht.taskID,
+                                 self.hts["pip"][ipv]["not"].hmac,
+                                 witness,
+                                 trace)
+        
         else:
             # TODO get this to report
-            print "Cert New!"
             rep = HTRepNewCert()
             rep.createFromValues(ht.taskID,
                                 self.hts["cs"].currentServTime(),
                                 self.hts["pip"][ipv]["not"].hmac,
                                 chain,
                                 trace)
-            return rep
-
-        # TODO get this to report
-        print "Done!"
+        return rep
+        
     def executeHTL(self):
-        nr = 0
-        htr = []
+        nr     = 0
+        htr    = []
+        report = {}
         random.shuffle(self.hts["tasks"])
         
-        for r in self.hts["tasks"]:
-            rep = self.executeHT(r)
+        for ht in self.hts["tasks"]:
 
+            print "---"
+            print "Executing task", ht.taskID
+            print "IP Address and Port", ht.targetIP, ht.targetPort
+            print "Target host name is", ht.targetHost
+            print "The known hashes are", display(ht.knownCertHashes)
+            
+            rep = self.executeHT(ht)
+            
+            report[ht.taskID]                    = {}            
+            report[ht.taskID]['known hashes']    = display(ht.knownCertHashes)
+            report[ht.taskID]['target ip']       = ht.targetIP
+            report[ht.taskID]['target port']     = ht.targetPort
+            report[ht.taskID]['target host']     = ht.targetHost
+            report[ht.taskID]['possible hashes'] = display(ht.cccHashs)
+            
             if rep:
+                print "Hunting task result",  messageNames[rep.type]
+                report[ht.taskID]['reply type'] = messageNames[rep.type]
+                report[ht.taskID]['trace'] = rep.trace
                 htr.append(rep)
                 nr += 1
                 
+            else:
+                print "Hunting task result Nil"
+                report[ht.taskID]['reply type'] = 'Nil'
+
             if nr >= 5:
                 self.send_results(htr)
                 nr = 0
                 htr = []
+                
         if htr:
             self.send_results(htr)
         # TODO: Return useful log information
-        return {}
-    
         
+        return report
         
-        
-    
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-

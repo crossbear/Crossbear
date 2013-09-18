@@ -1,0 +1,139 @@
+\RequirePackage{xkeyval}
+\RequirePackage{xcolor}
+\RequirePackage{tumcolor}
+\RequirePackage{tikz}
+
+
+% Define variables for width and height of logos
+\newcommand{\tumlogos@default@width}{0pt}
+\newcommand{\tumlogos@default@height}{0pt}
+
+\newcommand{\tumlogos@width}{\tumlogos@default@width}
+\newcommand{\tumlogos@height}{\tumlogos@default@height}
+\newlength{\tumlogos@unitlength}
+\newcommand{\tumlogos@resetlength}%
+{%
+	\setlength{\tumlogos@unitlength}{0pt}%
+}
+
+
+% Define command syntax
+\newcommand{\TUM}[1]%
+{%
+	\tumlogos@resetlength%
+	\relax%
+	\setkeys{tumlogos@all,tumlogos@TUM}{#1}%
+	\relax%
+	\csname tumlogos@TUM\endcsname%
+	\relax%
+}
+\newcommand{\NET}[1]%
+{%
+	\tumlogos@resetlength%
+	\setkeys{tumlogos@all,tumlogos@NET}{#1}%
+	\relax%
+	\csname tumlogos@NET\endcsname%
+	\relax%
+}
+\newcommand{\NETBlackTransparent}[1]%
+{%
+	\tumlogos@resetlength%
+	\setkeys{tumlogos@all,tumlogos@NET}{#1}%
+	\relax%
+	\csname tumlogos@NETBlackTransparent\endcsname%
+	\relax%
+}
+
+
+% Assign values to variables
+\define@key{tumlogos@TUM}{width}[\empty]%
+{%
+	\ifx{#1}\empty
+		\relax%
+	\else
+		\setlength{\tumlogos@unitlength}{#1}%
+		\setlength{\tumlogos@unitlength}{\tumlogos@TUM@unitwidth\tumlogos@unitlength}%
+	\fi
+}
+\define@key{tumlogos@TUM}{height}[\empty]%
+{%
+	\ifx{#1}\empty
+		\relax%
+	\else
+		\setlength{\tumlogos@unitlength}{#1}%
+		\setlength{\tumlogos@unitlength}{\tumlogos@TUM@unitheight\tumlogos@unitlength}%
+	\fi
+}
+\define@key{tumlogos@NET}{width}[\empty]%
+{%
+	\ifx{#1}\empty
+		\relax%
+	\else
+		\setlength{\tumlogos@unitlength}{#1}%
+		\setlength{\tumlogos@unitlength}{\tumlogos@NET@unitwidth\tumlogos@unitlength}%
+	\fi
+}
+\define@key{tumlogos@NET}{height}[\empty]%
+{%
+	\ifx{#1}\empty
+		\relax%
+	\else
+		\setlength{\tumlogos@unitlength}{#1}%
+		\setlength{\tumlogos@unitlength}{\tumlogos@NET@unitheight\tumlogos@unitlength}%
+	\fi
+}
+
+
+% Typeset TUM logo (black)
+% ------------------------------------------------------------------------
+\newcommand{\tumlogos@TUM@unitheight}{0.037037}
+\newcommand{\tumlogos@TUM@unitwidth}{0.019608}
+\newcommand{\tumlogos@TUM}%
+{%
+	\begin{tikzpicture}[x=\tumlogos@unitlength,y=\tumlogos@unitlength]
+		\useasboundingbox (0,0) rectangle (51,27);
+		\fill[color=TUMBlack] (5,0) -- (9.8,0) -- (9.8,22.2) -- (15.3,22.2) -- (15.3,0) -- (30.4,0) -- (30.4,22.2) -- (35.9,22.2) -- (35.9,0) -- (40.7,0) -- (40.7,22.2) -- (46.2,22.2) -- (46.2,0) -- (51,0) -- (51,27) -- (25.3,27) -- (25.3,4.8) -- (20.1,4.8) -- (20.1,27) -- (0,27) -- (0,22.2) -- (5,22.2) -- cycle;
+	\end{tikzpicture}%
+}
+% ------------------------------------------------------------------------
+
+
+% Typeset NET logo (color)
+% ------------------------------------------------------------------------
+\newcommand{\tumlogos@NET@unitheight}{0.037037}
+\newcommand{\tumlogos@NET@unitwidth}{0.019608}
+\newcommand{\tumlogos@NET}%
+{%
+	\begin{tikzpicture}[x=\tumlogos@unitlength,y=\tumlogos@unitlength]
+		\useasboundingbox (0,0) rectangle (30,30);
+		\fill[fill=I8LogoRed] (0,0) to (30,0) to (30,30) to (0,30) to (0,0);
+        \fill[fill=white] (0.0000,2.0408) to (16.7347,30.0000) to (15.5455,30.0000) to (0.0000,4.0277);
+        \fill[fill=white] (4.6939,0.0000) to (30.0000,25.5102) to (30.0000,26.9591) to (3.2566,0.0000);
+        \fill[fill=white] (19.7959,0.0000) to (11.8367,30.0000) to (10.7810,30.0000) to (18.7402,0.0000);
+        \fill[fill=white] (24.4898,0.0000) to (0.0000,13.6735) to (0.0000,12.6531) to (22.6622,0.00000);
+        \fill[fill=white] (30.0000,19.1837) to (0.0000,23.6736) to (0.0000,22.6418) to (30.0000,18.1519);
+        %\draw[draw=black,line width=1.2pt] (0,0) to (1,0);
+	\end{tikzpicture}%
+}
+% ------------------------------------------------------------------------
+
+
+% Typeset NET logo black/white
+% ------------------------------------------------------------------------
+\newcommand{\tumlogos@NETBlackTransparent@unitheight}{0.037037}
+\newcommand{\tumlogos@NETBlackTransparent@unitwidth}{0.019608}
+\newcommand{\tumlogos@NETBlackTransparent}%
+{%
+	\begin{tikzpicture}[x=\tumlogos@unitlength,y=\tumlogos@unitlength]
+		\useasboundingbox (0,0) rectangle (30,30);
+		\fill[fill=TUMBlack!15] (0,0) to (30,0) to (30,30) to (0,30) to (0,0);
+        \fill[fill=white] (0.0000,2.0408) to (16.7347,30.0000) to (15.5455,30.0000) to (0.0000,4.0277);
+        \fill[fill=white] (4.6939,0.0000) to (30.0000,25.5102) to (30.0000,26.9591) to (3.2566,0.0000);
+        \fill[fill=white] (19.7959,0.0000) to (11.8367,30.0000) to (10.7810,30.0000) to (18.7402,0.0000);
+        \fill[fill=white] (24.4898,0.0000) to (0.0000,13.6735) to (0.0000,12.6531) to (22.6622,0.00000);
+        \fill[fill=white] (30.0000,19.1837) to (0.0000,23.6736) to (0.0000,22.6418) to (30.0000,18.1519);
+        %\draw[draw=black,line width=1.2pt] (0,0) to (1,0);
+	\end{tikzpicture}%
+}
+% ------------------------------------------------------------------------
+
