@@ -88,9 +88,8 @@ Crossbear.CBNet = function (cbFrontend) {
 				httpRequest.setRequestHeader("Host", hostName);
 
 				// Convert the Post-data into a suitable format and send it
-				var bb = new MozBlobBuilder();
-				bb.append(postData.buffer);
-				httpRequest.send(bb.getBlob('application/octet-stream'));
+				var bb = new Blob([postData.buffer], {"type": 'application/octet-stream'});
+				httpRequest.send(bb);
 
 			} catch (e) {
 				cbFrontend.displayTechnicalFailure("CBNet:postBinaryRetrieveBinaryFromUrl: could not connect to the specified server: " + e, true);

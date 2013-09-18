@@ -21,7 +21,7 @@
  * @author Thomas Riedmaier
  */
 
-if (typeof Crossbear == "undefined") {
+if ((typeof Crossbear) == "undefined") {
 	var Crossbear = {
 			
 		/**
