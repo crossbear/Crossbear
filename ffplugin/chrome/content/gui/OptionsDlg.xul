@@ -31,7 +31,8 @@
   ondialogcancel="return cancel();"
   onload="onLoad();">
   
-    <!-- Include scripts -->
+  <!-- Include scripts -->
+  <script type="application/javascript" src="chrome://crossbear/content/CBHelper.js"/>
   <script type="application/javascript" src="chrome://crossbear/content/gui/OptionsDlg.js"/>
     
   <!-- Dialog Header -->
