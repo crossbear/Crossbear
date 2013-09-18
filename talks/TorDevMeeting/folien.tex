@@ -1,0 +1,62 @@
+\documentclass[t]{beamer}
+\usepackage{pgf}
+\usepackage{helvet}
+\usepackage{calc}
+\usepackage[utf8]{inputenc} % set your input encoding differently, if you want
+\usepackage[english]{babel}
+
+% Setting style of presentation
+% =============================
+\usetheme{NET}
+\setbeamercovered{transparent=10}
+\setbeamertemplate{navigation symbols}{}
+
+
+% Some common packages
+% ====================
+\usepackage{units}
+\usepackage{amsbsy}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{wasysym}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{epsf}
+\usepackage{epsfig}
+\usepackage{fixmath}
+\usepackage{wrapfig}
+\usepackage{subfigure}
+
+\DeclareMathOperator{\loca}{locate}
+\newcommand{\hairspace}{\hspace{1pt}}
+\newcommand{\eg}{\mbox{e.\hairspace{}g.,}\xspace}
+\newcommand{\ie}{\mbox{i.\hairspace{}e.,}\xspace}
+\newcommand{\Wlog}{\mbox{W.\hairspace{}l.\hairspace{}o.\hairspace{}g.}\xspace}
+
+
+% \newtheorem{satz}{Satz}
+% \newcommand{\myfont}{\Small}
+
+% Adapt title information
+% =======================
+\title[Crossbear: A short introduction]{Crossbear, a short introduction}
+\author[Ralph Holz, Jan Seeger, Vedat Levi Alev]{Ralph Holz, Jan Seeger, Vedat Levi Alev}
+\institute{Network Architectures and Services \\ Technische Universität München}
+\date{25.7.2013}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\include{introduction}
+\include{crossbear}
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

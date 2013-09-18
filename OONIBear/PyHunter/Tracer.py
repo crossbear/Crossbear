@@ -14,14 +14,16 @@ class Tracer(object):
     """
 
     # TODO: rename these variables in init
-    def __init__(self, mHops, sperHop):
+    def __init__(self, mHops, sperHop, period):
         self.mHops   = mHops
         self.sperHop = sperHop
+        self.period  = period
 
 
     # TODO: can we replace this with OONI's traceroute or do we insist
     # on having our own for comparability?
     def traceroute(self, dst , dst_port=3880, src_port=3000):
+
         """
         Carry out a traceroute to a destination.
         Arguments:
@@ -35,7 +37,9 @@ class Tracer(object):
         ttl    = 1
         hops   = []
         success = False
+        last    = ""
         for ttl in range(1, self.mHops):
+            
             if success:
                 break
             samples = []
@@ -58,7 +62,8 @@ class Tracer(object):
                 try:
                     _, curr_addr = recv_sock.recvfrom(512)
                     curr_addr = curr_addr[0]
-                
+                    if curr_addr:
+                        last = curr_addr
                 except socket.error:
                     # no message received
                     pass
@@ -71,9 +76,18 @@ class Tracer(object):
                     success = True
                 elif curr_addr is not None:
                     samples.append("%s" % curr_addr)
+
+            if ttl % self.period == 1:
+                print 'TTL %s; Current hop %s' % (ttl, last)
+            
             # TODO: document
             samples = "|".join(samples)
             hops.append(samples)
-        # TODO: document
-        return "\n".join(filter(lambda x: x, hops)) + ("%s" % dst)
-
+            
+        if ttl % self.period != 1:
+            print 'TTL %s; Current hop %s' % (ttl, last)
+            
+        # remove empty samples, interleave the rest with new lines
+        filtered = '\n'.join(filter(lambda x: x, hops))
+        # add the host address to this chunk
+        return (filtered + '\n' + '%s' % dst).strip()

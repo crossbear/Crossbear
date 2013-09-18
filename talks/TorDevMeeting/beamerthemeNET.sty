@@ -1,0 +1,126 @@
+\ProvidesPackage{beamerthemeNET}
+\RequirePackage{tumlogos}
+\RequirePackage{tumcolor}
+
+\mode<presentation>
+\beamertemplatelargetitlepage
+\beamertemplatelargepartpage
+\beamertemplatelargeframetitle
+\beamertemplatelargeblocks
+\beamertemplateplaintoc
+
+% Set colors for text and, headline, footline, and sidebar
+% ------------------------------------------------------------------------
+\setbeamercolor{alerted text}{fg=TUMBlack}
+\setbeamercolor{structure}{fg=TUMBlack}
+\setbeamercolor{frametitle}{fg=TUMBlack}
+\setbeamercolor{separation line}{bg=TUMBlack!80}
+\setbeamercolor{sidebar}        {bg=I8Blue}
+\setbeamercolor{headline}       {bg=I8LightBlue,fg=black}
+\setbeamercolor{headline right} {bg=I8DarkBlue,fg=black}
+\setbeamercolor{footline}       {bg=I8DarkBlue,fg=black}
+\setbeamercolor{footline right} {bg=I8LightBlue,fg=black}
+% ------------------------------------------------------------------------
+
+% Template is based on the sidebar outerhtheme
+\useoutertheme[right]{sidebar}
+
+% Template does not adapt automatically to new sizes but it is straight-forward to fix it.
+\def \headerheight {10ex}
+\def \sidebarwidth {.05\paperwidth}
+\def \nonsidebarwidth {.95\paperwidth}
+\def \footlinelogowidth {.12\paperwidth}
+\def \footlineinfowidth {0.84\paperwidth}
+
+% Set items to squares instead of circles
+\setbeamertemplate{itemize items}[square]
+\setbeamertemplate{enumerate items}[square]
+\setbeamertemplate{sections/subsections in toc}[square]
+\setbeamerfont{block title}{series=\bfseries}
+\setbeamerfont{title}{series=\bfseries}
+
+% This selects my favorite font type for math mode and provides bold vectors as used by MSV
+\usefonttheme{professionalfonts}
+\SetSymbolFont{operators}{normal}{OT1}{cmss}{m}{n}
+\DeclareMathAlphabet{\mathnorm}{OML}{lmr}{m}{n}
+\DeclareMathAlphabet{\mathbit}{OML}{cmr}{bx}{it}
+
+
+% FRAMTITLE
+% ------------------------------------------------------------------------
+\defbeamertemplate*{frametitle}{moepi theme}
+{%
+    \leftskip=4ex%
+    \vskip-3.8ex%
+    \usebeamercolor[fg]{frametitle}\usebeamerfont{frametitle}\textbf{\insertframetitle}\par%
+    \vskip1ex%
+}%
+% ------------------------------------------------------------------------
+
+
+% SIDEBAR
+% ------------------------------------------------------------------------
+\setbeamersize{sidebar width right=\sidebarwidth}
+\defbeamertemplate*{sidebar right}{moepi theme}
+{%
+    \begin{beamercolorbox}[wd=0.3ex,ht=\paperwidth]{separation line}%
+    \end{beamercolorbox}%
+}%
+% ------------------------------------------------------------------------
+
+
+% HEADLINE
+% ------------------------------------------------------------------------
+\defbeamertemplate*{headline}{moepi theme}{%
+    \hbox{%
+		\begin{beamercolorbox}[wd=\nonsidebarwidth,ht=\headerheight,left]{headline}%
+            \leftskip3ex%
+            \NET{width=12ex}%
+            \vskip1.5ex%
+		\end{beamercolorbox}%
+		\begin{beamercolorbox}[wd=\sidebarwidth,ht=\headerheight,left]{headline right}%
+		\end{beamercolorbox}%
+	}\par%
+	
+	\begin{beamercolorbox}[wd=\paperwidth,ht=0.2ex]{lower separation line head}%
+	\end{beamercolorbox}%
+	
+	\vskip-\headerheight%
+	\vskip-0.2ex%
+	\hskip\nonsidebarwidth%
+	\begin{beamercolorbox}[wd=0.2ex,ht=\headerheight]{lower separation line head}%
+	\end{beamercolorbox}%
+	\vskip0pt%
+}
+% ------------------------------------------------------------------------
+
+
+% FOOTLINE
+% ------------------------------------------------------------------------
+\defbeamertemplate*{footline}{moepi theme}{%
+    \begin{beamercolorbox}[wd=\paperwidth,ht=0.2ex]{upper separation line foot}%
+    \end{beamercolorbox}%
+    \hbox{%
+        \begin{beamercolorbox}[wd=\footlinelogowidth,ht=5ex,left]{footline}%
+           \leftskip3ex%
+           \hbox{\TUM{width=6ex}}%
+           \vskip1ex%
+        \end{beamercolorbox}%
+        \leftskip-0.01\paperwidth%
+        \begin{beamercolorbox}[wd=\footlineinfowidth,ht=5ex,left]{footline}%
+            \hbox{\insertshortauthor {:} \insertshorttitle}%
+            \vskip1.5ex
+        \end{beamercolorbox}%
+        \begin{beamercolorbox}[wd=\sidebarwidth,ht=5ex,center]{footline right}%
+            \hbox{\insertframenumber}
+            \vskip1.8ex
+        \end{beamercolorbox}%
+    }%
+    
+    \vskip-5.1ex%
+    \hskip\nonsidebarwidth%
+    \begin{beamercolorbox}[wd=0.2ex,ht=5ex]{upper separation line foot}%
+    \end{beamercolorbox}%
+}
+% ------------------------------------------------------------------------
+

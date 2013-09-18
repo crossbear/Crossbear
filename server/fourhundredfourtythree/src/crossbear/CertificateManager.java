@@ -176,12 +176,14 @@ public class CertificateManager {
 		// Go through all Elements of the chain
 		Iterator<X509Certificate> iter = certList.iterator();
 		while (iter.hasNext()) {
-			// Get the PEM-encoding for each certificate, calculate its MD5-hash and append its HEX-String representation to the output
+			// Get the PEM-encoding for each certificate,
+			// calculate its MD5-hash and append its
+			// HEX-String representation to the output
 		    String hulla = getPemEncoding(iter.next());
-		    System.out.println("PEM encoding: " + hulla);
+		    //System.out.println("PEM encoding: " + hulla);
 		    String m = Message.byteArrayToHexString(MD5(hulla.getBytes("UTF-8")));
-		    System.out.println("My hash is: " + m);
-			re.append(m);
+		    //System.out.println("My hash is: " + m);
+		    re.append(m);
 		}
 
 		return re.toString();
@@ -253,7 +255,7 @@ public class CertificateManager {
 	 */
 	private static String getPemEncoding(X509Certificate cert) throws CertificateEncodingException {
 
-		// Get the bytes of the certificate and encode them in base64
+		// Get the bytes of the certificate(DER) and encode them in base64
 		String base64EncodedCert = new String(Base64.encode(cert.getEncoded()));
 
 		// Write the PEM header
@@ -448,13 +450,22 @@ public class CertificateManager {
 		Long re;
 		SQLException lastSQLException = null;
 
-		// Calculate the certificate's SHA256-Hash
+		// Calculate the certificate's SHA256-Hash.
+		// 
+		// XXX|TODO: This uses a ASN.1 DER certificate, while
+		// we normally use PEM encoding in the chain.
 		String certSHA256 = Message.byteArrayToHexString(SHA256(cert.getEncoded()));
 
 		/*
-		 * "Insert-if-not-exists" requires two SQL statements. Since the state of the database might change in between the two statements transactions are used. Transactions might fail on commit. The
-		 * only legal reason for that is that the entry that should be inserted has already been inserted in the meantime. In that case try getting that entry and if that succeeded go on. If that
-		 * failed again then there is a real problem and an exception is thrown.
+		 * "Insert-if-not-exists" requires two SQL
+		 * statements. Since the state of the database might
+		 * change in between the two statements transactions
+		 * are used. Transactions might fail on commit. The
+		 * only legal reason for that is that the entry that
+		 * should be inserted has already been inserted in the
+		 * meantime. In that case try getting that entry and
+		 * if that succeeded go on. If that failed again then
+		 * there is a real problem and an exception is thrown.
 		 */
 		db.setAutoCommit(false);
 		for (int i = 0; i < 2; i++) {
@@ -492,7 +503,7 @@ public class CertificateManager {
 							Object[] params2 = { certSHA256, certSHA1, cert.getEncoded(), certPemMd5, certPem };
 							key = db.executeInsert("INSERT INTO ServerCerts (SHA256DERHash,SHA1DERHash, DERRaw, MD5PEMHash, PEMRaw) VALUES (?,?,?,?,?)", params2);
 						} else {
-							
+							// certChainSha256 = (String)SHA256((byte[])((String)SHA256(Certificate-DER) + (String)(MD5(Chaincerts-PEM)))
 							String certChainSHA256 = Message.byteArrayToHexString(SHA256(Message.hexStringToByteArray(certSHA256+certChainMd5)));
 									
 							Object[] params2 = { certSHA256, certSHA1, cert.getEncoded(), certPemMd5, certPem, certChainMd5,certChainSHA256 };
@@ -882,7 +893,7 @@ public class CertificateManager {
 			// Remove the server's certificate from the chain
 			validatedChain.removeFirst();
 
-			// Get the concatenation of the md5 hashes of the chain's certificates ...
+			// Get the concatenation of the md5 hashes of the chain's certificates in PEM form
 			certChainMD5 = getCertChainMD5(validatedChain);
 		}
 
@@ -920,8 +931,14 @@ public class CertificateManager {
 		Collections.copy(certChain,in);
 
 		/*
-		 * The chain's terminator might be inside the system's root-CA KeyStore. If a chain is only valid if it is terminated (i.e. endMustBeSelfSigned==true ) and it is not yet terminated, the
-		 * system's root-CA KeyStore is used as Set of possible trust anchors. If that is not true the last element of the certificate chain is used as only possible trust anchor.
+		 * The chain's terminator might be inside the system's
+		 * root-CA KeyStore. If a chain is only valid if it is
+		 * terminated (i.e. endMustBeSelfSigned==true ) and it
+		 * is not yet terminated, the system's root-CA
+		 * KeyStore is used as Set of possible trust
+		 * anchors. If that is not true the last element of
+		 * the certificate chain is used as only possible
+		 * trust anchor.
 		 */
 		PKIXParameters params;
 		if (endMustBeSelfSigned && !isSelfSigned(certChain.getLast())) {

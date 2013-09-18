@@ -22,8 +22,7 @@ from misc.Scanner import Scanner
 class GeoIPScanner(Scanner):
 	def __init__(self, main_config_file_loc):
 		super(GeoIPScanner, self).__init__(main_config_file_loc)
-		
-		# Fetch information regarding MaxMind DB from glaobl config file
+		# Fetch information regarding MaxMind DB from global config file
 		self.dbpath = self.mainConfig.get("geoloc", "dbpath")
 		self.maxMind = MaxMind.MaxMind(self.dbpath)
 
@@ -31,9 +30,10 @@ class GeoIPScanner(Scanner):
 		cur = self.db.cursor()
 		sql = "INSERT INTO geo_results (ip, city, region_name, region, time_zone, longitude, latitude, metro_code, country_code, country_code3, country_name, postal_code, dma_code, ipStart, ipEnd) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
 		for ip in ips:
-			record = self.maxMind.queryDB(ip)
-			cur.execute(sql, tuple([record[i] for i in ['address', 'city', 'region_name', 'region', 'time_zone', 'longitude', 'latitude', 'metro_code', 'country_code', 'country_code3', 'country_name', 'postal_code', 'dma_code', 'ipStart', 'ipEnd']]))
-		cur.close()
+                        if not self.cached(ip):
+                                record = self.maxMind.queryDB(ip)
+                                cur.execute(sql, tuple([record[i] for i in ['address', 'city', 'region_name', 'region', 'time_zone', 'longitude', 'latitude', 'metro_code', 'country_code', 'country_code3', 'country_name', 'postal_code', 'dma_code', 'ipStart', 'ipEnd']]))
+                                cur.close()
 
 
 if __name__ == "__main__":

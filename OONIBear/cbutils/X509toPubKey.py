@@ -6,7 +6,6 @@ Extract the public key from an x.509 certificate.
 import Crypto.Util.asn1 as cua
 import re
 
-
 def extractPubKey(cert,format='DER'):
     """
     Extract the public key from an x.509 certificate.
