@@ -1,51 +1,16 @@
 #!/usr/bin/python
+from database import DB
+from graphfactory import GraphFactory
+import argparse
 
-from sys import argv
-from ConfigParser import SafeConfigParser
-import psycopg2
-import psycopg2.extras
-import pygraphviz as pgv
+parser = argparse.ArgumentParser(description="Graphs crossbear traces.")
+parser.add_argument("-i", "--intersecting", action = "store_true")
 
-class TraceDB(object):
-    def __init__(self, config_file):
-        self.config = SafeConfigParser()
-        self.config.read(config_file)
-        self.tracedb = psycopg2.connect(
-            host = self.config.get("tracedb", "host"),
-            user = self.config.get("tracedb", "user"),
-            database = self.config.get("tracedb", "dbname"),
-            password = self.config.get("tracedb", "password"))
-        
-    def traces(self, huntingtaskid):
-        cursor = self.tracedb.cursor(cursor_factory = psycopg2.extras.DictCursor)
-        cursor.execute("SELECT trace FROM huntingtaskresults WHERE huntingtaskid = %s;", (huntingtaskid,))
-        for row in cursor:
-            result = []
-            for line in row['trace'].split("\n"):
-                result.append(line.split("|"))
-            yield result
-        cursor.close()
-
-if len(argv) != 3:
-    print "Plese call with \"graph-traceroute.py <config file> <huntingtask id>\"."
-    exit(1)
-
-# TODO: use sensible variable names
-tdb = TraceDB(argv[1])
-g = pgv.AGraph(directed = True, rankdir = 'LR')
-
-for singletrace in tdb.traces(argv[2]):
-    prevnodes = []
-    for nextnodes in singletrace:
-        for node in nextnodes:
-            for prevnode in prevnodes:
-                g.add_edge(prevnode,node)
-        prevnodes = nextnodes
-
-g.layout(prog = "dot")
-g.draw("test.png")
-
-# TODO:
-# * Colour victim destination node: blue
-# * Colour victim client node: blue
-# * 
+args = parser.parse_args()
+db = DB("analyser.config")
+graphoptions = {}
+if (args.intersecting):
+    graphoptions = {"intersecting": True}
+gf = GraphFactory(**graphoptions)
+g = gf.tograph(db.traces(1))
+g.draw_to_json("out.json")
