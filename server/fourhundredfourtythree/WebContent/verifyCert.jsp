@@ -18,7 +18,7 @@
     Original authors: Thomas Riedmaier, Ralph Holz (TU Muenchen, Germany)
 */
 
---%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream"
+--%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.io.File"
 	 language="java"
 	contentType="application/octet-stream"
 	%><%!
@@ -129,7 +129,11 @@
 		if(reply == null){
 			// Can we also cache the signature of the Message? Should be okay, since the message doesn't change much.
 			MessageList ml = cvrp.process();
-			SignatureMessage sigm = new SignatureMessage(ml.getBytes(), properties.getProperty("privatekey.path"));
+			SignatureMessage sigm = new SignatureMessage(ml.getBytes(),
+								     properties.getProperty("pkey.keystoreFile"),
+								     properties.getProperty("pkey.keystorePassword"),
+								     properties.getProperty("pkey.alias"),
+								     properties.getProperty("pkey.password"));
 			ml.add(sigm);
 			// If that failed calculate the reply ...
 			reply = ml.getBytes();
