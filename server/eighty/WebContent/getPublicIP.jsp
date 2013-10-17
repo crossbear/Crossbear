@@ -1,5 +1,8 @@
-<%--
-    This file is part of Crossbear.
+<%@ page
+	import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.*"
+	language="java"
+	contentType="application/octet-stream" %><%!
+/*    This file is part of Crossbear.
 
     Crossbear is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,11 +18,7 @@
     along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
 
     Original authors: Thomas Riedmaier, Ralph Holz (TU Muenchen, Germany)
---%><%@ page
-	import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.*"
-	language="java"
-	contentType="application/octet-stream"
-	%><%!
+*/	
 	/*
 	* getPublicIP.jsp is - unlike all other pages - meant to be accessed over plain http. This is necessary since it's not possible to acces
 	* a server over https using it's ip, which in turn needs to be done since the desired output of this page is an PublicIP of a certain version.
@@ -55,7 +54,7 @@
 			Security.addProvider(new BouncyCastleProvider());
 
 			// Load the porperties and settings from the config file
-			properties = new Properties(contextPath.concat("../../crossbear.properties"))
+			properties = new Properties(contextPath.concat("../../crossbear.properties"));
 					
 			/*
 			* Like mentioned above the PublicIPNotifProcessor needs to load the RSA key on initilization.
