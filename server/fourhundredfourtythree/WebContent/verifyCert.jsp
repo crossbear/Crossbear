@@ -1,5 +1,9 @@
-<%--
-/*
+<%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.io.File"
+	 language="java"
+	contentType="application/octet-stream"
+	%><%!
+
+	/*
     This file is part of Crossbear.
 
     Crossbear is free software: you can redistribute it and/or modify
@@ -17,11 +21,6 @@
 
     Original authors: Thomas Riedmaier, Ralph Holz (TU Muenchen, Germany)
 */
-
---%><%@ page import="crossbear.*,crossbear.messaging.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.io.File"
-	 language="java"
-	contentType="application/octet-stream"
-	%><%!
 	
 	/*
 	* verifyCert.jsp takes as input a CertVerifyRequest-message. If the request is valid a check is performed if it has been
