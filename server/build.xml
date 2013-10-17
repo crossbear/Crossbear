@@ -1,28 +1,33 @@
 <project name="crossbear" default="compile-both">
-        <target name="clean">
-                <delete dir="eighty/WebContent/WEB-INF/classes/"/>
-		<delete dir="fourhundredfourtythree/WebContent/WEB-INF/classes/"/>
-        </target>
+  <target name="clean">
+    <delete dir="eighty/WebContent/WEB-INF/classes/"/>
+    <delete dir="fourhundredfourtythree/WebContent/WEB-INF/classes/"/>
+    <delete file="eighty/WebContent/WEB-INF/lib/crossbear.jar"/>
+  </target>
 
-	<target name="compile-both" depends="compile-fourhundredfourtythree,compile-eighty"/>
-        
-	<target name="compile-eighty">
-                <mkdir dir="eighty/WebContent/WEB-INF/classes/"/>
-                <javac srcdir="eighty/src/" destdir="eighty/WebContent/WEB-INF/classes/" includeantruntime="false">
-                        <classpath>
-				<pathelement path="fourhundredfourtythree/WebContent/WEB-INF/classes/"/>
-                                <fileset dir="eighty/WebContent/WEB-INF/lib/" includes="*.jar"/>
-                        </classpath>
-                </javac>
-        </target>
+  <target name="compile-both" depends="compile-fourhundredfourtythree,compile-eighty"/>
+  
+  <target name="compile-eighty" depends="jar-crossbear">
+    <mkdir dir="eighty/WebContent/WEB-INF/classes/"/>
+    <javac srcdir="eighty/src/" destdir="eighty/WebContent/WEB-INF/classes/" includeantruntime="false">
+      <classpath>
+        <fileset dir="eighty/WebContent/WEB-INF/lib/" includes="*.jar"/>
+      </classpath>
+    </javac>
+  </target>
 
-        <target name="compile-fourhundredfourtythree">
-                <mkdir dir="fourhundredfourtythree/WebContent/WEB-INF/classes/"/>
-                <javac srcdir="fourhundredfourtythree/src/" destdir="fourhundredfourtythree/WebContent/WEB-INF/classes/" includeantruntime="false">
-                        <classpath>
-                                <fileset dir="fourhundredfourtythree/WebContent/WEB-INF/lib/" includes="*.jar"/>
-                        </classpath>
-                </javac>
-        </target>
+  <target name="compile-fourhundredfourtythree">
+    <mkdir dir="fourhundredfourtythree/WebContent/WEB-INF/classes/"/>
+    <javac srcdir="fourhundredfourtythree/src/" destdir="fourhundredfourtythree/WebContent/WEB-INF/classes/" includeantruntime="false">
+      <classpath>
+        <fileset dir="fourhundredfourtythree/WebContent/WEB-INF/lib/" includes="*.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="jar-crossbear" depends="compile-fourhundredfourtythree">
+    <mkdir dir="eighty/WebContent/WEB-INF/lib/"/>
+    <jar destfile="eighty/WebContent/WEB-INF/lib/crossbear.jar" basedir="fourhundredfourtythree/WebContent/WEB-INF/classes/"/>
+  </target>
 </project>
 
