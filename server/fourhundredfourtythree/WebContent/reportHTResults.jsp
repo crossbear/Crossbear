@@ -17,7 +17,7 @@
 
     Original authors: Thomas Riedmaier, Ralph Holz (TU München, Germany)
 
---%><%@ page import="crossbear.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream"
+--%><%@ page import="crossbear.*,org.bouncycastle.jce.provider.BouncyCastleProvider,java.security.*,java.io.OutputStream,java.io.File"
 	language="java" 
 	contentType="application/octet-stream"
 %><%!
