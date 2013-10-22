@@ -438,17 +438,17 @@ Crossbear.CBProtector = function (cbFrontend) {
 			
 			// Display the warning dialog to the user and ask him/her to send the certificate chain to the Crossbear-Team
 			var emailLinkText = "mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+hostIPPort+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User";
-			var mitmWarningXML = document.implementation.createDocument(null, "p", null);
-                        var mitmWarning = mitmWarningXML.createTextNode("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a man-in-the-middle! This means an attacker can potentially read and alter everything you send from your browser!");
-			var brElement = mitmWarningXML.createElement("br");
-			var emailRequest = mitmWarningXML.createElement("a");
+			var mitmWarningXML = document.createDocumentFragment()
+                        var mitmWarning = document.createTextNode("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a man-in-the-middle! This means an attacker can potentially read and alter everything you send from your browser!");
+			var brElement = document.createElement("br");
+			var emailRequest = document.createElement("a");
 			emailRequest.setAttribute("style", "text-decoration:underline");
                         emailRequest.setAttribute("href", emailLinkText);
-                        var mitmWarningHeader = mitmWarningXML.createTextNode("You could do the research community a big favor by ");
-			var emailText = mitmWarningXML.createTextNode(" sending an e-mail ");
-                        var mitmWarningTrailer = mitmWarningXML.createTextNode(" to the Crossbear team.");
+                        var mitmWarningHeader = document.createTextNode("You could do the research community a big favor by ");
+			var emailText = document.createTextNode(" sending an e-mail ");
+                        var mitmWarningTrailer = document.createTextNode(" to the Crossbear team.");
 			emailRequest.appendChild(emailText);
-			mitmWarningXML.appendChild(mitmWarning);
+		        mitmWarningXML.appendChild(mitmWarning);
 			mitmWarningXML.appendChild(brElement);
 			mitmWarningXML.appendChild(mitmWarningHeader);
 			mitmWarningXML.appendChild(emailRequest);

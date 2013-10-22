@@ -241,8 +241,8 @@ Crossbear.CBFrontend = function (cbServerName) {
 			// Check if Convergence is installed. If it is: deactivate Crossbear!  
 		    AddonManager.getAddonByID("convergence@extension.thoughtcrime.org", function(addon) {  
 		      if(addon != null && addon.isActive){
-		          var convergenceWarningXML = document.implementation.createDocument(null, "p", null);
-			  var convergenceWarning = convergenceWarningXML.createTextNode("You are running Convergence. Since Crossbear cannot operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two add-ons. Note that Crossbear queries Convergence, so there is no need for the latter.");
+		          var convergenceWarningXML = document.createDocumentFragment()
+			  var convergenceWarning = document.createTextNode("You are running Convergence. Since Crossbear cannot operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two add-ons. Note that Crossbear queries Convergence, so there is no need for the latter.");
                           convergenceWarningXML.appendChild(convergenceWarning);
 		    	  self.warnUserAboutBeingUnderAttack(convergenceWarningXML, 0);
 		    	  self.shutdown(true);

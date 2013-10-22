@@ -233,8 +233,8 @@ Crossbear.CBHunter = function (cbFrontend) {
 					
 					// If somebody tampered with the data: Warn the user!
 					if (!Crossbear.arrayCompare(supposedHash, actualHash)) {
-					        var tamperWarningXML = document.implementation.createDocument(null, "p", null);
-                                                var tamperWarning = tamperWarningXML.createTextNode("Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.");
+					        var tamperWarningXML = document.createDocumentFragment()
+                                                var tamperWarning = document.createTextNode("Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.");
                     				tamperWarningXML.appendChild(tamperWarning);
 						cbFrontend.warnUserAboutBeingUnderAttack(tamperWarningXML,5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: received invalid input: "+plaintext+supposedHash+":"+actualHash, true);
@@ -338,9 +338,9 @@ Crossbear.CBHunter = function (cbFrontend) {
 						
 					// If it's neither then something went wrong
 					} else {
-						var dnsWarningXML = document.implementation.createDocument(null, "p", null);
+						var dnsWarningXML = document.createDocumentFragment()
 						// TODO: actually output {currentAddr}
-						var dnsWarning = dnsWarningXML.createTextNode("Your DNS server generates generates invalid DNS entries.");
+						var dnsWarning = document.createTextNode("Your DNS server generates generates invalid DNS entries.");
 						dnsWarningXML.appendChild(dnsWarning);
 						cbFrontend.warnUserAboutBeingUnderAttack(dnsWarningXML,5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receiveCBServerIPs: parsing DNS entry failed: "+currentAddr, true);

@@ -89,7 +89,7 @@ function convertJudgmentToXML(judgment){
 	
 	// Wrap the judgment's XML in a paragraph
 	// Changed use of E4X to DOMParser/Serializer
-	var judgmentXML = document.implementation.createDocument(null, "p", null);
+	var judgmentXML = document.createDocumentFragment()
 	
 	// Split the textual representation to get the single judgments
 	var judgmentLines = judgment.split("\n");
@@ -99,7 +99,7 @@ function convertJudgmentToXML(judgment){
 		
 		// Between two consecutive judgments: add a linebreak
 		if(i != 0){
-			var brElement = judgmentXML.createElement("br");
+			var brElement = document.createElement("br");
 			judgmentXML.appendChild(brElement);
 		}
 		
@@ -108,10 +108,10 @@ function convertJudgmentToXML(judgment){
 			
 			// Add a critical judgment to the judgment paragraph (color:red and weight:bold)
 			// TODO: This use of font is horribly deprecated - beautify
-			var fontElement = judgmentXML.createElement("font");
+			var fontElement = document.createElement("font");
 			fontElement.setAttribute("color","red");
-			var bElement = judgmentXML.createElement("b");
-			var bContent = judgmentXML.createTextNode({judgmentLines[i].substr(6,judgmentLines[i].length-13)});
+			var bElement = document.createElement("b");
+			var bContent = document.createTextNode(judgmentLines[i].substr(6,judgmentLines[i].length-13));
 			bElement.appendChild(bContent);
 			fontElement.appendChild(bElement);
 			judgmentXML.appendChild(fontElement);
@@ -121,7 +121,7 @@ function convertJudgmentToXML(judgment){
 		} else {
 			
 			// Add a normal judgment to the judgment paragraph
-			var normalContent = judgmentXML.createTextNode({judgmentLines[i]});
+			var normalContent = document.createTextNode(judgmentLines[i]);
 			judgmentXML.appendChild(normalContent);
 			//judgmentXML.appendChild(<>{judgmentLines[i]}</>);
 			
