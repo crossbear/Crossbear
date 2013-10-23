@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8 -*-
 /*
     This file is part of Crossbear.
 
@@ -72,9 +73,10 @@ Crossbear.CBFrontend = function (cbServerName) {
 		 * @param critical If True Crossbear will be shut down after the displaying the exception
 		 */
 		Crossbear.CBFrontend.prototype.displayTechnicalFailure = function displayTechnicalFailure(what, critical) {
-			
+
+			var trace = new Error().stack;
 			// Display the message of the failure in the "Error"-tab of the Error Console
-			Components.utils.reportError(what);
+			Components.utils.reportError(what + "Trace: \n" + trace);
 			
 			// If the exception was a critical one: Shutdown the system ...
 			if (critical) {
