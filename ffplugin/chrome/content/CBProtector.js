@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8; -*- */
 /*
     This file is part of Crossbear.
 
@@ -275,7 +276,6 @@ Crossbear.CBProtector = function (cbFrontend) {
 
 			// Check if the server's reply has entirely been received
 			if ((this.readyState == 4) && (this.status == 200)) {
-
 				// If yes: check if that reply actually contained data
 				var output = this.response;
 				if (output) {

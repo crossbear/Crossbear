@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8; -*-
 /*
     This file is part of Crossbear.
 
@@ -86,6 +87,14 @@ Crossbear.CBNet = function (cbFrontend) {
 				
 				// Set the HTTP-Host-Header (required if several domains are hosted on a single IP)
 				httpRequest.setRequestHeader("Host", hostName);
+
+				// Open debug file and write post data
+				// Components.utils.import("resource://gre/modules/FileUtils.jsm");
+				// var file = new FileUtils.File("/home/jeeger/posted" + serverUrl.replace(/\//g, ''));
+				// var stream = FileUtils.openFileOutputStream(file,FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
+				// var binarystream = Components.classes["@mozilla.org/binaryoutputstream;1"].createInstance(Components.interfaces.nsIBinaryOutputStream);
+				// binarystream.setOutputStream(stream)
+				// binarystream.writeByteArray(postData, postData.length)
 
 				// Convert the Post-data into a suitable format and send it
 				var bb = new Blob([postData.buffer], {"type": 'application/octet-stream'});
