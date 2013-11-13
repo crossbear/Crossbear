@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "linux_ping.c"
+#include "ping_linux.c"
 
 int main(int argc, char **argv) {
   char **value = NULL;

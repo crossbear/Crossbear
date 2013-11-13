@@ -8,15 +8,16 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <locale.h>
+#include <stdint.h>
 
 #define MAXLINELENGTH 255
 
 // For now we call the ping binary.
-int ping(unsigned char ttl, char* address, int ipversion, char **ret) {
+int32_t ping(unsigned char ttl, char* address, int32_t ipversion, char **ret) {
      // Don't rightly know if we need this.
      char *oldlocale = setlocale(LC_ALL, "");
      setlocale(LC_ALL, "C");
-     int pipes[2];
+     int32_t pipes[2];
      pipe(pipes);
      char *ttlstring = malloc(MAXLINELENGTH * sizeof(char));
      snprintf(ttlstring, MAXLINELENGTH, "%d", ttl);
@@ -33,7 +34,7 @@ int ping(unsigned char ttl, char* address, int ipversion, char **ret) {
 	  close(pipes[0]);
 	  // We leave stderr undupped, so we can see errors properly.
 	  dup2(pipes[1], STDOUT_FILENO);
-	  int retval = execve(args[0], args, (char *const *)NULL);
+	  int32_t retval = execve(args[0], args, (char *const *)NULL);
 	  if (retval < 0) {
 	       fprintf(stderr, "Fork error: %s", strerror(errno));
 	       exit(255);
@@ -41,7 +42,7 @@ int ping(unsigned char ttl, char* address, int ipversion, char **ret) {
      }
      close(pipes[1]);
      FILE *input = fdopen(pipes[0], "r");
-     int totallength = 0;
+     int32_t totallength = 0;
      char *line = (char*)malloc(MAXLINELENGTH * sizeof(char));
      while (fgets(line, MAXLINELENGTH, input) != NULL) {
 	  *ret = realloc(*ret,  totallength + strlen(line) + 1);
@@ -50,7 +51,7 @@ int ping(unsigned char ttl, char* address, int ipversion, char **ret) {
 	  memset(line, 0, MAXLINELENGTH);
      }
      free(line);
-     int returnstatus = 0;
+     int32_t returnstatus = 0;
      waitpid(childpid, &returnstatus, 0);
      if (! WIFEXITED(returnstatus)) {
 	  free(*ret);
