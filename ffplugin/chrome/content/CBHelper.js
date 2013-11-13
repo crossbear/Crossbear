@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8; -*- */
 /*
     This file is part of Crossbear.
 
@@ -595,25 +596,21 @@ if ((typeof Crossbear) == "undefined") {
 				}
 
 			} else {
-
-				// Find the path of the c-library
-				try {
-					var cLib = ctypes.open(ctypes.libraryName("c"));
-					libPaths.cLib = ctypes.libraryName("c");
-					cLib.close();
-				} catch (e) {
+				var uri_linux = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService).newURI('resource://CrossbearLIB_Linux', null, null);
+				if (uri_linux instanceof Components.interfaces.nsIFileURL) {
 					try {
-						var cLib = ctypes.open("libc.so.6");
-						libPaths.cLib = "libc.so.6";
-						cLib.close();
+						var crossbearLibLinux = ctypes.open(uri_linux.file.path);
+						libPaths.crossbearLibLinux = uri_linux.file.path;
+						crossbearLibLinux.close();
 					} catch (e) {
-						cbFrontend.displayTechnicalFailure("getLibPaths: Failed to open c-library", true);
+						cbFrontend.displayTechnicalFailure("getLibPaths: Failed to open crossbear-linux library - " + uri_linux.file.path + ": " + e, true);
 					}
 					;
+				} else {
+					cbFrontend.displayTechnicalFailure("getLibPaths: Failed to open crossbear-linux library - no uri: " + e, true);
 				}
-				;
 			}
-
+			
 			return libPaths;
 		},
 

@@ -1,4 +1,5 @@
 resource CrossbearLIB libraries/WINNT_x86-msvc/crossbear.dll ABI=WINNT_x86-msvc
-resource CrossbearLIB_Linux libraries/crossbear_linux.so ABI=Linux_x86-gcc3
+resource CrossbearLIB_Linux libraries/crossbear_linux_32.so ABI=Linux_x86-gcc3
+resource CrossbearLIB_Linux libraries/crossbear_linux_64.so ABI=Linux_x86_64-gcc3
 content     crossbear    chrome/content/
 overlay chrome://browser/content/browser.xul chrome://crossbear/content/gui/General.xul

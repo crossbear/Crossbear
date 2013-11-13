@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8; -*- */
 /*
     This file is part of Crossbear.
 

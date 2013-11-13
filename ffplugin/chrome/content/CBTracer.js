@@ -1,18 +1,19 @@
+/* -*- js-indent-level: 8; -*- */ 
 /*
-    This file is part of Crossbear.
+  This file is part of Crossbear.
 
-    Crossbear is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  Crossbear is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    Crossbear is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  Crossbear is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /**
@@ -69,14 +70,14 @@ Crossbear.CBTracer = function (cbFrontend) {
 					cbFrontend.displayTechnicalFailure("CBTracer: Failed to open crossbear-library: " + libPaths.crossbearLib, true);
 					return false;
 				}
-			
-			// Load lib-c on linux/unix
+				
+				// Load lib-c on linux/unix
 			} else {
 
 				try {
-					libs.cLib = ctypes.open(libPaths.cLib);
+					libs.crossbearLibLinux = ctypes.open(libPaths.crossbearLibLinux);
 				} catch (e) {
-					cbFrontend.displayTechnicalFailure("CBTracer: Failed to open c-library: " + libPaths.cLib, true);
+					cbFrontend.displayTechnicalFailure("CBTracer: Failed to open linux crossbear library: " + libPaths.crossbearLibLinux, true);
 					return false;
 				}
 			}
@@ -121,54 +122,22 @@ Crossbear.CBTracer = function (cbFrontend) {
 
 				// See crossbear.cpp
 				functions.ping = libs.crossbearLib.declare("ping", 
-						ctypes.default_abi, 
-						ctypes.bool, 
-						ctypes.jschar.ptr, 
-						ctypes.int32_t, 
-						ctypes.jschar.ptr, 
-						ctypes.int32_t);
+									   ctypes.default_abi, 
+									   ctypes.bool, 
+									   ctypes.jschar.ptr, 
+									   ctypes.int32_t, 
+									   ctypes.jschar.ptr, 
+									   ctypes.int32_t);
 				
-			} else{
-
-				// See http://linux.die.net/man/3/malloc
-				functions.malloc = libs.cLib.declare("malloc", 
-					ctypes.default_abi, 
-					ctypes.voidptr_t, 
-					ctypes.uint32_t);
-			
-				// See http://linux.die.net/man/3/free
-				functions.free = libs.cLib.declare("free", 
-					ctypes.default_abi, 
-					ctypes.void_t, 
-					ctypes.voidptr_t);
-				
-				// See http://linux.die.net/man/3/popen
-				functions.popen = libs.cLib.declare("popen", 
-						ctypes.default_abi, 
-						types.someStruct.ptr, 
-						ctypes.char.ptr, 
-						ctypes.char.ptr);
-				
-				// See http://linux.die.net/man/3/pclose
-				functions.pclose = libs.cLib.declare("pclose", 
-						ctypes.default_abi, 
-						ctypes.int, 
-						types.someStruct.ptr);
-
-				// See http://linux.die.net/man/3/fgetc
-				functions.fgetc = libs.cLib.declare("fgetc", 
-						ctypes.default_abi, 
-						ctypes.int, 
-						types.someStruct.ptr);
-
-				// See http://linux.die.net/man/3/inet_pton
-				functions.inet_pton = libs.cLib.declare("inet_pton", 
-						ctypes.default_abi, 
-						ctypes.int, 
-						ctypes.int, 
-						ctypes.char.ptr, 
-						ctypes.voidptr_t);
-
+			} else {
+				functions.ping_linux = libs.crossbearLibLinux.declare("ping",
+										      ctypes.default_abi,
+										      ctypes.int,
+										      ctypes.char,
+										      ctypes.char.ptr,
+										      ctypes.int,
+										      ctypes.char.ptr.ptr);
+									
 			}
 		};
 
@@ -203,7 +172,7 @@ Crossbear.CBTracer = function (cbFrontend) {
 				self.defineNativelibFunctions(self.functions, self.types, self.libs);
 
 			} catch (e) {
-				cbFrontend.displayTechnicalFailure("CBTracer:init failed: " + e, true);
+				cbFrontend.displayTechnicalFailure("CBTracer:init failed: " + e + "\nTrace:\n" + e.stack, true);
 			}
 		};
 		
@@ -267,27 +236,9 @@ Crossbear.CBTracer = function (cbFrontend) {
 		 * @returns "TARGET "+TargetIP if the target was reached, "HOP "+HopIP if an intermediate Host was reached or "NO_REPLY" if an error occurred during the execution of "ping"
 		 */
 		Crossbear.CBTracer.prototype.ping_linux = function ping_linux(ip, ipVersion, ttl) {
-
-			// Execute ping and pipe its output
-			var pipe = self.functions.popen("/bin/ping" + ((ipVersion == 6) ? "6" : "") + " -c 1 -n -W 1 -t " + ttl + " " + ip + " 2>&1", "r");
-			if (pipe == 0) {
-				cbFrontend.displayTechnicalFailure("CBTracer:ping_linux: popen failed.", true);
-				return null;
-			}
-
-			// Read ping's output from the pipe
-			var pingRawOutput = [];
-			var currentChar = self.functions.fgetc(pipe);
-			while (currentChar != -1) {
-				pingRawOutput.push(currentChar);
-				currentChar = self.functions.fgetc(pipe);
-			}
-
-			// Close the pipe
-			if (self.functions.pclose(pipe) < 0) {
-				cbFrontend.displayTechnicalFailure("CBTracer:ping_linux: pclose failed.", true);
-				return null;
-			}
+			
+			var strbuf = ctypes.char.ptr.ptr()
+			var ret = self.functions.ping_linux(ttl, ip, ipVersion, strbuf);
 
 			// Convert the output to a Javascript string
 			var pingOutput = Crypto.charenc.Binary.bytesToString(Crossbear.jsArrayToUint8Array(pingRawOutput));
@@ -306,12 +257,12 @@ Crossbear.CBTracer = function (cbFrontend) {
 			// If there was only the target's IP in the output and if the packet loss was 0% then the ping reached the target
 			if ((firstNonMatchIP == null) && containsZeroPercent) {
 				return "TARGET " + ip;
-			
-			// If there was more than one IP in the output and it also contained a pattern indicating that the TTL was exceeded then the ping reached an intermediate hop
+				
+				// If there was more than one IP in the output and it also contained a pattern indicating that the TTL was exceeded then the ping reached an intermediate hop
 			} else if ((firstNonMatchIP != null) && containsTTL) {
 				return "HOP " + firstNonMatchIP;
-			
-			// All other cases mean that an error occurred.
+				
+				// All other cases mean that an error occurred.
 			} else {
 				return "NO_REPLY";
 			}
@@ -321,6 +272,7 @@ Crossbear.CBTracer = function (cbFrontend) {
 		/**
 		 * Perform a ping on a Windows system. This is currently done by calling the crossbear.dll which will in turn use the IPHLPAPI.dll to perform pings.
 		 * 
+		 * TODO: Bug mentioned below is fixed. Maybe think about implementing this differently? 
 		 * Please Note: Calling the IPHLPAPI.dll directly is not possible due to the bug https://bugzilla.mozilla.org/show_bug.cgi?id=684017 (GetLastError not possible from ctypes)
 		 * 
 		 * @param ip The IP-Address to ping 
