@@ -14,19 +14,18 @@
 
 // For now we call the ping binary.
 int32_t ping(unsigned char ttl, char* address, int32_t ipversion, char **ret) {
-     // Don't rightly know if we need this.
-     char *oldlocale = setlocale(LC_ALL, "");
-     setlocale(LC_ALL, "C");
+     *ret = malloc(sizeof(char));
+     **ret = 0;
      int32_t pipes[2];
      pipe(pipes);
      char *ttlstring = malloc(MAXLINELENGTH * sizeof(char));
      snprintf(ttlstring, MAXLINELENGTH, "%d", ttl);
-     char *args[] = {"/bin/ping", "-c", "1", "-n", "-W1", "-t", ttlstring, address, NULL};
+     char * args[] = {"/bin/ping", "-c", "1", "-n", "-W1", "-t", ttlstring, address, NULL};
      if (ipversion == 6) {
 	  args[0] = "/bin/ping6";
      } else if (ipversion != 4) {
 	  fprintf(stderr, "Invalid IP version. Got %d, expected 4 or 6.", ipversion);
-	  *ret = NULL;
+	  free(ttlstring);
 	  return 1;
      }
      pid_t childpid = fork();
@@ -37,28 +36,38 @@ int32_t ping(unsigned char ttl, char* address, int32_t ipversion, char **ret) {
 	  int32_t retval = execve(args[0], args, (char *const *)NULL);
 	  if (retval < 0) {
 	       fprintf(stderr, "Fork error: %s", strerror(errno));
+	       free(ttlstring);
 	       exit(255);
 	  }
      }
+     free(ttlstring);
      close(pipes[1]);
      FILE *input = fdopen(pipes[0], "r");
      int32_t totallength = 0;
      char *line = (char*)malloc(MAXLINELENGTH * sizeof(char));
      while (fgets(line, MAXLINELENGTH, input) != NULL) {
 	  *ret = realloc(*ret,  totallength + strlen(line) + 1);
-	  strcat(*ret, line);
+	  strncat(*ret, line, MAXLINELENGTH);
 	  totallength = strlen(*ret);
 	  memset(line, 0, MAXLINELENGTH);
      }
      free(line);
+     fclose(input);
      int32_t returnstatus = 0;
      waitpid(childpid, &returnstatus, 0);
-     if (! WIFEXITED(returnstatus)) {
+     if (WIFEXITED(returnstatus)) {
+	  int retval = WEXITSTATUS(returnstatus);
+	  if (retval != 0) {
+	       free(*ret);
+	       *ret = NULL;
+	  }
+	  return retval;
+     } else if (WIFSIGNALED(returnstatus)) {
+	  int signal = WTERMSIG(returnstatus);
 	  free(*ret);
-	  free(ttlstring);
-	  return WEXITSTATUS(returnstatus);
+	  *ret = NULL;
+	  return -signal;
+     } else {
+	  return -1;
      }
-     setlocale(LC_ALL, oldlocale);
-     free(ttlstring);
-     return 0;
 }
