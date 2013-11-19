@@ -13,16 +13,22 @@
 #define MAXLINELENGTH 255
 
 // For now we call the ping binary.
-int32_t ping(unsigned char ttl, char* address, int32_t ipversion, char **ret) {
+int32_t ping(uint8_t ttl,char* address, uint8_t ipversion, char **ret) {
+     if (ret == NULL) {
+	  fprintf(stderr, "NULL pointer given as output value, quitting.");
+	  return 2;
+     }
      *ret = malloc(sizeof(char));
      **ret = 0;
      int32_t pipes[2];
      pipe(pipes);
      char *ttlstring = malloc(MAXLINELENGTH * sizeof(char));
      snprintf(ttlstring, MAXLINELENGTH, "%d", ttl);
-     char * args[] = {"/bin/ping", "-c", "1", "-n", "-W1", "-t", ttlstring, address, NULL};
+     char * args[] = {NULL, "-c", "1", "-n", "-W1", "-t", ttlstring, address, NULL};
      if (ipversion == 6) {
 	  args[0] = "/bin/ping6";
+     } else if (ipversion == 4) {
+	  args[0] = "/bin/ping";
      } else if (ipversion != 4) {
 	  fprintf(stderr, "Invalid IP version. Got %d, expected 4 or 6.", ipversion);
 	  free(ttlstring);
@@ -69,5 +75,23 @@ int32_t ping(unsigned char ttl, char* address, int32_t ipversion, char **ret) {
 	  return -signal;
      } else {
 	  return -1;
+     }
+}
+
+#include <arpa/inet.h>
+
+int32_t is_valid_ip(const char *addr) {
+     // Enough room for the bigger of the two structures.
+     void *tmpbuf = malloc(sizeof(struct in6_addr));
+     int ret = inet_pton(AF_INET, addr, tmpbuf);
+     if (ret == 1) {
+	  free(tmpbuf);
+	  return 1;
+     } else if (ret == 0) {
+	  ret =  inet_pton(AF_INET6, addr, tmpbuf);
+	  free(tmpbuf);
+	  return ret;
+     } else {
+	  return 1;
      }
 }
