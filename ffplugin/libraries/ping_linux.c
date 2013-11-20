@@ -13,7 +13,8 @@
 #define MAXLINELENGTH 255
 
 // For now we call the ping binary.
-int32_t ping(uint8_t ttl,char* address, uint8_t ipversion, char **ret) {
+int32_t ping(uint8_t ttl,/* const */char* address, uint8_t ipversion, char **ret) {
+     fprintf(stderr, "PING TTL: %d, Address: %s, IP version: %d\n", ttl, address, ipversion);
      if (ret == NULL) {
 	  fprintf(stderr, "NULL pointer given as output value, quitting.");
 	  return 2;
@@ -24,12 +25,13 @@ int32_t ping(uint8_t ttl,char* address, uint8_t ipversion, char **ret) {
      pipe(pipes);
      char *ttlstring = malloc(MAXLINELENGTH * sizeof(char));
      snprintf(ttlstring, MAXLINELENGTH, "%d", ttl);
+     // TODO: Do initialization differently so we can use a const char.
      char * args[] = {NULL, "-c", "1", "-n", "-W1", "-t", ttlstring, address, NULL};
      if (ipversion == 6) {
 	  args[0] = "/bin/ping6";
      } else if (ipversion == 4) {
 	  args[0] = "/bin/ping";
-     } else if (ipversion != 4) {
+     } else {
 	  fprintf(stderr, "Invalid IP version. Got %d, expected 4 or 6.", ipversion);
 	  free(ttlstring);
 	  return 1;
@@ -63,11 +65,7 @@ int32_t ping(uint8_t ttl,char* address, uint8_t ipversion, char **ret) {
      waitpid(childpid, &returnstatus, 0);
      if (WIFEXITED(returnstatus)) {
 	  int retval = WEXITSTATUS(returnstatus);
-	  if (retval != 0) {
-	       free(*ret);
-	       *ret = NULL;
-	  }
-	  return retval;
+	  return -retval;
      } else if (WIFSIGNALED(returnstatus)) {
 	  int signal = WTERMSIG(returnstatus);
 	  free(*ret);
