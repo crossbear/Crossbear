@@ -67,8 +67,8 @@
     <separator orient="horizontal" class="groove-thin"/>
     
     <!-- Button to open a LocalTDCDlg -->
-    <label value="Trust Decision Cache"/>
-	<button flex="1" label="Show" width="200" onclick="var params = {inn : {cbFrontend : window.arguments[0].inn.cbFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalTDCDlg.xul', 'Crossbear - Local Trust Decision Cache', 'chrome,centerscreen,dialog=YES', params);"/> 
+    <!-- <label value="Trust Decision Cache"/> -->
+    <!-- 	<button flex="1" label="Show" width="200" onclick="var params = {inn : {cbFrontend : window.arguments[0].inn.cbFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalTDCDlg.xul', 'Crossbear - Local Trust Decision Cache', 'chrome,centerscreen,dialog=YES', params);"/>  -->
 
     <separator orient="horizontal" class="groove-thin"/>
     

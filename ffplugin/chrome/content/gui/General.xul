@@ -62,8 +62,11 @@ the rest of the system).
 				
 						<!-- MenueItem Settings: Open a OptionsDlg -->
 						<menuitem label="Settings" id="crossbear-statusbarpanel-popup-settings" onclick="var params = {inn : {cbFrontend : crossbearFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/OptionsDlg.xul', 'Crossbear - Settings', 'chrome,centerscreen,dependent=YES,dialog=YES', params);"/>
-						<menuseparator/>
-						
+
+
+						<menuitem label="Trust Decision Cache" id="crossbear-statusbarpanel-popup-decisioncache" onclick="var params ={inn : {cbFrontend : crossbearFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalTDCDlg.xul', 'Crossbear - Trust Decision Cache', 'chrome, dependent=YES, dialog=YES', params);"/>
+
+						  <menuseparator/>
 						<!-- MenueItem Protector: Call the protectorCheckBoxClicked-function if the user clicks on it -->
 						<menuitem type="checkbox" autocheck="false" label="Protector" id="crossbear-statusbarpanel-popup-protector" onclick="crossbearFrontend.protectorCheckBoxClicked();"/>
 						
