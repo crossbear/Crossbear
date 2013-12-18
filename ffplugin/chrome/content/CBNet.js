@@ -41,8 +41,10 @@ Crossbear.CBNet = function (cbFrontend) {
 		 * @param e The DOM-Event representing the error that occured
 		 */
 		Crossbear.CBNet.prototype.networkConnectionError = function networkConnectionError(e) {
+			var errormsg = "CBNet: Error " + e.target.status + " occurred while performing a XMLHttpRequest. " +
+				"URL: " + e.target.url + "\n Trace: " + e.target.trace;
 			// Display a critical technical failure in all cases but the case that a timeout occurred (e.target.status == 0)
-			cbFrontend.displayTechnicalFailure("CBNet: Error " + e.target.status + " occurred while performing a XMLHttpRequest.", (e.target.status != 0));
+			cbFrontend.displayTechnicalFailure(errormsg, (e.target.status != 0));
 		};
 
 	
@@ -74,7 +76,8 @@ Crossbear.CBNet = function (cbFrontend) {
 
 				// Set the Request to Post data ...
 				httpRequest.open("POST", serverUrl, true);
-				
+				httpRequest.url = serverUrl;
+				httpRequest.trace = new Error().stack;
 				// ... and to receive binary data.
 				httpRequest.responseType = "arraybuffer";
 
@@ -82,7 +85,7 @@ Crossbear.CBNet = function (cbFrontend) {
 				httpRequest.onerror = self.networkConnectionError;
 
 				// Set the callback function and it's parameters
-				httpRequest.onreadystatechange = callBackFunction;
+				httpRequest.onload = callBackFunction;
 				httpRequest.cbCallBackParams = callBackParams;
 				
 				// Set the HTTP-Host-Header (required if several domains are hosted on a single IP)
@@ -126,7 +129,8 @@ Crossbear.CBNet = function (cbFrontend) {
 
 				// Set the Request to Get data ...
 				httpRequest.open("GET", serverUrl, true);
-				
+				httpRequest.url = serverUrl;
+				httpRequest.trace = new Error().stack;
 				// ... and to receive binary data.
 				httpRequest.responseType = "arraybuffer";
 
@@ -134,7 +138,7 @@ Crossbear.CBNet = function (cbFrontend) {
 				httpRequest.onerror = self.networkConnectionError;
 
 				// Set the callback function and it's parameters
-				httpRequest.onreadystatechange = callBackFunction;
+				httpRequest.onload = callBackFunction;
 				httpRequest.cbCallBackParams = callBackParams;
 				
 				// Set the HTTP-Host-Header (required if several domains are hosted on a single IP)
