@@ -132,12 +132,15 @@ Crossbear.CBTracer = function (cbFrontend) {
 			} else {
 				functions.ping_linux = libs.crossbearLibLinux.declare("ping",
 										      ctypes.default_abi,
-										      ctypes.int,
-										      ctypes.char,
-										      ctypes.char.ptr,
-										      ctypes.int,
-										      ctypes.char.ptr.ptr);
-									
+										      ctypes.int32_t,// Return value
+										      ctypes.uint8_t,// TTL
+										      ctypes.char.ptr,// Address
+										      ctypes.uint8_t,// IP version (4 or 6)
+										      ctypes.char.ptr.ptr); // Return text
+				functions.is_valid_ip = libs.crossbearLibLinux.declare("is_valid_ip",
+										       ctypes.default_abi,
+										       ctypes.uint8_t, // Return value
+										       ctypes.char.ptr); // IP address
 			}
 		};
 
@@ -186,13 +189,6 @@ Crossbear.CBTracer = function (cbFrontend) {
 		 */
 		Crossbear.CBTracer.prototype.getFirstNonMatchIP = function getFirstNonMatchIP(pingOutput, referenceIP) {
 			
-			// Allocate a buffer that can be used by c-types-functions
-			var addressBuf = self.functions.malloc(128);
-			if(addressBuf == 0){
-				cbFrontend.displayTechnicalFailure("CBTracer:getFirstNonMatchIP: malloc failed.",true);
-				return null;
-			}
-
 			// Define a Regex that will match all IPs (and more)
 			var ipPat = /[\da-f]*([:\.]+[\da-f]+)+(::)?/gi;
 			
@@ -203,24 +199,19 @@ Crossbear.CBTracer = function (cbFrontend) {
 			for ( var i = 0; i < ipCandidates.length; i++) {
 				
 				// For each match check if it is a valid IP-Address using the native inet_pton-function
-				var isValidIP = self.functions.inet_pton(self.types.PR_AF_INET, ipCandidates[i], addressBuf);
-				if (isValidIP == 0) {
-					isValidIP = self.functions.inet_pton(self.types.PR_AF_INET6, ipCandidates[i], addressBuf);
-				}
+				var isValidIP = self.functions.is_valid_ip(ipCandidates[i]);
 
 				// If it IS a valid IP-address compare it with the referenceIP ...
 				if (isValidIP == 1) {
 					if(ipCandidates[i] != referenceIP){
 						
-						// ... and in case they are not equal free all allocated buffers and return it
-						self.functions.free(addressBuf);		
+						// ... and in case they are not equal return it
 						return ipCandidates[i];
 					}
 				}
 			}
 
-			// If no non-matching IP is found free all allocated buffers and return null
-			self.functions.free(addressBuf);		
+			// If no non-matching IP is found return null
 			return null;
 		};
 		
@@ -236,12 +227,18 @@ Crossbear.CBTracer = function (cbFrontend) {
 		 * @returns "TARGET "+TargetIP if the target was reached, "HOP "+HopIP if an intermediate Host was reached or "NO_REPLY" if an error occurred during the execution of "ping"
 		 */
 		Crossbear.CBTracer.prototype.ping_linux = function ping_linux(ip, ipVersion, ttl) {
+			var str = ctypes.char.ptr();
+			dump(ip + " " + ipVersion + " " + ttl);
+			var ret = self.functions.ping_linux(ttl, ip, ipVersion, str.address());
+			// TODO: Document return values of ping function.
+			if (ret > 0) {
+				// error
+				cbFrontend.displayTechnicalFailure("Ping returned error: " + ret + " Address: " + ip);
+				return "";
+			}
 			
-			var strbuf = ctypes.char.ptr.ptr()
-			var ret = self.functions.ping_linux(ttl, ip, ipVersion, strbuf);
-
 			// Convert the output to a Javascript string
-			var pingOutput = Crypto.charenc.Binary.bytesToString(Crossbear.jsArrayToUint8Array(pingRawOutput));
+			var pingOutput = str.readString();
 
 			// Check if all occurences of IPs inside the output match the IP that was pinged
 			var firstNonMatchIP = self.getFirstNonMatchIP(pingOutput, ip);
