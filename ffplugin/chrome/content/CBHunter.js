@@ -273,7 +273,7 @@ Crossbear.CBHunter = function (cbFrontend) {
 					return;
 				}
 			} else if ((this.readyState == 4) && (this.status == 0)) { 
-				cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: could not connect to cbServer (connection timed out)!", false);
+				cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: could not connect to cbServer (connection timed out) :" + this.statusText, false);
 				
 				// In case a callback-function was specified transfer the control-flow to it
 				if(this.cbCallBackParams.callback != null){

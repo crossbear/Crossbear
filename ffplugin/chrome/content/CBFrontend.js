@@ -76,7 +76,7 @@ Crossbear.CBFrontend = function (cbServerName) {
 
 			var trace = new Error().stack;
 			// Display the message of the failure in the "Error"-tab of the Error Console
-			Components.utils.reportError(what + "Trace: \n" + trace);
+			Components.utils.reportError(what + "\nTrace: \n" + trace);
 			
 			// If the exception was a critical one: Shutdown the system ...
 			if (critical) {
