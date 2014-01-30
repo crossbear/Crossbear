@@ -147,15 +147,15 @@ Crossbear.CBMessageCurrentServerTime = function (rawData) {
 /**
  * The signature message is contained in every hunting task list. The
  * signature is calculated using the server private key with
- * SHA256withRSA. 
- * 
- * The signature is done over the binary message received from the
- * server, with the signature message removed from the message.
- * 
+ * SHA256withRSA, and can be verified by calculating the signature
+ * over the binary message list with the signature message removed
+ * using the server public key.
  */
-Crossbear.CBMessageSignature = function (rawData) {
+Crossbear.CBMessageSignature = function (rawData, offset, length) {
 	this.messageType = "CBMessageSignature";
 	this.signatureData = rawData;
+	this.offset = offset
+	this.messageLength = length
 
 	if (typeof(_crossbear_messagesignature_prototype_called) == 'undefined') {
 		_crossbear_messagesignature_prototype_called = true;
@@ -166,6 +166,13 @@ Crossbear.CBMessageSignature = function (rawData) {
 
 		Crossbear.CBMessageSignature.prototype.getSignature = function getSignature() {
 			return this.signatureData;
+		};
+		Crossbear.CBMessageSignature.prototype.getOffset = function getOffset() {
+			return this.offset;
+		};
+
+		Crossbear.CBMessageSignature.prototype.getMessageLength = function getMessageLength() {
+			return this.messageLength
 		};
 	};
 }
