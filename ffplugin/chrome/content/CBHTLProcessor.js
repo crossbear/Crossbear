@@ -104,6 +104,8 @@ Crossbear.CBHTLProcessor = function (cbFrontend) {
 							}
 							cbFrontend.cbhunter.addPublicIP(serverMessages[i]);
 							
+						} else if (serverMessages[i].messageType == "CBMessageSignature") {
+							// TODO: Verify message
 						} else{
 							cbFrontend.displayTechnicalFailure("CBHTLProcessor:parseHuntingTaskList: received unknown message from server.", true);
 						}

@@ -663,7 +663,8 @@ if ((typeof Crossbear) == "undefined") {
 
 				} else if (typ == Crossbear.CBMessageTypes.CERT_VERIFY_RESULT) {
 					decodedMessages.push(new Crossbear.CBMessageCertVerifyResult(messageData));
-
+				} else if (typ == Crossbear.CBMessageTypes.SIGNATURE) {
+					decodedMessages.push(new Crossbear.CBMessageSignature(messageData))
 					// If an unknown type has been observed: Throw an exception 
 				} else {
 					cbFrontend.displayTechnicalFailure("messageBuilder: received unknown message type: " + type, true);
