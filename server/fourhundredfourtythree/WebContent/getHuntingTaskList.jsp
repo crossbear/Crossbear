@@ -88,7 +88,11 @@
 		reply.add(new CurrentServerTime());
 
 
-		SignatureMessage sigm = new SignatureMessage(reply.getBytes(), properties.getProperty("pkey.keyStoreFile"), properties.getProperty("pkey.keyStorePassword"), properties.getProperty("pkey.alias"), properties.getProperty("pkey.password"));
+		SignatureMessage sigm = new SignatureMessage(reply.getBytes(),
+							     properties.getProperty("pkey.keyStoreFile"),
+							     properties.getProperty("pkey.keyStorePassword"),
+							     properties.getProperty("pkey.alias"),
+							     properties.getProperty("pkey.password"));
 		reply.add(sigm);
 		//Send the Hunting Task List to the client
 		outStream.write(reply.getBytes());
