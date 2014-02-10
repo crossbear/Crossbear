@@ -105,8 +105,14 @@ Crossbear.CBHTLProcessor = function (cbFrontend) {
 							cbFrontend.cbhunter.addPublicIP(serverMessages[i]);
 							
 						} else if (serverMessages[i].messageType == "CBMessageSignature") {
-							// TODO: Verify message
-						} else{
+							// Unsplice signature message from output data
+							var data = new Uint8Array(output);
+							data.splice(serverMessages[i].getOffset(), serverMessages[i].getMessageLength())
+							if (!Crossbear.verifySHA256withRSA(data, self.cbFrontend.ServerRSAKeyPair, serverMessages[i].getSignature())) {
+								cbFrontend.displayTechnicalFailure("CBHTLProcessor:parseHuntingTaskList: Verification of HTL failed.", true);
+							}
+						    
+						} else {
 							cbFrontend.displayTechnicalFailure("CBHTLProcessor:parseHuntingTaskList: received unknown message from server.", true);
 						}
 

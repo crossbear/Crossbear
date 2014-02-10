@@ -683,6 +683,15 @@ if ((typeof Crossbear) == "undefined") {
 			// Finally return the decoded messages
 			return decodedMessages;
 		},
+		
+		verifySHA256withRSA: function(data, serverkey, signature) {
+			var myhash = CryptoJS.SHA256(data);
+			var theirhash = RSA.decryptedString(serverkey, signature)
+			// It seems like padding is irrelevant for the current use case.
+			return myhash == theirhash
+			
+		},
+		
 	/*	
 		xmlToDOM : function (xml, doc, nodes) {  
 			if (xml.length() != 1) {  
