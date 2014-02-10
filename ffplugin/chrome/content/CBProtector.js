@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8; -*- */
 /*
     This file is part of Crossbear.
 
@@ -27,6 +28,7 @@
  * @param cbFrontend The cbFrontend-class that will be used to display information/errors to the user and to read the user preferences and settings.
  * 
  * @author Thomas Riedmaier
+ * @author Ralph Holz
  */
 Crossbear.CBProtector = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
@@ -139,7 +141,10 @@ Crossbear.CBProtector = function (cbFrontend) {
 		};
 		
 		/**
-		 * Request a certificate verification from the Crossbear server
+		 * Request a certificate verification from the Crossbear server, Step 1.
+		 * In this function, we try to identify if we need to use a proxy.
+		 * Mozilla's function is asynchronous, and will call our callback once
+		 * it has a result for us.
 		 * 
 		 * @param serverCertChain The certificate chain that should be verified
 		 * @param serverCertHash The SHA256-hash of the certificate that should or should not be trusted when received from "host"
@@ -149,14 +154,33 @@ Crossbear.CBProtector = function (cbFrontend) {
 			
 			// Add an entry in the log
 			cbFrontend.displayInformation("Requesting Verification for \""+ hostIPPort + "\" from the Crossbear server");
+			
+			// use an anonymous class for the callback
+			var asyncCallbackObj = { 
+				onProxyAvailable : function(aRequest, aURI, aProxyInfo, aStatus) {
+					var resolveResult = 0;
+					if (aProxyInfo != null) {
+					    resolveResult = 1;
+					}
 
-			// Create the CertVerifyRequest-message that should be sent
-			var msg = new Crossbear.CBMessageCertVerifyRequest(serverCertChain, hostIPPort, (pps.resolve(ioService.newURI("https://"+ hostIPPort.split("|")[0], null, null),0) != null)?1:0);
+					// Create the CertVerifyRequest-message that should be sent
+					var msg = new Crossbear.CBMessageCertVerifyRequest(serverCertChain, hostIPPort, resolveResult);
 
-			// Send the message to the server ...
-			cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, {serverCertChain: serverCertChain, serverCertHash: serverCertHash, hostIPPort : hostIPPort });
+					// Send the message to the server ...
+					cbFrontend.cbnet.postBinaryRetrieveBinaryFromUrl("https://" + cbFrontend.cbServerName + "/verifyCert.jsp", cbFrontend.cbServerName + ":443", Crossbear.jsArrayToUint8Array(msg.getBytes()), self.certVerifyCallback, {serverCertChain: serverCertChain, serverCertHash: serverCertHash, hostIPPort : hostIPPort });
+					return;
+				}
+			};
+
+			pps.asyncResolve(ioService.newURI("https://"+ hostIPPort.split("|")[0], null, null),0, asyncCallbackObj);
+			return;
 			
 		};
+
+		Crossbear.CBProtector.prototype.requestVerificationFromServerCont = function requestVerificationFromServerCont() {
+		}
+
+		
 		
 		/**
 		 * Add a new entry in the CBTrustDecisionCache for the host's certificate and domain according to the user's choice of trust and his/hers defaultCacheValidity.
@@ -252,7 +276,6 @@ Crossbear.CBProtector = function (cbFrontend) {
 
 			// Check if the server's reply has entirely been received
 			if ((this.readyState == 4) && (this.status == 200)) {
-
 				// If yes: check if that reply actually contained data
 				var output = this.response;
 				if (output) {
@@ -355,6 +378,7 @@ Crossbear.CBProtector = function (cbFrontend) {
 			}
 
 		};
+
 		
 		/**
 		 * Accept a connection (usually because its certificate has been approved by the user)
@@ -414,7 +438,22 @@ Crossbear.CBProtector = function (cbFrontend) {
 			
 			// Display the warning dialog to the user and ask him/her to send the certificate chain to the Crossbear-Team
 			var emailLinkText = "mailto:crossbear@pki.net.in.tum.de?subject=Observation%20strange%20certificate%20chain%20for%20the%20Crossbear-Server&body=Hey%20Crossbear-Team,%0D%0A%0D%0AI%20observed%20a%20strange%20certificate%20chain%20for%20the%20Crossbear-Server("+hostIPPort+")%20on%20"+new Date().toGMTString() +"%0D%0A%0D%0A#########################################################################################%0D%0ANOTE%20TO%20SENDER:%20PLEASE%20ATTACH%20THE%20FILE%20CONTAINING%20THE%20CERTIFICATE%20CHAIN!%20YOU%20FIND%20IT%20AT%0D%0A%0D%0A"+tempFile.path+"%0D%0A%0D%0A#########################################################################################%0D%0A%0D%0ABest%20regards,%0D%0A%0D%0AA%20friendly%20Crossbear-User";
-			cbFrontend.warnUserAboutBeingUnderAttack(<p xmlns:html="http://www.w3.org/1999/xhtml">The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a Man-in-the-middle! Do not visit any security relevant pages (e.g. banks)!<html:br /><html:br /> You could do the research community a big favor by <html:a style="text-decoration:underline" href={emailLinkText}> sending an email </html:a> to the Crossbear-Team.<html:br /><html:br /></p>,5);
+			var mitmWarningXML = document.createDocumentFragment()
+                        var mitmWarning = document.createTextNode("The Crossbear server sent an unexpected certificate. It is VERY LIKELY that you are under attack by a man-in-the-middle! This means an attacker can potentially read and alter everything you send from your browser!");
+			var brElement = document.createElement("br");
+			var emailRequest = document.createElement("a");
+			emailRequest.setAttribute("style", "text-decoration:underline");
+                        emailRequest.setAttribute("href", emailLinkText);
+                        var mitmWarningHeader = document.createTextNode("You could do the research community a big favor by ");
+			var emailText = document.createTextNode(" sending an e-mail ");
+                        var mitmWarningTrailer = document.createTextNode(" to the Crossbear team.");
+			emailRequest.appendChild(emailText);
+		        mitmWarningXML.appendChild(mitmWarning);
+			mitmWarningXML.appendChild(brElement);
+			mitmWarningXML.appendChild(mitmWarningHeader);
+			mitmWarningXML.appendChild(emailRequest);
+			mitmWarningXML.appendChild(mitmWarningTrailer);
+			cbFrontend.warnUserAboutBeingUnderAttack(mitmWarningXML,5);
 			
 			// Cancel the connection attempt
 			channel.cancel(Components.results.NS_BINDING_SUCCEEDED);

@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8; -*- */
 /*
     This file is part of Crossbear.
 
@@ -24,6 +25,7 @@
  * @param cbFrontend The cbFrontend-class that will be used to display information/errors to the user and to read the user preferences and settings.
  * 
  * @author Thomas Riedmaier
+ * @author Ralph Holz
  */
 Crossbear.CBHunter = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
@@ -232,7 +234,10 @@ Crossbear.CBHunter = function (cbFrontend) {
 					
 					// If somebody tampered with the data: Warn the user!
 					if (!Crossbear.arrayCompare(supposedHash, actualHash)) {
-						cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.</p>"),5);
+					        var tamperWarningXML = document.createDocumentFragment()
+                                                var tamperWarning = document.createTextNode("Your system is under attack! Somebody modified the datatransfer between the Crossbear server and your system.");
+                    				tamperWarningXML.appendChild(tamperWarning);
+						cbFrontend.warnUserAboutBeingUnderAttack(tamperWarningXML,5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: received invalid input: "+plaintext+supposedHash+":"+actualHash, true);
 						return;
 					}
@@ -268,7 +273,7 @@ Crossbear.CBHunter = function (cbFrontend) {
 					return;
 				}
 			} else if ((this.readyState == 4) && (this.status == 0)) { 
-				cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: could not connect to cbServer (connection timed out)!", false);
+				cbFrontend.displayTechnicalFailure("CBHunter:receivePublicIP: could not connect to cbServer (connection timed out) :" + this.statusText, false);
 				
 				// In case a callback-function was specified transfer the control-flow to it
 				if(this.cbCallBackParams.callback != null){
@@ -334,7 +339,11 @@ Crossbear.CBHunter = function (cbFrontend) {
 						
 					// If it's neither then something went wrong
 					} else {
-						cbFrontend.warnUserAboutBeingUnderAttack(<p>Your DNS server generates generates invalid DNS entries: {currentAddr}</p>,5);
+						var dnsWarningXML = document.createDocumentFragment()
+						// TODO: actually output {currentAddr}
+						var dnsWarning = document.createTextNode("Your DNS server generates generates invalid DNS entries.");
+						dnsWarningXML.appendChild(dnsWarning);
+						cbFrontend.warnUserAboutBeingUnderAttack(dnsWarningXML,5);
 						cbFrontend.displayTechnicalFailure("CBHunter:receiveCBServerIPs: parsing DNS entry failed: "+currentAddr, true);
 					}
 				}

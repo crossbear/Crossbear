@@ -9,6 +9,7 @@ from   cbmessaging.MessageTypes   import messageTypes, messageNames
 from   cbmessaging.HTRepNewCert   import HTRepNewCert
 from   cbmessaging.HTRepKnownCert import HTRepKnownCert
 from   PipFetcher                 import PipFetcher
+#from   cbmessaging.CurServTime    import CurServTime
 from   time                       import time
 from   cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
 from   cbutils.CertUtils import get_chain, compute_chain_hashes
@@ -117,7 +118,7 @@ class PyHunter(object):
         print "Tracerouting!"
         trace = self.tracer.traceroute(ht.targetIP)
 
-        if witness:
+        if cert_known:
             # TODO get this to report
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.

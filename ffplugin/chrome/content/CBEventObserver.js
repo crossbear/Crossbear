@@ -28,6 +28,7 @@
  * @param cbFrontend The cbFrontend-class that will be used to display information/errors to the user
  * 
  * @author Thomas Riedmaier
+ * @author Ralph Holz
  */
 Crossbear.CBEventObserver = function (cbFrontend) {
 	this.cbFrontend = cbFrontend;
@@ -84,7 +85,10 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 				if (aData == "enter") { 
 					
 					// ... notify the user that he will no longer be protected by Crossbear
-					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You entered the private-browsing mode. Crossbear will NOT protect you while you are using that mode!</p>"),0);
+					var pbWarningXML = document.createDocumentFragment()
+					var pbWarning = document.createTextNode("You entered the private-browsing mode. Please note that Crossbear will NOT protect you while you are using this mode!");
+					pbWarningXML.appendChild(pbWarning);
+					cbFrontend.warnUserAboutBeingUnderAttack(pbWarningXML,0);
 					
 					// ... deactivate the Protector, and
 					cbFrontend.deactivateProtector(false);
@@ -133,7 +137,10 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					
 					// Rise a warning! (except when the user disabled the protector or the warning)
 					if(!self.checkCBServerOnly && cbFrontend.getUserPref("protector.showRedirectWarning", "bool")){
-						cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You requested a SSL-secured resource but the server redirected you to an unsafe resource. You might be under attack!</p>"),0);
+						var attackWarningXML = document.createDocumentFragment()
+						var attackWarning = document.createTextNode("You requested an SSL/TLS-secured resource, but the server redirected you to an unsafe resource. You might be under attack!");
+						attackWarningXML.appendChild(attackWarning);
+						cbFrontend.warnUserAboutBeingUnderAttack(attackWarningXML,0);
 					}
 					return;
 				}
@@ -147,7 +154,10 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 						
 					// If not warn the user and cancel the connection
 					} else{
-						cbFrontend.warnUserAboutBeingUnderAttack(new XML('<p xmlns:html="http://www.w3.org/1999/xhtml">You tried to access a HTTPS-page using its IP-Address. This is strongly disencouraged and currently not supported by Crossbear.<html:br /><html:br /> If you want to go on you have to disable the Crossbear-Protector!</p>'),0);
+						var ipUseWarningXML = document.createDocumentFragment()
+						var ipWarning = document.createTextNode("You tried to access an HTTPS site using its IP address. This is strongly discouraged and currently not supported by Crossbear. If you want to go on, you have to disable the Crossbear protector!");
+						ipUseWarningXML.appendChild(ipWarning);
+						cbFrontend.warnUserAboutBeingUnderAttack(ipUseWarningXML,0);
 						aSubject.QueryInterface(Components.interfaces.nsIChannel).cancel(Components.results.NS_BINDING_SUCCEEDED);
 						return;
 					}
@@ -160,7 +170,10 @@ Crossbear.CBEventObserver = function (cbFrontend) {
 					serverCert = aSubject.QueryInterface(Components.interfaces.nsIChannel).securityInfo.QueryInterface(Components.interfaces.nsISSLStatusProvider).SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus).serverCert;
 				} catch (e) {
 					// The server didn't send any certificate. Since this is very suspicious -> warn the user!
-					cbFrontend.warnUserAboutBeingUnderAttack(new XML("<p>You requested a SSL-secured resource but the server didn't send any certificate! You might be under an attack!</p>"),5);
+					var noCertWarningXML = document.createDocumentFragment()
+					var noCertWarning = document.createTextNode("You requested an SSL/TLS-secured resource, but the server didn't send any certificate! You might be under attack!");
+					noCertWarningXML.appendChild(noCertWarning);
+					cbFrontend.warnUserAboutBeingUnderAttack(noCertWarningXML,5);
 					cbFrontend.displayTechnicalFailure("CBEventObserver:observe: could not extract server certificate for "+host, false);
 					return;
 				}
