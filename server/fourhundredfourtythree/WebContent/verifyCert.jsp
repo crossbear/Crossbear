@@ -99,7 +99,7 @@
 
 		} catch (Exception e) {
 
-			Logger.dumpExceptionToFile(properties.getProperty("logging.dir")+"/fourhundredfourtythree.verifyCert.init.error", e);
+			Logger.dumpExceptionToFile("/tmp/fourhundredfourtythree.verifyCert.init.error", e);
 
 		}
 
@@ -133,8 +133,8 @@
 			// Can we also cache the signature of the Message? Should be okay, since the message doesn't change much.
 			MessageList ml = cvrp.process();
 			SignatureMessage sigm = new SignatureMessage(ml.getBytes(),
-								     properties.getProperty("pkey.keystoreFile"),
-								     properties.getProperty("pkey.keystorePassword"),
+								     properties.getProperty("pkey.keyStoreFile"),
+								     properties.getProperty("pkey.keyStorePassword"),
 								     properties.getProperty("pkey.alias"),
 								     properties.getProperty("pkey.password"));
 			ml.add(sigm);
