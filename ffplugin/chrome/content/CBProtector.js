@@ -324,7 +324,8 @@ Crossbear.CBProtector = function (cbFrontend) {
 
 							// Second: Display it 
 							window.openDialog("chrome://crossbear/content/gui/UnknownCertDlg.xul", "", "chrome,centerscreen,dependent=YES,dialog=YES,close=no", params);
-
+						} else if (serverMessages[i].messageType == "CBMessageSignature") {
+							// TODO: Verify message.
 						// A HuntingTask will be stored in and then executed by the CBHunter(WorkerThread)
 						} else if (serverMessages[i].messageType == "CBMessageHuntingTask") {
 							cbFrontend.cbhunter.addTask(serverMessages[i]);
