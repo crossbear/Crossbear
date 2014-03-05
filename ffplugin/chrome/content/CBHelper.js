@@ -685,10 +685,29 @@ if ((typeof Crossbear) == "undefined") {
 		},
 		
 		verifySHA256withRSA: function(data, serverkey, signature) {
-			var myhash = CryptoJS.SHA256(data);
-			var theirhash = RSA.decryptedString(serverkey, signature)
-			// It seems like padding is irrelevant for the current use case.
-			return myhash == theirhash
+			// TODO: Log data, signature data
+			console = Components.utils.import("resource://gre/modules/devtools/Console.jsm").console;
+			var myhash = Crypto.SHA256(data);
+			console.log("My hash:");
+			console.log(myhash);
+			var verifypair = new Crossbear.RSA.RSAVerifyPair(serverkey);
+			var decrypted = Crossbear.RSA.RSAdecryptToString(verifypair, signature);
+			// Now to remove padding. The relevant RFC is http://tools.ietf.org/html/rfc3447#section-9.2.
+			// TLDR: Hashing by PKCS#1.5 prepends an algorithm identifier to the actual hash.
+			// These identifiers are described in the notes to section 9.2.
+			// All we need to do is take the last 32 bytes of the result and we have the hash.
+			decrypted = decrypted.slice(256 - 33);
+			// TODO: convert to hex.
+			var result = "";
+			for (var i = 0; i < decrypted.length; i++) {
+				// Convert to hex string
+				var hexstr =  decrypted.charCodeAt(i).toString(16);
+				// Terrible hack. We join the empty array with "0" in between, so we need one more empty element.
+				result += Array(2 - hexstr.length  + 1).join("0") + hexstr;
+			}
+			console.log("Their hash:");
+			console.log(result);
+			return myhash == result
 			
 		},
 		

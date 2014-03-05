@@ -1,3 +1,4 @@
+// -*- js-indent-level: 8; -*-
 /*
     This file is part of Crossbear.
 
@@ -107,7 +108,7 @@ Crossbear.CBHTLProcessor = function (cbFrontend) {
 						} else if (serverMessages[i].messageType == "CBMessageSignature") {
 							// Unsplice signature message from output data
 							var data = new Uint8Array(output);
-							data.splice(serverMessages[i].getOffset(), serverMessages[i].getMessageLength())
+							data = data.subarray(serverMessages[i].getOffset(), serverMessages[i].getMessageLength())
 							if (!Crossbear.verifySHA256withRSA(data, self.cbFrontend.ServerRSAKeyPair, serverMessages[i].getSignature())) {
 								cbFrontend.displayTechnicalFailure("CBHTLProcessor:parseHuntingTaskList: Verification of HTL failed.", true);
 							}
