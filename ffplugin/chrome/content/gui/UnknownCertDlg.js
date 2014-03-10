@@ -99,7 +99,7 @@ function convertJudgmentToXML(judgment){
 		
 		// Between two consecutive judgments: add a linebreak
 		if(i != 0){
-			var brElement = document.createElement("br");
+			var brElement = document.createElementNS("http://www.w3.org/1999/xhtml","br");
 			judgmentXML.appendChild(brElement);
 		}
 		
@@ -108,9 +108,9 @@ function convertJudgmentToXML(judgment){
 			
 			// Add a critical judgment to the judgment paragraph (color:red and weight:bold)
 			// TODO: This use of font is horribly deprecated - beautify
-			var fontElement = document.createElement("font");
+			var fontElement = document.createElementNS("http://www.w3.org/1999/xhtml","font");
 			fontElement.setAttribute("color","red");
-			var bElement = document.createElement("b");
+			var bElement = document.createElementNS("http://www.w3.org/1999/xhtml","b");
 			var bContent = document.createTextNode(judgmentLines[i].substr(6,judgmentLines[i].length-13));
 			bElement.appendChild(bContent);
 			fontElement.appendChild(bElement);
