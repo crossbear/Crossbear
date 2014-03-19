@@ -663,7 +663,9 @@ if ((typeof Crossbear) == "undefined") {
 
 				} else if (typ == Crossbear.CBMessageTypes.CERT_VERIFY_RESULT) {
 					decodedMessages.push(new Crossbear.CBMessageCertVerifyResult(messageData));
-
+				} else if (typ == Crossbear.CBMessageTypes.SIGNATURE) {
+					decodedMessages.push(new Crossbear.CBMessageSignature(
+						messageData, currentReadPos, currentMessageLength));
 					// If an unknown type has been observed: Throw an exception 
 				} else {
 					cbFrontend.displayTechnicalFailure("messageBuilder: received unknown message type: " + type, true);
@@ -681,6 +683,29 @@ if ((typeof Crossbear) == "undefined") {
 			// Finally return the decoded messages
 			return decodedMessages;
 		},
+		
+		verifySHA256withRSA: function(data, serverkey, signature) {
+
+			var myhash = Crypto.SHA256(data);
+			var verifypair = new Crossbear.RSA.RSAVerifyPair(serverkey);
+			var decrypted = Crossbear.RSA.RSAdecryptToString(verifypair, signature);
+			// Now to remove padding. The relevant RFC is http://tools.ietf.org/html/rfc3447#section-9.2.
+			// TLDR: Hashing by PKCS#1.5 prepends an algorithm identifier to the actual hash.
+			// These identifiers are described in the notes to section 9.2.
+			// All we need to do is take the last 32 bytes of the result and we have the hash.
+			decrypted = decrypted.substring(256 - 33);
+			// TODO: convert to hex.
+			var result = "";
+			for (var i = 0; i < decrypted.length; i++) {
+				// Convert to hex string
+				var hexstr =  decrypted.charCodeAt(i).toString(16);
+				// Terrible hack. We join the empty array with "0" in between, so we need one more empty element.
+				result += Array(2 - hexstr.length  + 1).join("0") + hexstr;
+			}
+			return myhash == result
+			
+		},
+		
 	/*	
 		xmlToDOM : function (xml, doc, nodes) {  
 			if (xml.length() != 1) {  

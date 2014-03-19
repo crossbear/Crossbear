@@ -20,4 +20,7 @@ TAGS
 /talks/TorDevMeeting/folien.snm
 /talks/TorDevMeeting/folien.toc
 /talks/TorDevMeeting/introduction.aux
-
+/ffplugin/libraries/.gdb_history
+/ffplugin/libraries/crossbear_linux_32.so
+/ffplugin/libraries/crossbear_linux_64.so
+/server/eighty/WebContent/WEB-INF/lib/crossbear.jar

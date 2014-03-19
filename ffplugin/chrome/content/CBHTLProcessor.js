@@ -1,3 +1,4 @@
+// -*- js-indent-level: 8; -*-
 /*
     This file is part of Crossbear.
 
@@ -104,7 +105,19 @@ Crossbear.CBHTLProcessor = function (cbFrontend) {
 							}
 							cbFrontend.cbhunter.addPublicIP(serverMessages[i]);
 							
-						} else{
+						} else if (serverMessages[i].messageType == "CBMessageSignature") {
+							var sigmessage = serverMessages[i];
+							// Unsplice signature message from output data
+							var data = new Uint8Array(output);
+							var firstslice = data.subarray(0, sigmessage.getOffset());
+							var secondslice = data.subarray(sigmessage.getOffset() + sigmessage.getMessageLength(), data.length);
+							var spliced = new Uint8Array(firstslice.length + secondslice.length);
+							spliced.set(firstslice);
+							spliced.set(secondslice, firstslice.length);
+							if (!Crossbear.verifySHA256withRSA(spliced, self.cbFrontend.ServerRSAKeyPair, serverMessages[i].getSignature())) {
+								cbFrontend.displayTechnicalFailure("CBHTLProcessor:parseHuntingTaskList: Verification of HTL failed.", true);
+							}
+						} else {
 							cbFrontend.displayTechnicalFailure("CBHTLProcessor:parseHuntingTaskList: received unknown message from server.", true);
 						}
 

@@ -48,6 +48,8 @@ Crossbear.CBMessageTypes = {
 	// Messages to request a certificate verification and to receive it's result
 	CERT_VERIFY_REQUEST : 100,
 	CERT_VERIFY_RESULT : 110,
+
+	SIGNATURE : 6
 };
 
 /**
@@ -141,6 +143,39 @@ Crossbear.CBMessageCurrentServerTime = function (rawData) {
 
 	}
 };
+
+/**
+ * The signature message is contained in every hunting task list. The
+ * signature is calculated using the server private key with
+ * SHA256withRSA, and can be verified by calculating the signature
+ * over the binary message list with the signature message removed
+ * using the server public key.
+ */
+Crossbear.CBMessageSignature = function (rawData, offset, length) {
+	this.messageType = "CBMessageSignature";
+	this.signatureData = rawData;
+	this.offset = offset
+	this.messageLength = length
+
+	if (typeof(_crossbear_messagesignature_prototype_called) == 'undefined') {
+		_crossbear_messagesignature_prototype_called = true;
+
+		/**
+		 * Getter function for the signature data.
+		 */
+
+		Crossbear.CBMessageSignature.prototype.getSignature = function getSignature() {
+			return this.signatureData;
+		};
+		Crossbear.CBMessageSignature.prototype.getOffset = function getOffset() {
+			return this.offset;
+		};
+
+		Crossbear.CBMessageSignature.prototype.getMessageLength = function getMessageLength() {
+			return this.messageLength
+		};
+	};
+}
 
 /**
  * HuntingTask-messages are sent from the Crossbear server to the Crossbear client(s). Upon receiving a HuntingTask-message a client will contact the scan-target and download its certificate chain.

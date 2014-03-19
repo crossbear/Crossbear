@@ -61,7 +61,8 @@
 	<box orient="vertical" id="crossbear-serverReplyBox" align="center" >
 		<label style="font-size:200%; font-weight:bold;" id="crossbear-serverReplyRating"/>
 		<description>
-		<html:div id="crossbear-serverReplyDiv" type="content" />
+		<html:p id="crossbear-serverReplyDiv" type="content">
+		</html:p>
 		</description>
 	</box>
 	
