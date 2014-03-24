@@ -167,7 +167,7 @@ Crossbear.CBNet = function (cbFrontend) {
 				var target = Components.classes["@mozilla.org/thread-manager;1"].getService().currentThread;
 
 				// Perform a DNS-request on serverHostName with callbackObject as callback
-				dnsService.asyncResolve(serverHostName, 0, callbackObject, target);
+				dnsService.asyncResolve(serverHostName, dnsService.RESOLVE_DISABLE_IPV6, callbackObject, target);
 
 			} catch (e) {
 				cbFrontend.displayTechnicalFailure("CBNet:requestServerDNS: could not retrieve DNS for " + serverHostName + "!", true);
