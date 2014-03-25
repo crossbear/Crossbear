@@ -1,3 +1,4 @@
+/* -*- js-indent-level: 8; -*- */
 /*
     This file is part of Crossbear.
 
@@ -716,7 +717,6 @@ Crossbear.CBCertificateChainFetcher = function (cbFrontend) {
 				self.freeNetAddress(netAddress);
 				return null;
 			}
-
 			// Try to connect to the server
 			var success = self.functions.PR_Connect(socket, netAddress, self.functions.PR_SecondsToInterval(20));
 			if (success != self.types.PR_SUCCESS) {
