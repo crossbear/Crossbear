@@ -431,7 +431,7 @@ public class CVRProcessor {
 	private static boolean huntingTaskShouldBeCreated(CertVerifyRequest request, CertVerifyResult result) {
 		
 		// Did the comparison of the request's and the host's certificates resulted in a "different"-judgment and is the Certificate also unknown to Convergence?
-		if(result.getReport().indexOf("CERTCOMPARE: DIFFERENT") == -1 || result.getReport().indexOf("CONVERGENCE: UNKNOWN") == -1){
+		if(result.getReport().indexOf("CERTCOMPARE: DIFFERENT") == -1) {
 			return false;
 		}
 		
@@ -723,7 +723,7 @@ public class CVRProcessor {
 		result.addJudgment(getJudgmentOfTotalNumberOfObservation(requestCert, hostPort, db));
 		
 		// What is the period during which Convergence observed the certificate?
-		result.addJudgment(new ConvergenceConnector(db, 1000*60*60*6).getJudgmentOfObservationPeriod(requestCert, hostPort));
+		//result.addJudgment(new ConvergenceConnector(db, 1000*60*60*6).getJudgmentOfObservationPeriod(requestCert, hostPort));
 
 		// Has the certificate been issued for the requesting domain?
 		result.addJudgment(getJudgmentOfDomainMatch(requestCert, cvr.getHostName()));
