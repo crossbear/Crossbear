@@ -2,9 +2,11 @@ Crossbear - crossbear@pki.net.in.tum.de
 =======================================
 Also see https://pki.net.in.tum.de.
 
-Attention: The Crossbear Firefox add-on currently only works until
-Firefox version 17. We're working on the new version for more recent
-versions of Firefox. The reason is a deprecated API.
+[Attention: As of Crossbear 1.5.21, we have removed support for
+Convergence as it does not seem to be supported any more. We are
+currently considering integrating Perspectives.]
+
+
 
 Supported systems:
 * Windows: probably all versions from Windows XP onwards
@@ -16,12 +18,14 @@ On Linux, open Firefox. Tools -> Add-ons. Click the icon that so nicely
 wishes to imitate the look of a wrench. Choose "install add-on from file".
 
 Team:
-Ralph Holz (coordinator, developer)
-Thomas Riedmaier (developer, did the original SSL!)
-Vedat Levi Alev (developer, works on the OONI integration)
-Oliver Gasser (developer, does the new extension that also starts with 'S')
-Jan Seeger (developer, does the automated analysis)
-Phillip Dowling (developer, does Python tools for processing certs)
+Ralph Holz
+Jan Seeger
+
+Former team members:
+Vedat Levi Alev
+Phillip Dowling
+Oliver Gasser
+Thomas Riedmaier (the original coder)
 
 Licensing: Crossbear code is GPLv3 - see notice contained in every
 source file. However, some components we redistribute (e.g. Java
@@ -95,12 +99,11 @@ that Crossbear can provide.* At any other time, it is wise (and will hurt our
 work only very little), if you deactivate Crossbear.
 
 Let us repeat this: our goal is to trace men-in-the-middle, not users. We want
-to gather hard data. If you want to help us with this, you are very welcome. 
-We want to publish attacks that we learn about, and we can only do this with 
+to gather hard data. If you want to help us with this, you are very welcome.
+We want to publish attacks that we learn about, and we can only do this with
 your help. However, if you feel you don't want to participate in the hunting,
-but still want some reassurance, we can recommend Convergence (convergence.io).
-In fact, Crossbear makes use of Convergence itself (as a kind of back-end to
-have more vantage points).
+but still want some reassurance, we can recommend Perspectives
+(http://perspectives-project.org/). 
 
 If you have any questions, please do contact us. Our e-mail address is indicates
 at the top of this document.
