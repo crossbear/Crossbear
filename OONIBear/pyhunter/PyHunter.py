@@ -118,7 +118,7 @@ class PyHunter(object):
         print "Tracerouting!"
         trace = self.tracer.traceroute(ht.targetIP)
 
-        if cert_known:
+        if witness:
             # TODO get this to report
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.
