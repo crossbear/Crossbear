@@ -99,8 +99,8 @@ class PyHunter(object):
             return None
 
         # TODO get this to the report      
-        
         chain = get_chain(ht.targetIP,ht.targetPort)
+            
         
         witness  = None
         if ht.knownCertHashes:
@@ -151,8 +151,11 @@ class PyHunter(object):
             print "IP Address and Port", ht.targetIP, ht.targetPort
             print "Target host name is", ht.targetHost
             print "The known hashes are", display(ht.knownCertHashes)
-            
-            rep = self.executeHT(ht)
+            try:
+                rep = self.executeHT(ht)
+            except IOError as e:
+                print "IO Error occurred when executing HT: " + str(e)
+                rep = False
             
             report[ht.taskID]                    = {}            
             report[ht.taskID]['known hashes']    = display(ht.knownCertHashes)
