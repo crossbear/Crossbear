@@ -31,7 +31,7 @@ class HTLFetcher(object):
         sigmessage = messagelist.getMessage(messageindex)
         messagelist.removeMessage(messageindex)
         toverify = messagelist.getBytes()
-        cert = X509.load_cert("cbserver.crt")
+        cert = X509.load_cert(self.servCert)
         pubkey = cert.get_pubkey()
         pubkey.reset_context(md="sha256")
         pubkey.verify_init()
