@@ -2,9 +2,18 @@ Crossbear - crossbear@pki.net.in.tum.de
 =======================================
 Also see https://pki.net.in.tum.de.
 
-[Attention: As of Crossbear 1.5.21, we have removed support for
-Convergence as it does not seem to be supported any more. We are
-currently considering integrating Perspectives.]
+Recent updates:
+* As of Firefox 29, the add-on bar has been removed. Crossbear
+  uses this bar as a quick way to access settings and activate
+  or deactivate the Protector and Hunter functionality. If you
+  want this quick access, we recommend to install the following
+  add-on, which restores the add-on bar:
+  https://addons.mozilla.org/en-US/firefox/addon/the-addon-bar/
+
+* As of Crossbear 1.5.21, we have removed support for
+  Convergence as it does not seem to be supported any more.
+  A decision has been made to use our own notary infrastructure
+  instead. This transition will be transparent.
 
 
 
@@ -14,8 +23,8 @@ Supported systems:
 
 Quick start: download crossbear.xpi.
 On Windows, just drag & drop it into Firefox.
-On Linux, open Firefox. Tools -> Add-ons. Click the icon that so nicely
-wishes to imitate the look of a wrench. Choose "install add-on from file".
+On Linux, open Firefox and go to "Add-ons". Choose "install add-on from file".
+
 
 Team:
 Ralph Holz
@@ -26,6 +35,7 @@ Vedat Levi Alev
 Phillip Dowling
 Oliver Gasser
 Thomas Riedmaier (the original coder)
+
 
 Licensing: Crossbear code is GPLv3 - see notice contained in every
 source file. However, some components we redistribute (e.g. Java
