@@ -1,22 +1,29 @@
 #!/usr/bin/python
 
 import argparse
+import ConfigParser
 import os
 from pyhunter import PyHunter
 
 if os.geteuid() != 0:
     exit("    PyBear can only be run as root.")
 
-parser = argparse.ArgumentParser(description="Python implementation of Crossbear")
-parser.add_argument('cbhostname', help="Hostname of Crossbear server")
-parser.add_argument('cbservercert', help="Filename of Crossbear server certificate")
-parser.add_argument('tracermaxhops', help="Max number of hops per trace.", type=int)
-parser.add_argument('tracersamplesperhop', help="Number of samples per hop.", type=int)
-parser.add_argument('tracerperiod', help="???", type=int)
-                                 
 
+parser = argparse.ArgumentParser(description="Python implementation of Crossbear")
+parser.add_argument('--config','-c', help="Config filename", default="./cb.conf", dest="configfile")
 args = parser.parse_args()
-hunter = PyHunter.PyHunter(args.cbhostname, args.cbservercert, args.tracermaxhops, args.tracersamplesperhop, args.tracerperiod)
+
+cp = ConfigParser.RawConfigParser()
+
+cp.read(args.configfile)
+
+# TODO: Get list of URLs and issue verify requests for them.
+
+hunter = PyHunter.PyHunter(cp.get("Server", "cb_host"),
+                           cp.get("Server", "cb_cert"),
+                           cp.getint("Tracer", "max_hops"),
+                           cp.getint("Tracer", "samples_per_hop"),
+                           cp.getint("Tracer", "period"))
 
 hunter.getHTL()
 hunter.executeHTL()
