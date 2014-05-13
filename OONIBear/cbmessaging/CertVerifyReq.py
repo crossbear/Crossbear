@@ -2,14 +2,14 @@ from Message import Message
 from MessageTypes import messageTypes
 from OpenSSL import crypto as ocrypto
 from pprint import pprint
-from struct import pack
+from struct import pack, unpack
 
 class CertVerifyReq(Message):
 
     def createFromBytes(self, msgtype, data):
         Message.createFromBytes(self, msgtype, data)
-        self.options = unpack(">B", data[0])
-        numcerts = unpack(">B", data[1])
+        self.options = unpack(">B", data[0])[0]
+        numcerts = unpack(">B", data[1])[0]
         for i in range(0, numcerts):
             # TODO: Not implemented
             pass
