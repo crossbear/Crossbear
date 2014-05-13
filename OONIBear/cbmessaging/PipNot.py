@@ -11,6 +11,7 @@ from Message import Message
 import MessageTypes
 from struct import unpack, pack
 import abc
+import binascii
 
 class PipNot(Message):
 
@@ -42,3 +43,8 @@ class PipNot(Message):
         elif self.ipversion == 6:
             bytes += pack(">BBBBBBBBBBBBBBBB", *self.publicIP)
         return bytes
+
+
+    def __repr__(self):
+        ip = ".".join(str(x) for x in self.publicIP)
+        return "PipNot(publicIP=%s,hmac=%s)" % (ip,binascii.hexlify(self.hmac))

@@ -5,6 +5,7 @@ A crossbear hunter implementation in python.
 # NOTE all print commands should log to the ooni thingy.
 from   HTLFetcher                 import HTLFetcher
 from   cbmessaging.Message        import Message
+from   cbmessaging.MessageList    import MessageList
 from   cbmessaging.MessageTypes   import messageTypes, messageNames
 from   cbmessaging.HTRepNewCert   import HTRepNewCert
 from   cbmessaging.HTRepKnownCert import HTRepKnownCert
@@ -81,11 +82,14 @@ class PyHunter(object):
 	    print e
             return False
 
-    def send_results(self, hts):
+    def send_result(self, ht):
         """sends the results to the CB server"""
-
         conn = SingleTrustHTTPS(self.cbServerCert, self.cbServerHostName, 443)
-        conn.request("SEND", "", "".join(h.getBytes() for h in hts))
+        conn.request("POST", "/reportHTResults.jsp",
+                     MessageList.getBytesForMessage(ht))
+        response = conn.getresponse()
+        if response.status != 200:
+            print "Error submitting hunting task results. Error code: %s, %s" % (response.status, response.reason)
         conn.close()
 
     def executeHT(self,ht):
@@ -118,7 +122,7 @@ class PyHunter(object):
         print "Tracerouting!"
         trace = self.tracer.traceroute(ht.targetIP)
 
-        if cert_known:
+        if witness:
             # TODO get this to report
             rep = HTRepKnownCert()
             # TODO: I don't know if the selection of the hmac is correct.
@@ -140,7 +144,6 @@ class PyHunter(object):
         
     def executeHTL(self):
         nr     = 0
-        htr    = []
         report = {}
         random.shuffle(self.hts["tasks"])
         
@@ -168,20 +171,10 @@ class PyHunter(object):
                 print "Hunting task result",  messageNames[rep.type]
                 report[ht.taskID]['reply type'] = messageNames[rep.type]
                 report[ht.taskID]['trace'] = rep.trace
-                htr.append(rep)
-                nr += 1
-                
+                self.send_result(rep)
             else:
                 print "Hunting task result Nil"
                 report[ht.taskID]['reply type'] = 'Nil'
-
-            if nr >= 5:
-                self.send_results(htr)
-                nr = 0
-                htr = []
-                
-        if htr:
-            self.send_results(htr)
         # TODO: Return useful log information
         
         return report

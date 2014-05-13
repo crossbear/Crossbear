@@ -11,6 +11,7 @@ Structure:
     hmac of the ip that was inserted in the trace to the server as first hop
     (32b)
     length of the certificate chain that was observed by the client (1b)
+    certificate chain (var. length)
     trace to the target (var. length)
 """
 
@@ -26,31 +27,32 @@ class HTRepNewCert(Message):
     taskid -- ID of the Hunting Task (byte array, 4B)
     ts -- server's timestamp of "time-of-execution (byte array, 4B, also see CurServTime.py)
     hmac -- the HMAC token from a Public IP Notification (byte array, 32B)
-    certhash -- hash of the observed certificate chain (byte array, 32B)
+    certchain -- The observed certificate chain (byte array, variable length)
     trace -- Traceroute to the alleged victim host (String, variable length)
     """
 
     # RH: CONTINUE HERE
 
     def createFromValues(self, taskid, ts, hmac, certchain, trace):
-        # set message type and length (72B for taskid, ts, hmac and
-        # plus length of traceroute)
-        Message.createFromValues(self, messageTypes['TASK_REPLY_NEW_CERT'], 40 + len(trace))
+        # Convert certs to DER
+        self.certchain = []
+        for cert in certchain[:min(255,len(certchain))]:
+            self.certchain.append(ssl.PEM_cert_to_DER_cert(cert))
+        certlength = sum(len(x) for x in self.certchain)
+        # set message type and length ( 41 Bytes for taskid, ts, hmac and number of certificates
+        # plus length of trace and length of cert chain.
+        Message.createFromValues(self, messageTypes['TASK_REPLY_NEW_CERT'], 41 + len(trace) + certlength)
         self.taskid    = taskid
         self.ts        = ts
         self.hmac      = hmac
-        self.certchain = certchain
         self.trace     = trace
 
 
     def getBytes(self):
-        timeStamp = int( self.ts / 1000 )
         # Pack in network byte order
-
-        out = [pack(">II", self.taskid, timeStamp), self.hmac,
+        out = [pack(">II", self.taskid, int(self.ts)), self.hmac,
                pack(">B", 0xff & len(self.certchain))]
-        for cert in self.certchain[:min(255, len(self.certchain))]:
-            out.append(ssl.PEM_cert_to_DER_cert(cert))
-                      
+        out.append("".join(self.certchain))
         out.append(self.trace)
-        return "".join(out)
+        result = "".join(out)
+        return result
