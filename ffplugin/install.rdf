@@ -5,8 +5,8 @@
 
   <Description about="urn:mozilla:install-manifest">  
     <em:id>crossbear@pki.net.in.tum.de</em:id>  
-    <em:version>1.5.21</em:version>  
-    <em:type>2</em:type>  
+    <em:version>v1.6.0-rc1-2-gd589090</em:version>  
+    <em:type>2</em:type>
    
     <!-- Target Application this extension can install into, 
          with minimum and maximum supported versions. --> 

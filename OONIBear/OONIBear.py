@@ -1,6 +1,6 @@
 from twisted.python import usage
 from ooni.nettest import NetTestCase
-from ooni.PyHunter import PyHunter
+from ooni.pyhunter import PyHunter
 from pprint import pprint
 import traceback
 import ConfigParser

@@ -5,6 +5,8 @@ is used to give the client the ability to send Hunting Task Replies
 with a timestamp that is at least roughly equal to the timestamp the
 server would have recorded if it had executed the Hunting Task itself
 at that time.
+
+The timestamp is given in seconds since the epoch. *NOTE*: Java timestamp uses milliseconds, python uses seconds.
 """
 
 from Message import Message
@@ -37,3 +39,6 @@ class CurServTime(Message):
 
     def getBytes(self):
         return pack(">l", self.servertime)
+
+    def __repr__(self):
+        return "CurServTime(servertime=%d,timediff=%d)" % (self.servertime, self.diff)

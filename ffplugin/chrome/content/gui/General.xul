@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 <!--
 
-    This file is part of Crossbear.
+This file is part of Crossbear.
 
-    Crossbear is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Crossbear is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Crossbear is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Crossbear is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with Crossbear.  If not, see <http://www.gnu.org/licenses/>.
 
 -->
 
@@ -26,59 +26,61 @@ the rest of the system).
 
 <overlay id="crossbear" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-		<!-- Include scripts -->
-		<script src="chrome://crossbear/content/crypto-js/crypto.js"/>
-		<script src="chrome://crossbear/content/crypto-js/blockmodes.js"/>
-		<script src="chrome://crossbear/content/crypto-js/aes.js"/>
-		<script src="chrome://crossbear/content/crypto-js/sha256.js"/>
-		<script src="chrome://crossbear/content/crypto-js/sha1.js"/>
-		
-		<script src="chrome://crossbear/content/CBHelper.js"/>
+  <!-- Include scripts -->
+  <script src="chrome://crossbear/content/crypto-js/crypto.js"/>
+  <script src="chrome://crossbear/content/crypto-js/blockmodes.js"/>
+  <script src="chrome://crossbear/content/crypto-js/aes.js"/>
+  <script src="chrome://crossbear/content/crypto-js/sha256.js"/>
+  <script src="chrome://crossbear/content/crypto-js/sha1.js"/>
+  
+  <script src="chrome://crossbear/content/CBHelper.js"/>
 
-		<script src="chrome://crossbear/content/rsa-js/RSA.js"/>
-		<script src="chrome://crossbear/content/rsa-js/BigInt.js"/>
-		<script src="chrome://crossbear/content/rsa-js/Barrett.js"/>
-		<script src="chrome://crossbear/content/rsa-js/OAEP.js"/>
+  <script src="chrome://crossbear/content/rsa-js/RSA.js"/>
+  <script src="chrome://crossbear/content/rsa-js/BigInt.js"/>
+  <script src="chrome://crossbear/content/rsa-js/Barrett.js"/>
+  <script src="chrome://crossbear/content/rsa-js/OAEP.js"/>
 
-		<script src="chrome://crossbear/content/CBMessages.js"/>
-		<script src="chrome://crossbear/content/CBEvents.js"/>
-		<script src="chrome://crossbear/content/CBDatabase.js"/>
-		<script src="chrome://crossbear/content/CBNet.js"/>
-		<script src="chrome://crossbear/content/CBHunter.js"/>
-		<script src="chrome://crossbear/content/CBProtector.js"/>
-		<script src="chrome://crossbear/content/CBHTLProcessor.js"/>
-		<script src="chrome://crossbear/content/CBTrustDecisionCache.js"/>
-		<script src="chrome://crossbear/content/CBEventObserver.js"/>
-		<script src="chrome://crossbear/content/CBFrontend.js"/>
-		
-		<!-- Instantiate a new CBFrontend-object and thus initialize the Crossbear system -->
-		<script> var crossbearFrontend = new Crossbear.CBFrontend('crossbear.net.in.tum.de');</script>
+  <script src="chrome://crossbear/content/CBMessages.js"/>
+  <script src="chrome://crossbear/content/CBEvents.js"/>
+  <script src="chrome://crossbear/content/CBDatabase.js"/>
+  <script src="chrome://crossbear/content/CBNet.js"/>
+  <script src="chrome://crossbear/content/CBHunter.js"/>
+  <script src="chrome://crossbear/content/CBProtector.js"/>
+  <script src="chrome://crossbear/content/CBHTLProcessor.js"/>
+  <script src="chrome://crossbear/content/CBTrustDecisionCache.js"/>
+  <script src="chrome://crossbear/content/CBEventObserver.js"/>
+  <script src="chrome://crossbear/content/CBFrontend.js"/>
+  
+  <!-- Instantiate a new CBFrontend-object and thus initialize the Crossbear system -->
+  <script> var crossbearFrontend = new Crossbear.CBFrontend('crossbear.net.in.tum.de');</script>
 
-		<!-- Crossbear Popup Menu -->
-		<popupset >
-		
-				<!-- Call the setPopupValues-function if the user clicks on the popup -->
-				<menupopup id="crossbear-statusbarpanel-popup" onpopupshowing="crossbearFrontend.setPopupValues()" position="before_end">
-				
-						<!-- MenueItem Settings: Open a OptionsDlg -->
-						<menuitem label="Settings" id="crossbear-statusbarpanel-popup-settings" onclick="var params = {inn : {cbFrontend : crossbearFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/OptionsDlg.xul', 'Crossbear - Settings', 'chrome,centerscreen,dependent=YES,dialog=YES', params);"/>
+  <!-- Crossbear Popup Menu -->
+  <popupset>
+    
+    <!-- Call the setPopupValues-function if the user clicks on the popup -->
+
+  </popupset>
+
+  <!-- Add the Crossbear Popup Menu to the Add-on-bar -->
+  <toolbarpalette id="BrowserToolbarPalette">
+    <toolbarbutton title="Crossbear" type="menu" id="crossbear-statusbarpanel" class="statusbarpanel-iconic" image="chrome://crossbear/content/gui/statusbar icon.png" tooltiptext="Crossbear"  popup="crossbear-statusbarpanel-popup">
+      <menupopup id="crossbear-statusbarpanel-popup" onpopupshowing="crossbearFrontend.setPopupValues()" position="before_end">
+	
+	<!-- MenueItem Settings: Open a OptionsDlg -->
+	<menuitem label="Settings" id="crossbear-statusbarpanel-popup-settings" onclick="var params = {inn : {cbFrontend : crossbearFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/OptionsDlg.xul', 'Crossbear - Settings', 'chrome,centerscreen,dependent=YES,dialog=YES', params);"/>
 
 
-						<menuitem label="Trust Decision Cache" id="crossbear-statusbarpanel-popup-decisioncache" onclick="var params ={inn : {cbFrontend : crossbearFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalTDCDlg.xul', 'Crossbear - Trust Decision Cache', 'chrome, dependent=YES, dialog=YES', params);"/>
+	<menuitem label="Trust Decision Cache" id="crossbear-statusbarpanel-popup-decisioncache" onclick="var params ={inn : {cbFrontend : crossbearFrontend},out : {}}; window.openDialog('chrome://crossbear/content/gui/LocalTDCDlg.xul', 'Crossbear - Trust Decision Cache', 'chrome, dependent=YES, dialog=YES', params);"/>
 
-						  <menuseparator/>
-						<!-- MenueItem Protector: Call the protectorCheckBoxClicked-function if the user clicks on it -->
-						<menuitem type="checkbox" autocheck="false" label="Protector" id="crossbear-statusbarpanel-popup-protector" onclick="crossbearFrontend.protectorCheckBoxClicked();"/>
-						
-						<!-- MenueItem Hunter: Call the hunterCheckBoxClicked-function if the user clicks on it -->
-						<menuitem type="checkbox" autocheck="false" label="Hunter" id="crossbear-statusbarpanel-popup-hunter" onclick="crossbearFrontend.hunterCheckBoxClicked();"/>
-				</menupopup>
-		</popupset>
-
-		<!-- Add the Crossbear Popup Menu to the Add-on-bar -->
-		<statusbar id="status-bar">  
-				<statusbarpanel id="crossbear-statusbarpanel" class="statusbarpanel-iconic" src="chrome://crossbear/content/gui/statusbar icon.png" tooltiptext="Crossbear"  popup="crossbear-statusbarpanel-popup"/>
-		</statusbar>
+	<menuseparator/>
+	<!-- MenueItem Protector: Call the protectorCheckBoxClicked-function if the user clicks on it -->
+	<menuitem type="checkbox" autocheck="false" label="Protector" id="crossbear-statusbarpanel-popup-protector" onclick="crossbearFrontend.protectorCheckBoxClicked();"/>
+	
+	<!-- MenueItem Hunter: Call the hunterCheckBoxClicked-function if the user clicks on it -->
+	<menuitem type="checkbox" autocheck="false" label="Hunter" id="crossbear-statusbarpanel-popup-hunter" onclick="crossbearFrontend.hunterCheckBoxClicked();"/>
+      </menupopup>
+    </toolbarbutton>
+  </toolbarpalette>
 
 </overlay>
 

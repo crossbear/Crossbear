@@ -61,6 +61,7 @@ class MessageList(object):
         ret = out.getvalue()
         out.close()
         return ret
+
     def length(self):
         return len(self.messages)
 

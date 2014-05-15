@@ -19,7 +19,7 @@ class Message(object):
     # subclasses should implement this and also call this
     # implementation.
     def createFromValues(self, message_type, length):
-        self.length = length
+        self.length = length + 3
         self.type = message_type
         self.type_name = messageNames[message_type]
         return
