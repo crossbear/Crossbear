@@ -2,7 +2,7 @@ from Message import Message
 from MessageTypes import messageTypes
 from OpenSSL import crypto as ocrypto
 from pprint import pprint
-from struct import pack
+from struct import pack,unpack
 
 class CertVerifyRes(Message):
 

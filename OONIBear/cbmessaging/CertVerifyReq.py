@@ -1,6 +1,6 @@
 from Message import Message
 from MessageTypes import messageTypes
-from OpenSSL import crypto as ocrypto
+import ssl
 from pprint import pprint
 from struct import pack, unpack
 
@@ -18,12 +18,11 @@ class CertVerifyReq(Message):
         self.certchain = []
         chainlength = 0
         for cert in certs:
-            certobj = ocrypto.load_certificate(ocrypto.FILETYPE_PEM, cert)
-            derobj = ocrypto.dump_certificate(ocrypto.FILETYPE_ASN1, certobj)
+            derobj = ssl.PEM_cert_to_DER_cert(cert)
             chainlength += len(derobj)
             self.certchain.append(derobj)
 
-        Message.createFromValues(self, messageTypes['CERT_VERIFY_REQUEST'], 5 + chainlength + len(hostname) + len(ip) + len(str(port)))
+        Message.createFromValues(self, messageTypes['CERT_VERIFY_REQUEST'], 4 + chainlength + len(hostname) + len(ip) + len(str(port)))
         self.options = options
         self.hostname = hostname
         self.ip = ip
@@ -37,10 +36,19 @@ class CertVerifyReq(Message):
 
 if __name__ == "__main__":
     import cbutils.CertUtils
-    c = cbutils.CertUtils.get_chain("thenybble.de", 443)
-    pprint(c)
+    import cbmessaging.MessageList
+    from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
+    c = cbutils.CertUtils.get_chain("www.google.de", 443)
     req = CertVerifyReq()
-    req.createFromValues(0, c, "thenybble.de", "176.28.10.36", 443)
-    b = req.getBytes()
-    with open("out.pack", "w") as f:
+    req.createFromValues(0, c, "www.google.de", "173.194.44.56", 443)
+    print(len(c))
+    b = cbmessaging.MessageList.MessageList.getBytesForMessage(req)
+    with open("message.bin", "w") as f:
         f.write(b)
+    conn = SingleTrustHTTPS("../cbserver.crt", "crossbear.net.in.tum.de", 443)
+    conn.request("POST", "/verifyCert.jsp", b)
+    response = conn.getresponse()
+    content = response.read()
+    ml = cbmessaging.MessageList.MessageList(content)
+    for msg in ml.allMessages():
+        print msg.type_name
