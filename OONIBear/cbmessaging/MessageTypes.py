@@ -1,6 +1,3 @@
-
-
-
 messageTypes = { "PUBLIC_IP_NOTIF4": 0,
                  "PUBLIC_IP_NOTIF6": 1,
                  "PUBLIC_IP_NOTIFICATION_REQUEST": 2,

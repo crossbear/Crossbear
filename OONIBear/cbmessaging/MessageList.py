@@ -1,7 +1,7 @@
 ''' A recode of the Message class with hopefully better message parsing.'''
 
 from struct import pack, unpack
-import PipNot, PipReq, CurServTime, SignatureMessage, HuntingTask, HTRepNewCert, HTRepKnownCert
+import PipNot, PipReq, CurServTime, SignatureMessage, HuntingTask, HTRepNewCert, HTRepKnownCert, CertVerifyReq, CertVerifyRes
 
 import cStringIO
 import types
@@ -9,9 +9,7 @@ from Message import Message
 
 class MessageList(object):
 
-    messageClasses = { 0: PipNot.PipNot, 1: PipNot.PipNot, 2: PipReq.PipReq, 5: CurServTime.CurServTime, 6: SignatureMessage.SignatureMessage, 10: HuntingTask.HuntingTask, 11: HuntingTask.HuntingTask, 20: HTRepNewCert.HTRepNewCert, 21: HTRepKnownCert.HTRepKnownCert, 100: types.NoneType, 110: types.NoneType }
-
-
+    messageClasses = { 0: PipNot.PipNot, 1: PipNot.PipNot, 2: PipReq.PipReq, 5: CurServTime.CurServTime, 6: SignatureMessage.SignatureMessage, 10: HuntingTask.HuntingTask, 11: HuntingTask.HuntingTask, 20: HTRepNewCert.HTRepNewCert, 21: HTRepKnownCert.HTRepKnownCert, 100: CertVerifyReq.CertVerifyReq, 110: CertVerifyRes.CertVerifyRes }
     
     # A HTTPResponse object.
     def __init__(self, response):
