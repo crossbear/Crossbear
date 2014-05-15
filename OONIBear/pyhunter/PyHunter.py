@@ -120,13 +120,10 @@ class PyHunter(object):
 
         # TODO get this to report
         print "Tracerouting!"
-        trace = self.tracer.traceroute(ht.targetIP)
-
+        trace = self.tracer.traceroute(self.hts["pip"][ipv]["not"].publicIPString, ht.targetIP)
         if witness:
             # TODO get this to report
             rep = HTRepKnownCert()
-            # TODO: I don't know if the selection of the hmac is correct.
-            # Previously, it was ht.hmac, but that never existed AFAIK
             rep.createFromValues(ht.taskID,
                                  self.hts["pip"][ipv]["not"].hmac,
                                  witness,

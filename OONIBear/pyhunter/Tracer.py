@@ -22,7 +22,7 @@ class Tracer(object):
 
     # TODO: can we replace this with OONI's traceroute or do we insist
     # on having our own for comparability?
-    def traceroute(self, dst , dst_port=3880, src_port=3000):
+    def traceroute(self, srcIP, dst, dst_port=3880, src_port=3000):
 
         """
         Carry out a traceroute to a destination.
@@ -89,5 +89,7 @@ class Tracer(object):
             
         # remove empty samples, interleave the rest with new lines
         filtered = '\n'.join(filter(lambda x: x, hops))
+        filtered = (srcIP + "\n" + filtered + "\n" + '%s' % dst).strip()
+
         # add the host address to this chunk
-        return (filtered + '\n' + '%s' % dst).strip()
+        return filtered

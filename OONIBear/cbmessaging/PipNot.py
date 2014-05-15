@@ -33,7 +33,10 @@ class PipNot(Message):
             ipLen = 16
             self.ipversion = 6
         self.publicIP = unpack(">" + "B" * ipLen, data[32:32 + ipLen])
-
+        if ipLen == 4:
+            self.publicIPString = ".".join(str(x) for x in self.publicIP)
+        elif ipLen == 16:
+            self.publicIPString = ":".join(str(x) for x in self.publicIP)
 
     def getBytes(self):
         bytes = ""
