@@ -57,8 +57,6 @@ class PyHunter(object):
             elif msg.type == messageTypes["IPV4_SHA256_TASK"] or msg.type == messageTypes["IPV6_SHA256_TASK"]:
                 self.hts["tasks"].append(msg)
                 continue
-        # TODO: Return useful log information
-        pprint.pprint(self.hts)
         return {}
         
     def freshen_pip(self,ipv):
@@ -110,7 +108,7 @@ class PyHunter(object):
         if ht.knownCertHashes:
 
             ht.cccHashs = compute_chain_hashes(chain)
-            print "Possible hashes are", display(ht.cccHashs)
+            #print "Possible hashes are", display(ht.cccHashs)
 
 
             for cHash in ht.cccHashs:
@@ -119,7 +117,7 @@ class PyHunter(object):
                     break
 
         # TODO get this to report
-        print "Tracerouting!"
+        #print "Tracerouting!"
         trace = self.tracer.traceroute(self.hts["pip"][ipv]["not"].publicIPString, ht.targetIP)
         if witness:
             # TODO get this to report
@@ -150,7 +148,7 @@ class PyHunter(object):
             print "Executing task", ht.taskID
             print "IP Address and Port", ht.targetIP, ht.targetPort
             print "Target host name is", ht.targetHost
-            print "The known hashes are", display(ht.knownCertHashes)
+            # print "The known hashes are", display(ht.knownCertHashes)
             try:
                 rep = self.executeHT(ht)
             except IOError as e:
