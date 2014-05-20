@@ -244,7 +244,7 @@ Crossbear.CBFrontend = function (cbServerName) {
 		    AddonManager.getAddonByID("convergence@extension.thoughtcrime.org", function(addon) {  
 		      if(addon != null && addon.isActive){
 		          var convergenceWarningXML = document.createDocumentFragment()
-			  var convergenceWarning = document.createTextNode("You are running Convergence. Since Crossbear cannot operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two add-ons. Note that Crossbear queries Convergence, so there is no need for the latter.");
+			  var convergenceWarning = document.createTextNode("You are running Convergence. Since Crossbear cannot operate while Convergence is present, Crossbear was deactivated. Please uninstall either of the two add-ons.");
                           convergenceWarningXML.appendChild(convergenceWarning);
 		    	  self.warnUserAboutBeingUnderAttack(convergenceWarningXML, 0);
 		    	  self.shutdown(true);
