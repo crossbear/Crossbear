@@ -5,10 +5,12 @@ import ConfigParser
 import os
 import itertools
 import socket
+import cbutils.MessageUtils
 from pyhunter import PyHunter
 from cbutils.CertUtils import get_chain
 from cbmessaging import CertVerifyReq
 from cbmessaging.MessageList import MessageList
+from cbmessaging.MessageTypes import messageTypes
 from cbmessaging.CertVerifyRes import CertVerifyRes
 from cbmessaging.CertVerifyReq import CertVerifyReq
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
@@ -44,13 +46,16 @@ def send_verify(cert, cbhostname, cvr):
         print("Error submitting CertificateVerifyRequest: Error %d, %s" % (response.status, response.reason))
     content = response.read()
     ml = MessageList(content)
-    # Return CertVerifyRes.
-    # TODO: Use PIP, timestamp message and other stuff. This requeres some restructuring.
+    cbutils.MessageUtils.verify(ml, cert)
+    # Return CertVerifyRes.  TODO: Use PIP, timestamp message and
+    # other stuff. This requeres some restructuring.
+    ret = None
     for msg in ml.allMessages():
-        if isinstance(msg, CertVerifyRes):
-            return msg
-    print("Error: CertificateVerifyRequest response did not contain a CertificateVerifyResponse!")
-    return None
+        if msg.getType() == messageTypes["CERT_VERIFY_RESULT"]:
+            ret = msg
+    if ret == None:
+        print("Error: CertificateVerifyRequest response did not contain a CertificateVerifyResponse!")
+    return ret
 
 parser = argparse.ArgumentParser(description="Python implementation of Crossbear")
 parser.add_argument('--config','-c', help="Config filename", default="./cb.conf", dest="configfile")
@@ -75,7 +80,8 @@ for host in hosts:
             print("Verify response from server for IP %s, host %s: %d" % (ip, host, response.rating))
         except socket.gaierror as e:
             print "Skipping cert verification of %s for unsupported IP version (address: %s)" % (host, ip)
-        
+
+exit
 
 hunter = PyHunter.PyHunter(cp.get("Server", "cb_host"),
                            cp.get("Server", "cb_cert"),
