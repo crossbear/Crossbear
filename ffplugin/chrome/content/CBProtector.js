@@ -415,7 +415,7 @@ Crossbear.CBProtector = function (cbFrontend) {
 			
 			// Cancel the connection attempt
 			channel.cancel(Components.results.NS_BINDING_SUCCEEDED);
-	
+			openUILinkIn("chrome://crossbear/content/gui/blocked.html", "current");
 		};
 		
 		/**
