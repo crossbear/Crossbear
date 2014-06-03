@@ -123,6 +123,7 @@ class PyHunter(object):
             # TODO get this to report
             rep = HTRepKnownCert()
             rep.createFromValues(ht.taskID,
+                                 self.hts["cs"].currentServTime(),
                                  self.hts["pip"][ipv]["not"].hmac,
                                  witness,
                                  trace)
