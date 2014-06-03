@@ -10,7 +10,6 @@ __author__ = "Vedat Levi Alev"
 from Message import Message
 import MessageTypes
 from struct import unpack, pack
-import abc
 import binascii
 
 class PipNot(Message):

@@ -25,6 +25,8 @@ class CertVerifyRes(Message):
         formatstring = ">B%ds" % (len(judgementstring),)
         return pack(formatstring, self.rating, judgementstring)
 
+    def __repr__(self):
+        return "CertVerifyRes(judgement=%s, rating=%d)" % (self.judgement, self.rating)
 
 if __name__ == "__main__":
     msg = CertVerifyRes()

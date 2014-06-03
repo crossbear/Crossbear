@@ -1,8 +1,6 @@
-import abc
 from MessageTypes import messageNames
 
 class Message(object):
-    __metaclass__ = abc.ABCMeta
     
     # Read data from a byte format. All subclasses should implement
     # this, and also call this implementation
@@ -32,3 +30,6 @@ class Message(object):
         '''Return the message bytes in string form (i.e. packed)'''
         raise NotImplementedError("getBytes not implemented for class %s", type(self))
         return
+
+    def getType(self):
+        return self.type

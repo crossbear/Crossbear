@@ -22,7 +22,6 @@ class HTRepKnownCert(Message):
     trace -- Traceroute to the alleged victim host (String, variable length)
     """
 
-    # TODO: Move this into a createFromValues function
     def createFromValues(self, taskid, ts, hmac, certhash, trace):
         # set message type and length (72B for taskid, ts, hmac and
         # certhash plus length of traceroute)
@@ -45,11 +44,10 @@ class HTRepKnownCert(Message):
         timeStamp = int(self.ts / 1000)
         out = [pack(">II", self.taskid, timeStamp), self.hmac, self.certhash,
                self.trace]
-                #pack("%dc" % len(trace), *list(trace))]
         # Concatenate the strings (no delimiter) and return the result
         return "".join(out)
 
-    # TODO: Finish this
+    # TODO: Finish this. Not really needed though.
     def createFromBytes(self, message_type, content):
         # Message.createFromBytes(self, message_type, content)
         # (taskid, timeStamp) = unpack(">II", content[:8])

@@ -1,6 +1,7 @@
 ''' A recode of the Message class with hopefully better message parsing.'''
 
 from struct import pack, unpack
+
 import PipNot, PipReq, CurServTime, SignatureMessage, HuntingTask, HTRepNewCert, HTRepKnownCert, CertVerifyReq, CertVerifyRes
 
 import cStringIO
@@ -9,7 +10,12 @@ from Message import Message
 
 class MessageList(object):
 
-    messageClasses = { 0: PipNot.PipNot, 1: PipNot.PipNot, 2: PipReq.PipReq, 5: CurServTime.CurServTime, 6: SignatureMessage.SignatureMessage, 10: HuntingTask.HuntingTask, 11: HuntingTask.HuntingTask, 20: HTRepNewCert.HTRepNewCert, 21: HTRepKnownCert.HTRepKnownCert, 100: CertVerifyReq.CertVerifyReq, 110: CertVerifyRes.CertVerifyRes }
+    messageClasses = { 0: PipNot.PipNot, 1: PipNot.PipNot, 2:
+                      PipReq.PipReq, 5: CurServTime.CurServTime, 6:
+                      SignatureMessage.SignatureMessage, 10: HuntingTask.HuntingTask, 11:
+                      HuntingTask.HuntingTask, 20: HTRepNewCert.HTRepNewCert, 21:
+                      HTRepKnownCert.HTRepKnownCert, 100: CertVerifyReq.CertVerifyReq,
+                      110: CertVerifyRes.CertVerifyRes }
     
     # A HTTPResponse object.
     def __init__(self, response):
@@ -63,6 +69,10 @@ class MessageList(object):
     def length(self):
         return len(self.messages)
 
+    def __repr__(self):
+        messages = [m.__repr__() for m in self.messages]
+        return "MessageList(messages=[%s])" % ("\n".join(messages),)
+        
 import urllib
 from pprint import pprint
 if __name__ == '__main__':

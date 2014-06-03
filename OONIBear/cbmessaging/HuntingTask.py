@@ -9,6 +9,7 @@ from cStringIO import StringIO
 #import ipaddr
 from struct import unpack,pack
 import struct
+import binascii
 import sys
 
 class HuntingTask(Message):
@@ -68,3 +69,9 @@ class HuntingTask(Message):
         out.write(pack('>H',self.targetPort))
         out.write(self.targetHost)
         return out.getvalue()
+
+
+    def __repr__(self):
+        return "HuntingTask(taskID=%d, knownCertHashes=%s, targetIP=%s, targetPort=%d, targetHost=%s)" \
+        % ( self.taskID, [ binascii.hexlify(h) for h in self.knownCertHashes],
+            self.targetIP, self.targetPort, self.targetHost)
