@@ -80,6 +80,8 @@ for host in hosts:
             print("Verify response from server for IP %s, host %s: %d" % (ip, host, response.rating))
         except socket.gaierror as e:
             print "Skipping cert verification of %s for unsupported IP version (address: %s)" % (host, ip)
+        except socket.timeout as e:
+            print "Skipping cert verification of %s (IP %s) due to timeout. Error: %s" % (host, ip, e)
 
 exit
 
