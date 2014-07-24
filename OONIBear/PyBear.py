@@ -6,6 +6,7 @@ import os
 import itertools
 import socket
 import cbutils.MessageUtils
+import OpenSSL
 from pyhunter import PyHunter
 from cbutils.CertUtils import get_chain
 from cbmessaging import CertVerifyReq
@@ -79,9 +80,11 @@ for host in hosts:
             response = send_verify(cp.get("Server", "cb_cert"), cp.get("Server", "cb_host"), cvr)
             print("Verify response from server for IP %s, host %s: %d" % (ip, host, response.rating))
         except socket.gaierror as e:
-            print "Skipping cert verification of %s for unsupported IP version (address: %s)" % (host, ip)
+            print "Skipping cert verification of %s due to unsupported IP version (address: %s). Error: %s" % (host, ip, e)
         except socket.timeout as e:
             print "Skipping cert verification of %s (IP %s) due to timeout. Error: %s" % (host, ip, e)
+        except OpenSSL.SSL.SysCallError as e:
+            print "Skippinf cert verification of %s (IP %s) due to OpenSSL syscall error. Error: %s" % (host, ip, e)
 
 exit
 
