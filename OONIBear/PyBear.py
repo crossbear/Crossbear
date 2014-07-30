@@ -7,6 +7,8 @@ import itertools
 import socket
 import cbutils.MessageUtils
 import OpenSSL
+import urllib
+import random
 from pyhunter import PyHunter
 from cbutils.CertUtils import get_chain
 from cbmessaging import CertVerifyReq
@@ -17,8 +19,17 @@ from cbmessaging.CertVerifyReq import CertVerifyReq
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
 from dns import resolver
 
-if os.geteuid() != 0:
-    exit("    PyBear can only be run as root.")
+
+def get_hosts(url, country, cert, cbhostname):
+    conn = SingleTrustHTTPS(cert, cbhostname, 443)
+    url = url + "?" + urllib.urlencode({"country": country})
+    conn.request("GET", url)
+    response = conn.getresponse()
+    if response.status != 200:
+        print("Error retrieving list of observation URLs from %s: Error %d, %s" % (url, response.status, response.reason))
+        return
+    content = response.read()
+    return [x.trim() for x in re.split(" |\n", content)]
 
 def resolve_ips(host):
     answers_ipv4 = []
@@ -58,6 +69,10 @@ def send_verify(cert, cbhostname, cvr):
         print("Error: CertificateVerifyRequest response did not contain a CertificateVerifyResponse!")
     return ret
 
+
+if os.geteuid() != 0:
+    exit("    PyBear can only be run as root.")
+
 parser = argparse.ArgumentParser(description="Python implementation of Crossbear")
 parser.add_argument('--config','-c', help="Config filename", default="./cb.conf", dest="configfile")
 args = parser.parse_args()
@@ -66,7 +81,11 @@ cp = ConfigParser.RawConfigParser()
 
 cp.read(args.configfile)
 
-hosts = cp.get("Protector", "hosts").split(" ")
+certificate = cp.get("Server", "cb_cert")
+cbhost = cp.get("Server", "cb_host")
+
+hosts = random.sample(get_hosts("/getObservationUrls.jsp", cp.get("Protector", "country"), certificate, cbhost), cp.get("Protector", "num_hosts"))
+
 for host in hosts:
     ips = resolve_ips(host)
     for ip in ips:
@@ -77,7 +96,7 @@ for host in hosts:
             # TODO: Find out whether we are behind an SSL proxy
             print("Sending cert verify request for IP %s, host %s" % (ip, host))
             cvr.createFromValues(0, chain, host, ip, 443)
-            response = send_verify(cp.get("Server", "cb_cert"), cp.get("Server", "cb_host"), cvr)
+            response = send_verify(certificate, cbhost, cvr)
             print("Verify response from server for IP %s, host %s: %d" % (ip, host, response.rating))
         except socket.gaierror as e:
             print "Skipping cert verification of %s due to unsupported IP version (address: %s). Error: %s" % (host, ip, e)
