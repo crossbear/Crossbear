@@ -7,9 +7,8 @@ import itertools
 import socket
 import cbutils.MessageUtils
 import OpenSSL
-import urllib
-import random
 from pyhunter import PyHunter
+from pyhunter import Verifier
 from cbutils.CertUtils import get_chain
 from cbmessaging import CertVerifyReq
 from cbmessaging.MessageList import MessageList
@@ -19,57 +18,6 @@ from cbmessaging.CertVerifyReq import CertVerifyReq
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
 from dns import resolver
 
-
-def get_hosts(url, country, cert, cbhostname):
-    conn = SingleTrustHTTPS(cert, cbhostname, 443)
-    url = url + "?" + urllib.urlencode({"country": country})
-    conn.request("GET", url)
-    response = conn.getresponse()
-    if response.status != 200:
-        print("Error retrieving list of observation URLs from %s: Error %d, %s" % (url, response.status, response.reason))
-        return
-    content = response.read()
-    return [x.trim() for x in re.split(" |\n", content)]
-
-def resolve_ips(host):
-    answers_ipv4 = []
-    try:
-        answers_ipv4 = resolver.query(host, "A")
-    except:
-        print "Error querying A records for host %s" % (host,) 
-
-    answers_ipv6 = []
-    try:
-        answers_ipv6 = resolver.query(host, "AAAA")
-    except:
-        print "Error querying AAAA records for host %s" % (host,)
-
-    result = []
-    for rr in itertools.chain(answers_ipv4, answers_ipv6):
-        result.append(rr.address)
-    return result
-
-def send_verify(cert, cbhostname, cvr):
-    conn = SingleTrustHTTPS(cert, cbhostname, 443)
-    conn.request("POST", "/verifyCert.jsp",
-                 MessageList.getBytesForMessage(cvr))
-    response = conn.getresponse()
-    if response.status != 200:
-        print("Error submitting CertificateVerifyRequest: Error %d, %s" % (response.status, response.reason))
-    content = response.read()
-    ml = MessageList(content)
-    cbutils.MessageUtils.verify(ml, cert)
-    # Return CertVerifyRes.  TODO: Use PIP, timestamp message and
-    # other stuff. This requeres some restructuring.
-    ret = None
-    for msg in ml.allMessages():
-        if msg.getType() == messageTypes["CERT_VERIFY_RESULT"]:
-            ret = msg
-    if ret == None:
-        print("Error: CertificateVerifyRequest response did not contain a CertificateVerifyResponse!")
-    return ret
-
-
 if os.geteuid() != 0:
     exit("    PyBear can only be run as root.")
 
@@ -78,34 +26,19 @@ parser.add_argument('--config','-c', help="Config filename", default="./cb.conf"
 args = parser.parse_args()
 
 cp = ConfigParser.RawConfigParser()
-
 cp.read(args.configfile)
+
+
 
 certificate = cp.get("Server", "cb_cert")
 cbhost = cp.get("Server", "cb_host")
 
-hosts = random.sample(get_hosts("/getObservationUrls.jsp", cp.get("Protector", "country"), certificate, cbhost), cp.get("Protector", "num_hosts"))
-
-for host in hosts:
-    ips = resolve_ips(host)
-    for ip in ips:
-        try:
-            print("Retrieving chain for %s (hostname %s)" % (ip, host))
-            chain = get_chain(ip, 443)
-            cvr = CertVerifyReq()
-            # TODO: Find out whether we are behind an SSL proxy
-            print("Sending cert verify request for IP %s, host %s" % (ip, host))
-            cvr.createFromValues(0, chain, host, ip, 443)
-            response = send_verify(certificate, cbhost, cvr)
-            print("Verify response from server for IP %s, host %s: %d" % (ip, host, response.rating))
-        except socket.gaierror as e:
-            print "Skipping cert verification of %s due to unsupported IP version (address: %s). Error: %s" % (host, ip, e)
-        except socket.timeout as e:
-            print "Skipping cert verification of %s (IP %s) due to timeout. Error: %s" % (host, ip, e)
-        except OpenSSL.SSL.SysCallError as e:
-            print "Skippinf cert verification of %s (IP %s) due to OpenSSL syscall error. Error: %s" % (host, ip, e)
-
-exit
+verifier = Verifier.Verifier("getObservationUrls.jsp",
+                             cp.get("Protector", "country"),
+                             certificate,
+                             cbhost,
+                             cp.get("Protector", "num_hosts"))
+verifier.doVerify()
 
 hunter = PyHunter.PyHunter(cp.get("Server", "cb_host"),
                            cp.get("Server", "cb_cert"),
