@@ -1,9 +1,15 @@
+import logging
 import random
 import urllib
+from cbutils.LoggingMessages import HTSuccessMsg, VerifySuccessMsg, HTFailMsg, VerifyFailureMsg
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
 
 class Verifier:
     def __init__(self, url, country, cert, cbhostname, num_hosts):
+        # TODO: Add two loggers, one structured for Verify and HT
+        # results, another for logging arbitrary error messages.
+        # so we can replace the "print" statements.
+        self.logger = logging.getLogger(__name__)
         self.protector_url = url
         self.protector_country = country
         self.cert = cert
@@ -28,12 +34,16 @@ class Verifier:
                     # TODO: Find out whether we are behind an SSL proxy
                     cvr.createFromValues(0, chain, host, ip, 443)
                     response = send_verify(certificate, cbhost, cvr)
+                    self.logger.info(VerifySuccessMsg(host, ip, response.rating, response.judgement))
                 except socket.gaierror as e:
                     print "Skipping cert verification of %s due to unsupported IP version (address: %s). Error: %s" % (host, ip, e)
+                    self.logger.error(VerifyFailureMsg(host, ip, "Unsupported IP version"))
                 except socket.timeout as e:
                     print "Skipping cert verification of %s (IP %s) due to timeout. Error: %s" % (host, ip, e)
+                    self.logger.error(VerifyFailureMsg(host, ip, "Timeout"))
                 except OpenSSL.SSL.SysCallError as e:
                     print "Skipping cert verification of %s (IP %s) due to OpenSSL syscall error. Error: %s" % (host, ip, e)
+                    self.logger.error(VerifyFailureMsg(host, ip, "OpenSSL syscall error"))
 
 
     def get_hosts(self):

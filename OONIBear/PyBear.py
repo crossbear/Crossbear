@@ -7,6 +7,7 @@ import itertools
 import socket
 import cbutils.MessageUtils
 import OpenSSL
+import logging
 from pyhunter import PyHunter
 from pyhunter import Verifier
 from cbutils.CertUtils import get_chain
@@ -28,6 +29,7 @@ args = parser.parse_args()
 cp = ConfigParser.RawConfigParser()
 cp.read(args.configfile)
 
+logging.basicConfig(filename=cp.get("General", "logfile"), format="%(asctime)s | %(message)s", level=logging.DEBUG)
 
 
 certificate = cp.get("Server", "cb_cert")
