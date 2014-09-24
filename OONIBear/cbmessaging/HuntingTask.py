@@ -27,7 +27,7 @@ class HuntingTask(Message):
         pos += 4
         
         # extract the number of well known certificate chain hashes
-        # Why 0xff?
+        # use 0xff to make it unsigned
         knownCerts = 0xff & unpack(">B", data[4])[0]
         pos += 1
         
@@ -35,7 +35,6 @@ class HuntingTask(Message):
         self.knownCertHashes = []
         
         for _ in range(knownCerts):
-            # TODO: Unpack those?
             self.knownCertHashes.append(data[pos:pos+32])
             pos += 32
         
