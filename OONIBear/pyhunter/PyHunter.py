@@ -10,10 +10,11 @@ from   cbmessaging.MessageTypes   import messageTypes, messageNames
 from   cbmessaging.HTRepNewCert   import HTRepNewCert
 from   cbmessaging.HTRepKnownCert import HTRepKnownCert
 from   PipFetcher                 import PipFetcher
-#from   cbmessaging.CurServTime    import CurServTime
+#from   cbmessaging.CurServTime   import CurServTime
 from   time                       import time
 from   cbutils.SingleTrustHTTPS   import SingleTrustHTTPS
-from   cbutils.CertUtils import get_chain, compute_chain_hashes
+from   cbutils.LoggingMessages    import HTSuccessMsg, VerifySuccessMsg, HTFailMsg, VerifyFailureMsg
+from   cbutils.CertUtils          import get_chain, compute_chain_hashes
 from   Crypto.Hash                import SHA256, MD5
 from   Tracer                     import Tracer
 import random
@@ -21,6 +22,7 @@ import ssl
 import pprint 
 import traceback
 import binascii
+import logging
 
 
 from itertools import permutations
@@ -31,7 +33,7 @@ display = lambda l : map(lambda z: binascii.hexlify(z), l)
 class PyHunter(object):
     # TODO: Merge this with the CBTester class
     def __init__(self, cbServerHostName, cbServerCert, tracerMHops, tracerSPerHop, tracerPeriod):
-
+        self.logger = logging.getLogger(__name__)
         self.cbServerHostName    = cbServerHostName
         self.tracer              = Tracer(tracerMHops, tracerSPerHop, tracerPeriod)
         self.hts                 = {"tasks" : [], "pip": {4:{}, 6:{}}}
@@ -96,6 +98,7 @@ class PyHunter(object):
 
         # TODO get this to the report
         if not self.freshen_pip(ipv):
+            self.logger.error(HTFailMsg(ht.taskID, ht.targetHost, ht.targetIP, "No PublicIP for Task"))
             print "Skipping execution of task", ht.taskID, "due to the lack",\
                     "of fresh PublicIP for it."
             return None
@@ -153,6 +156,7 @@ class PyHunter(object):
             try:
                 rep = self.executeHT(ht)
             except IOError as e:
+                self.logger.error(HTFailMsg(ht.taskID, ht.targetHost, ht.targetIP, "IOError %s" % (e,)))
                 print "IO Error occurred when executing HT: " + str(e)
                 rep = False
             
@@ -162,8 +166,9 @@ class PyHunter(object):
             report[ht.taskID]['target port']     = ht.targetPort
             report[ht.taskID]['target host']     = ht.targetHost
             report[ht.taskID]['possible hashes'] = display(ht.cccHashs)
-            
+
             if rep:
+                self.logger.info(HTSuccessMsg(ht.taskID, ht.targetHost, ht.targetIP, ht.knownCertHashes, ht.cccHashs))
                 print "Hunting task result",  messageNames[rep.type]
                 report[ht.taskID]['reply type'] = messageNames[rep.type]
                 report[ht.taskID]['trace'] = rep.trace

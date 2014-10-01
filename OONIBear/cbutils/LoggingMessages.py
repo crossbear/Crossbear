@@ -1,15 +1,16 @@
+import binascii
 
 # TODO: Log traceroute?    
 class HTSuccessMsg:
-    def __init__(self, htid, host, hostip, serverhashes, cert):
+    def __init__(self, htid, host, hostip, serverhashes, possiblehashes):
         self.htid = htid
         self.host = host
         self.hostip = hostip
-        self.serverhashes = " ".join(serverhashes)
-        self.cert = cert
+        self.serverhashes = " ".join([binascii.hexlify(x) for x in serverhashes])
+        self.possiblehashes = " ".join([binascii.hexlify(x) for x in serverhashes])
 
     def __str__(self):
-        return "HuntingTaskSuccess | %d | %s | %s | %s | %s" % (self.htid, self.host, self.hostip, self.serverhashes, self.cert)
+        return "HuntingTaskSuccess | %d | %s | %s | %s | %s" % (self.htid, self.host, self.hostip, self.serverhashes, self.possiblehashes)
 
 
 
