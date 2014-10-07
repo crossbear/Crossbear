@@ -228,7 +228,6 @@ Crossbear.CBTracer = function (cbFrontend) {
 		 */
 		Crossbear.CBTracer.prototype.ping_linux = function ping_linux(ip, ipVersion, ttl) {
 			var str = ctypes.char.ptr();
-			dump(ip + " " + ipVersion + " " + ttl);
 			var ret = self.functions.ping_linux(ttl, ip, ipVersion, str.address());
 			// TODO: Document return values of ping function.
 			if (ret > 0) {

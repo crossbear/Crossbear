@@ -1,6 +1,7 @@
 // -*- c-file-style: "k&r"; -*-
 
 #include <stdio.h>
+#include <errno.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -14,7 +15,7 @@
 
 // For now we call the ping binary.
 int32_t ping(uint8_t ttl,/* const */char* address, uint8_t ipversion, char **ret) {
-     fprintf(stderr, "PING TTL: %d, Address: %s, IP version: %d\n", ttl, address, ipversion);
+     //fprintf(stderr, "PING TTL: %d, Address: %s, IP version: %d\n", ttl, address, ipversion);
      if (ret == NULL) {
 	  fprintf(stderr, "NULL pointer given as output value, quitting.");
 	  return 2;
@@ -43,13 +44,17 @@ int32_t ping(uint8_t ttl,/* const */char* address, uint8_t ipversion, char **ret
 	  dup2(pipes[1], STDOUT_FILENO);
 	  int32_t retval = execve(args[0], args, (char *const *)NULL);
 	  if (retval < 0) {
-	       fprintf(stderr, "Fork error: %s", strerror(errno));
+	       fprintf(stderr, "Error executing ping binary: %s", strerror(errno));
 	       free(ttlstring);
 	       exit(255);
 	  }
      }
      free(ttlstring);
      close(pipes[1]);
+     if (childpid == -1) {
+	  fprintf(stderr, "Fork error. Error %d, %s", errno, strerror(errno));
+	  return 1;
+     }
      FILE *input = fdopen(pipes[0], "r");
      int32_t totallength = 0;
      char *line = (char*)malloc(MAXLINELENGTH * sizeof(char));

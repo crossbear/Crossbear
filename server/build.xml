@@ -3,6 +3,33 @@
     <delete dir="eighty/WebContent/WEB-INF/classes/"/>
     <delete dir="fourhundredfourtythree/WebContent/WEB-INF/classes/"/>
     <delete file="eighty/WebContent/WEB-INF/lib/crossbear.jar"/>
+    <delete file="version.txt"/>
+  </target>
+
+
+  <target name="dist" depends="compile-fourhundredfourtythree,compile-eighty">
+    <tstamp>
+      <format property="BUILDTIME" pattern="yyyy.MM.dd.HH:mm:ss z" locale="en,US"/>
+    </tstamp>
+
+    <exec executable="hostname" outputproperty="BUILDHOST">
+      <arg value="-s"/>
+    </exec>
+
+    <exec executable="git" outputproperty="VERSION">
+      <arg value="describe"/>
+    </exec>
+
+    <copy file="version.txt-in" tofile="version.txt" overwrite="true">
+      <filterchain>
+	<replacetokens>
+	  <token key="VERSION" value="${VERSION}"/>
+	  <token key="BUILDHOST" value="${BUILDHOST}"/>
+	  <token key="BUILDTIME" value="${BUILDTIME}"/>
+	</replacetokens>
+      </filterchain>
+    </copy>
+    <tar basedir="." destfile="/tmp/server.tar" compression="bzip2" includes="version.txt gpl.txt eighty/ fourhundredfourtythree/ crossbear.properties"/>
   </target>
 
   <target name="compile-both" depends="compile-fourhundredfourtythree,compile-eighty"/>
