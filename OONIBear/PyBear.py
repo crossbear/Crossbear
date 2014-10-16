@@ -35,7 +35,7 @@ logging.basicConfig(filename=cp.get("General", "logfile"), format="%(asctime)s |
 certificate = cp.get("Server", "cb_cert")
 cbhost = cp.get("Server", "cb_host")
 
-verifier = Verifier.Verifier("getObservationUrls.jsp",
+verifier = Verifier.Verifier("/getObservationUrls.jsp",
                              cp.get("Protector", "country"),
                              certificate,
                              cbhost,

@@ -1,8 +1,11 @@
 import logging
 import random
 import urllib
+import re
+import itertools
 from cbutils.LoggingMessages import HTSuccessMsg, VerifySuccessMsg, HTFailMsg, VerifyFailureMsg
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
+from cbutils import MessageUtils
 
 class Verifier:
     def __init__(self, url, country, cert, cbhostname, num_hosts):
@@ -21,11 +24,15 @@ class Verifier:
         if hosts == None:
             print("getHosts failed. aborting verification.")
             return
-        
-        hosts = random.sample(hosts,
-                              self.num_hosts)
+
+        if self.num_hosts < len(hosts):
+            hosts = random.sample(hosts,
+                                  self.num_hosts)
         for host in hosts:
-            ips = resolve_ips(host)
+            ips = Verifier.resolve_ips(host)
+            if not ips:
+                self.logger.error(VerifyFailureMsg(host, 0, "Could not resolve hostname."))
+                return
             for ip in ips:
                 try:
                     print("Retrieving chain for %s (hostname %s)" % (ip, host))
@@ -55,8 +62,9 @@ class Verifier:
             print("Error retrieving list of observation URLs from %s/%s: Error %d, %s" % (self.cbhostname, url, response.status, response.reason))
             return
         content = response.read()
-        return [x.trim() for x in re.split(" |\n", content)]
+        return [x.strip() for x in re.split(" |\n", content)]
 
+    @staticmethod
     def resolve_ips(host):
         answers_ipv4 = []
         try:
@@ -85,7 +93,7 @@ class Verifier:
             return
         content = response.read()
         ml = MessageList(content)
-        if not cbutils.MessageUtils.verify(ml, cert):
+        if not MessageUtils.verify(ml, cert):
             print("Error:  Returned MessageList failed to verify.")
         # Return CertVerifyRes.  TODO: Use PIP, timestamp message and
         # other stuff. This requeres some restructuring of the PyHunter code.
