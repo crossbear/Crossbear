@@ -11,6 +11,7 @@ import logging
 from pyhunter import PyHunter
 from pyhunter import Verifier
 from cbutils.CertUtils import get_chain
+import cbutils.Locator as locator
 from cbmessaging import CertVerifyReq
 from cbmessaging.MessageList import MessageList
 from cbmessaging.MessageTypes import messageTypes
@@ -35,8 +36,13 @@ logging.basicConfig(filename=cp.get("General", "logfile"), format="%(asctime)s |
 certificate = cp.get("Server", "cb_cert")
 cbhost = cp.get("Server", "cb_host")
 
+if cp.get("Protector", "geoip") == "true":
+    country = locator.getCountry()
+else:
+    country = cp.get("Protector", "country")
+
 verifier = Verifier.Verifier("/getObservationUrls.jsp",
-                             cp.get("Protector", "country"),
+                             country,
                              certificate,
                              cbhost,
                              cp.get("Protector", "num_hosts"))
