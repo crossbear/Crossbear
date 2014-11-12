@@ -51,6 +51,7 @@ def deploy():
     execute(install_pip)
     execute(install_deps)
     execute(install_crossbear)
+    execute(install_cronjob)
 
 @task
 def install_crossbear():
@@ -60,7 +61,13 @@ def install_crossbear():
     run("tar xvf pybear.tar -C PyBear")
     with cd("PyBear"):
         sudo("python -m py_compile PyBear.py")
+        run("sed -i.bak -e 's/cb_cert = cbserver.crt/cb_cert = \/home\/tumple_crossbear\/PyBear\/cbserver.crt/' cb.conf")
     
+@task
+def install_cronjob():
+    with cd("/etc/cron.hourly/"):
+        sudo("""echo -e "#!/bin/bash\n/usr/bin/python /home/tumple_crossbear/PyBear/PyBear.py -c /home/tumple_crossbear/PyBear/cb.conf" > 1crossbear""")
+        sudo("chmod a+x 1crossbear")
     
 
 # TODO Set up Cronjob
