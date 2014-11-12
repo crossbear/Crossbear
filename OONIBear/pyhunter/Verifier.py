@@ -1,13 +1,21 @@
 import logging
 import random
-
+import socket
 import urllib
 import re
 import itertools
 from cbutils.LoggingMessages import HTSuccessMsg, VerifySuccessMsg, HTFailMsg, VerifyFailureMsg
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
 from cbutils import MessageUtils
+from cbutils.CertUtils import get_chain
+from cbmessaging.CertVerifyRes import CertVerifyRes
+from cbmessaging.CertVerifyReq import CertVerifyReq
+from cbmessaging.MessageList import MessageList
+from cbmessaging.MessageTypes import messageTypes
+from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
+
 import dns
+import OpenSSL
 
 class Verifier:
     def __init__(self, url, country, cert, cbhostname, num_hosts):
@@ -42,8 +50,9 @@ class Verifier:
                     cvr = CertVerifyReq()
                     # TODO: Find out whether we are behind an SSL proxy
                     cvr.createFromValues(0, chain, host, ip, 443)
-                    response = send_verify(certificate, cbhost, cvr)
-                    self.logger.info(VerifySuccessMsg(host, ip, response.rating, response.judgement))
+                    response = self.send_verify(self.cert, self.cbhostname, cvr)
+                    if response != None:
+                        self.logger.info(VerifySuccessMsg(host, ip, response.rating, response.judgement))
                 except socket.gaierror as e:
                     print "Skipping cert verification of %s due to unsupported IP version (address: %s). Error: %s" % (host, ip, e)
                     self.logger.error(VerifyFailureMsg(host, ip, "Unsupported IP version"))
@@ -64,28 +73,28 @@ class Verifier:
             print("Error retrieving list of observation URLs from %s/%s: Error %d, %s" % (self.cbhostname, url, response.status, response.reason))
             return
         content = response.read()
-        return [x.strip() for x in re.split(" |\n", content)]
+        return [x.strip() for x in re.split(" |\n", content.strip())]
 
     @staticmethod
     def resolve_ips(host):
         answers_ipv4 = []
         try:
             answers_ipv4 = dns.resolver.query(host, "A")
-        except Exception as e:
-            print "Error querying A records for host %s" % (host, e) 
+        except dns.resolver.NoAnswer:
+            print "Error querying A records for host %s: No answer" % (host, str(e))
 
         answers_ipv6 = []
         try:
             answers_ipv6 = dns.resolver.query(host, "AAAA")
-        except Exception as e:
-            print "Error querying AAAA records for host %s: %s" % (host, e)
+        except dns.resolver.NoAnswer:
+            print "Error querying AAAA records for host %s: No answer" % (host)
 
         result = []
         for rr in itertools.chain(answers_ipv4, answers_ipv6):
             result.append(rr.address)
             return result
 
-    def send_verify(cert, cbhostname, cvr):
+    def send_verify(self, cert, cbhostname, cvr):
         conn = SingleTrustHTTPS(cert, cbhostname, 443)
         conn.request("POST", "/verifyCert.jsp",
                      MessageList.getBytesForMessage(cvr))
@@ -97,6 +106,7 @@ class Verifier:
         ml = MessageList(content)
         if not MessageUtils.verify(ml, cert):
             print("Error:  Returned MessageList failed to verify.")
+            return None
         # Return CertVerifyRes.  TODO: Use PIP, timestamp message and
         # other stuff. This requeres some restructuring of the PyHunter code.
         ret = None

@@ -2,6 +2,7 @@ import binascii
 
 # TODO: Log traceroute?    
 class HTSuccessMsg:
+
     def __init__(self, htid, host, hostip, serverhashes, possiblehashes):
         self.htid = htid
         self.host = host
@@ -15,7 +16,8 @@ class HTSuccessMsg:
 
 
 class VerifySuccessMsg:
-    def __init(self, host, hostip, rating, judgementstring):
+
+    def __init__(self, host, hostip, rating, judgementstring):
         self.host = host
         self.hostip = hostip
         self.rating = rating

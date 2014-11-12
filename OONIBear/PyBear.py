@@ -10,14 +10,7 @@ import OpenSSL
 import logging
 from pyhunter import PyHunter
 from pyhunter import Verifier
-from cbutils.CertUtils import get_chain
 import cbutils.Locator as locator
-from cbmessaging import CertVerifyReq
-from cbmessaging.MessageList import MessageList
-from cbmessaging.MessageTypes import messageTypes
-from cbmessaging.CertVerifyRes import CertVerifyRes
-from cbmessaging.CertVerifyReq import CertVerifyReq
-from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
 
 if os.geteuid() != 0:
     exit("    PyBear can only be run as root.")
