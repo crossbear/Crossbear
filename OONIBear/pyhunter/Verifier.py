@@ -1,11 +1,13 @@
 import logging
 import random
+
 import urllib
 import re
 import itertools
 from cbutils.LoggingMessages import HTSuccessMsg, VerifySuccessMsg, HTFailMsg, VerifyFailureMsg
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
 from cbutils import MessageUtils
+import dns
 
 class Verifier:
     def __init__(self, url, country, cert, cbhostname, num_hosts):
@@ -68,15 +70,15 @@ class Verifier:
     def resolve_ips(host):
         answers_ipv4 = []
         try:
-            answers_ipv4 = resolver.query(host, "A")
-        except:
-            print "Error querying A records for host %s" % (host,) 
+            answers_ipv4 = dns.resolver.query(host, "A")
+        except Exception as e:
+            print "Error querying A records for host %s" % (host, e) 
 
         answers_ipv6 = []
         try:
-            answers_ipv6 = resolver.query(host, "AAAA")
-        except:
-            print "Error querying AAAA records for host %s" % (host,)
+            answers_ipv6 = dns.resolver.query(host, "AAAA")
+        except Exception as e:
+            print "Error querying AAAA records for host %s: %s" % (host, e)
 
         result = []
         for rr in itertools.chain(answers_ipv4, answers_ipv6):

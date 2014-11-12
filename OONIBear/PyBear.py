@@ -18,7 +18,6 @@ from cbmessaging.MessageTypes import messageTypes
 from cbmessaging.CertVerifyRes import CertVerifyRes
 from cbmessaging.CertVerifyReq import CertVerifyReq
 from cbutils.SingleTrustHTTPS import SingleTrustHTTPS
-from dns import resolver
 
 if os.geteuid() != 0:
     exit("    PyBear can only be run as root.")
